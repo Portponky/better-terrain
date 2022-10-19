@@ -1,0 +1,175 @@
+[gd_scene load_steps=5 format=3 uid="uid://de8b6h6ieal7r"]
+
+[ext_resource type="Script" path="res://addons/better-terrain/Dock.gd" id="1_raoha"]
+[ext_resource type="PackedScene" uid="uid://cia2mxyx11o5c" path="res://addons/better-terrain/TileView.tscn" id="2_h2yoc"]
+
+[sub_resource type="Image" id="Image_8yibm"]
+data = {
+"data": PackedByteArray(255, 255, 255, 0, 255, 255, 255, 0, 255, 128, 128, 4, 255, 128, 128, 4, 255, 128, 128, 4, 255, 128, 128, 4, 255, 128, 128, 4, 255, 128, 128, 4, 255, 128, 128, 4, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 93, 93, 131, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 131, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 131, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 93, 93, 252, 255, 93, 93, 252, 255, 93, 93, 252, 255, 94, 94, 127, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 128, 128, 4, 255, 128, 128, 4, 255, 128, 128, 4, 255, 128, 128, 4, 255, 128, 128, 4, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 231, 255, 93, 93, 55, 255, 97, 97, 58, 255, 93, 93, 233, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 231, 255, 94, 94, 54, 255, 94, 94, 57, 255, 93, 93, 233, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 97, 97, 42, 255, 255, 255, 0, 255, 255, 255, 0, 255, 97, 97, 42, 255, 93, 93, 233, 255, 93, 93, 232, 255, 93, 93, 41, 255, 255, 255, 0, 255, 255, 255, 0, 255, 97, 97, 42, 255, 93, 93, 233, 255, 93, 93, 232, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 96, 96, 45, 255, 97, 97, 42, 255, 255, 255, 0, 255, 97, 97, 42, 255, 97, 97, 42, 255, 255, 255, 0, 255, 98, 98, 47, 255, 97, 97, 42, 255, 255, 255, 0, 255, 97, 97, 42, 255, 97, 97, 42, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 96, 96, 45, 255, 93, 93, 235, 255, 93, 93, 233, 255, 97, 97, 42, 255, 255, 255, 0, 255, 255, 255, 0, 255, 94, 94, 46, 255, 93, 93, 236, 255, 93, 93, 233, 255, 97, 97, 42, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 235, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 233, 255, 95, 95, 59, 255, 96, 96, 61, 255, 93, 93, 235, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 233, 255, 95, 95, 59, 255, 96, 96, 61, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 252, 255, 93, 93, 252, 255, 93, 93, 252, 255, 93, 93, 252, 255, 93, 93, 252, 255, 93, 93, 252, 255, 93, 93, 252, 255, 93, 93, 252, 255, 93, 93, 252, 255, 93, 93, 252, 255, 93, 93, 252, 255, 93, 93, 252, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0),
+"format": "RGBA8",
+"height": 16,
+"mipmaps": false,
+"width": 16
+}
+
+[sub_resource type="ImageTexture" id="ImageTexture_3jch3"]
+image = SubResource("Image_8yibm")
+
+[node name="Dock" type="Control"]
+custom_minimum_size = Vector2i(0, 100)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_raoha")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Toolbar" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+offset_right = 1152.0
+offset_bottom = 24.0
+
+[node name="Draw" type="Button" parent="VBoxContainer/Toolbar"]
+layout_mode = 2
+offset_right = 24.0
+offset_bottom = 24.0
+tooltip_text = "Draw terrain"
+toggle_mode = true
+icon = SubResource("ImageTexture_3jch3")
+flat = true
+
+[node name="Rectangle" type="Button" parent="VBoxContainer/Toolbar"]
+layout_mode = 2
+offset_left = 28.0
+offset_right = 52.0
+offset_bottom = 24.0
+tooltip_text = "Fill a rectangle of terrain"
+toggle_mode = true
+icon = SubResource("ImageTexture_3jch3")
+flat = true
+
+[node name="Fill" type="Button" parent="VBoxContainer/Toolbar"]
+layout_mode = 2
+offset_left = 56.0
+offset_right = 80.0
+offset_bottom = 24.0
+tooltip_text = "Bucket fill terrain"
+toggle_mode = true
+icon = SubResource("ImageTexture_3jch3")
+flat = true
+
+[node name="HSplitContainer" type="HSplitContainer" parent="VBoxContainer"]
+layout_mode = 2
+offset_top = 28.0
+offset_right = 1152.0
+offset_bottom = 648.0
+size_flags_vertical = 3
+split_offset = -200
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/HSplitContainer"]
+layout_mode = 2
+offset_right = 370.0
+offset_bottom = 620.0
+size_flags_horizontal = 3
+
+[node name="Panel" type="Panel" parent="VBoxContainer/HSplitContainer/VBoxContainer"]
+layout_mode = 2
+offset_right = 370.0
+offset_bottom = 592.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Tree" type="Tree" parent="VBoxContainer/HSplitContainer/VBoxContainer/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+hide_root = true
+
+[node name="LowerToolbar" type="HBoxContainer" parent="VBoxContainer/HSplitContainer/VBoxContainer"]
+layout_mode = 2
+offset_top = 596.0
+offset_right = 370.0
+offset_bottom = 620.0
+
+[node name="Control" type="Control" parent="VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar"]
+layout_mode = 2
+anchors_preset = 0
+offset_right = 230.0
+offset_bottom = 24.0
+size_flags_horizontal = 3
+
+[node name="AddTerrain" type="Button" parent="VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar"]
+layout_mode = 2
+offset_left = 234.0
+offset_right = 258.0
+offset_bottom = 24.0
+tooltip_text = "Add terrain type"
+icon = SubResource("ImageTexture_3jch3")
+flat = true
+
+[node name="EditTerrain" type="Button" parent="VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar"]
+layout_mode = 2
+offset_left = 262.0
+offset_right = 286.0
+offset_bottom = 24.0
+tooltip_text = "Edit terrain type"
+icon = SubResource("ImageTexture_3jch3")
+flat = true
+
+[node name="MoveUp" type="Button" parent="VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar"]
+layout_mode = 2
+offset_left = 290.0
+offset_right = 314.0
+offset_bottom = 24.0
+tooltip_text = "Move selected terrain up"
+icon = SubResource("ImageTexture_3jch3")
+flat = true
+
+[node name="MoveDown" type="Button" parent="VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar"]
+layout_mode = 2
+offset_left = 318.0
+offset_right = 342.0
+offset_bottom = 24.0
+tooltip_text = "Move selected terrain down"
+icon = SubResource("ImageTexture_3jch3")
+flat = true
+
+[node name="RemoveTerrain" type="Button" parent="VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar"]
+layout_mode = 2
+offset_left = 346.0
+offset_right = 370.0
+offset_bottom = 24.0
+tooltip_text = "Remove selected terrain type(s)"
+icon = SubResource("ImageTexture_3jch3")
+flat = true
+
+[node name="Panel2" type="Panel" parent="VBoxContainer/HSplitContainer"]
+clip_contents = true
+custom_minimum_size = Vector2i(0, 80)
+layout_mode = 2
+offset_left = 382.0
+offset_right = 1152.0
+offset_bottom = 620.0
+size_flags_horizontal = 3
+
+[node name="TileView" parent="VBoxContainer/HSplitContainer/Panel2" instance=ExtResource("2_h2yoc")]
+layout_mode = 1
+
+[connection signal="pressed" from="VBoxContainer/Toolbar/Draw" to="." method="_on_draw_pressed"]
+[connection signal="pressed" from="VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar/AddTerrain" to="." method="_on_add_terrain_pressed"]
+[connection signal="pressed" from="VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar/EditTerrain" to="." method="_on_edit_terrain_pressed"]
+[connection signal="pressed" from="VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar/MoveUp" to="." method="_on_move_pressed" binds= [false]]
+[connection signal="pressed" from="VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar/MoveDown" to="." method="_on_move_pressed" binds= [true]]
+[connection signal="pressed" from="VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar/RemoveTerrain" to="." method="_on_remove_terrain_pressed"]
