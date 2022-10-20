@@ -6,11 +6,11 @@ var dock : Control
 var button : Button
 
 func _enter_tree() -> void:
+	add_autoload_singleton(AUTOLOAD_NAME, "res://addons/better-terrain/BetterTerrain.gd")
+	
 	dock = load("res://addons/better-terrain/Dock.tscn").instantiate()
 	button = add_control_to_bottom_panel(dock, "Terrain")
 	button.visible = false
-	
-	add_autoload_singleton(AUTOLOAD_NAME, "res://addons/better-terrain/BetterTerrain.gd")
 
 
 func _exit_tree() -> void:
