@@ -144,3 +144,11 @@ func _on_remove_terrain_pressed() -> void:
 
 func _on_draw_pressed():
 	pass
+
+
+func _on_tree_cell_selected():
+	var selected = terrain_tree.get_selected()
+	if !selected:
+		return
+	
+	tile_view.paint = selected.get_index()
