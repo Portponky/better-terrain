@@ -5,6 +5,7 @@ extends Control
 
 var tileset : TileSet
 
+var highlighted_position := Vector2i(-1, -1) 
 
 func _ready():
 	pass
@@ -28,7 +29,10 @@ func _draw():
 			draw_texture_rect_region(source.texture, target_rect, rect, td.modulate)
 			if BetterTerrain.get_tile_terrain_type(td) == -1:
 				draw_rect(target_rect, Color(0.1, 0.1, 0.1, 0.5), true)
+			if target_rect.has_point(highlighted_position):
+				draw_rect(Rect2i(target_rect.position + Vector2i.ONE, target_rect.size - Vector2i.ONE), Color(1.0, 1.0, 1.0, 1.0), false)
 		
+		# Blank out unused or uninteresting tiles
 		var size = source.get_atlas_grid_size()
 		for y in size.y:
 			for x in size.x:
@@ -51,3 +55,8 @@ func is_tile_in_source(source: TileSetAtlasSource, coord: Vector2i) -> bool:
 		return false
 	return true
 
+
+func _gui_input(event):
+	if event is InputEventMouseMotion:
+		highlighted_position = event.position
+		queue_redraw()
