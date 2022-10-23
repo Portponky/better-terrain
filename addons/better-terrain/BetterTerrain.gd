@@ -218,8 +218,8 @@ func add_tile_peering_type(ts: TileSet, td: TileData, peering: int, type: int) -
 		return false
 	
 	var connection_type = ts_meta.terrains[td_meta.type][2]
-	if !BetterTerrainData.is_terrain_peering_cell(ts, connection_type, peering):
-		return false
+	#if !BetterTerrainData.is_terrain_peering_cell(ts, connection_type, peering):
+	#	return false
 	
 	if !td_meta.has(peering):
 		td_meta[peering] = [type]

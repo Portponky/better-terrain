@@ -25,10 +25,18 @@ extends Control
 	load("res://addons/better-terrain/icons/NonModifying.svg"),
 ]
 
-const TERRAIN_PROPERTIES_SCENE = preload("res://addons/better-terrain/TerrainProperties.tscn")
+const TERRAIN_PROPERTIES_SCENE := preload("res://addons/better-terrain/TerrainProperties.tscn")
 
 var tilemap : TileMap
 var tileset : TileSet
+
+enum PaintMode {
+	NO_PAINT,
+	PAINT,
+	ERASE
+}
+
+var paint_mode = PaintMode.NO_PAINT
 
 
 # Called when the node enters the scene tree for the first time.
@@ -167,3 +175,42 @@ func _on_paint_type_pressed():
 func _on_paint_terrain_pressed():
 	paint_type.button_pressed = false
 	tile_view.paint_mode = tile_view.PaintMode.PAINT_PEERING if paint_terrain.button_pressed else tile_view.PaintMode.NO_PAINT
+
+
+func canvas_draw(overlay: Control) -> void:
+	pass
+
+func canvas_input(view: SubViewport, event: InputEvent) -> bool:
+	var selected = terrain_tree.get_selected()
+	if !selected:
+		return false
+	
+	if event is InputEventMouseButton and !event.pressed:
+		paint_mode = PaintMode.NO_PAINT
+		return true
+	
+	var clicked = event is InputEventMouseButton and event.pressed
+	if clicked:
+		paint_mode = PaintMode.NO_PAINT
+		
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			paint_mode = PaintMode.PAINT
+		elif event.button_index == MOUSE_BUTTON_RIGHT:
+			paint_mode = PaintMode.ERASE
+		else:
+			return false
+	
+	if (clicked or event is InputEventMouseMotion) and paint_mode != PaintMode.NO_PAINT:
+		var pos = view.global_canvas_transform.affine_inverse() * event.position
+		var target = tilemap.local_to_map(tilemap.to_local(pos))
+		
+		if paint_mode == PaintMode.PAINT:
+			var type = selected.get_index()
+			BetterTerrain.set_cell(tilemap, 0, target, type)
+		elif paint_mode == PaintMode.ERASE:
+			tilemap.erase_cell(0, target)
+		
+		BetterTerrain.update_terrains(tilemap, 0, target - Vector2i.ONE, target + Vector2i.ONE)
+		return true
+	
+	return false

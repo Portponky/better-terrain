@@ -38,6 +38,14 @@ func _edit(object) -> void:
 	dock.reload()
 
 
-func _forward_canvas_gui_input(event) -> bool:
-	# handle tilemap editing
-	return false
+func _forward_canvas_draw_over_viewport(overlay: Control) -> void:
+	if dock.visible:
+		dock.canvas_draw(overlay)
+
+
+func _forward_canvas_gui_input(event: InputEvent) -> bool:
+	if !dock.visible:
+		return false
+	
+	var view = get_editor_interface().get_edited_scene_root().get_parent()
+	return dock.canvas_input(view, event)
