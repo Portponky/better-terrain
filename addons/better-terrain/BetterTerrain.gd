@@ -53,10 +53,11 @@ func _get_cache(ts: TileSet) -> Array:
 		for c in source.get_tiles_count():
 			var coord := source.get_tile_id(c)
 			for a in source.get_alternative_tiles_count(coord):
-				var td := source.get_tile_data(coord, a)
+				var alternate = source.get_alternative_tile_id(coord, a)
+				var td := source.get_tile_data(coord, alternate)
 				var tile_meta = _get_tile_meta(td)
 				if tile_meta.type >= 0 and tile_meta.type < cache.size():
-					cache[tile_meta.type].append([source_id, coord, a])
+					cache[tile_meta.type].append([source_id, coord, alternate])
 	
 	return cache
 
@@ -243,7 +244,7 @@ func remove_tile_peering_type(ts: TileSet, td: TileData, peering: int, type: int
 		return false
 	td_meta[peering].erase(type)
 	if td_meta[peering].is_empty():
-		td_meta.remove(peering)
+		td_meta.erase(peering)
 	_set_tile_meta(td, td_meta)
 	_purge_cache(ts)
 	return true
