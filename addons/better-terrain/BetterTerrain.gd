@@ -194,6 +194,8 @@ func set_tile_terrain_type(ts: TileSet, td: TileData, type: int) -> bool:
 	
 	var td_meta = _get_tile_meta(td)
 	td_meta.type = type
+	if type == -1:
+		td_meta = null
 	_set_tile_meta(td, td_meta)
 	_purge_cache(ts)
 	return true
@@ -239,7 +241,7 @@ func remove_tile_peering_type(ts: TileSet, td: TileData, peering: int, type: int
 		return false
 	if !td_meta[peering].has(type):
 		return false
-	td_meta[peering].remove(type)
+	td_meta[peering].erase(type)
 	if td_meta[peering].is_empty():
 		td_meta.remove(peering)
 	_set_tile_meta(td, td_meta)

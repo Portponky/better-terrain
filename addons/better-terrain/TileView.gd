@@ -8,14 +8,25 @@ var paint = -1
 
 var highlighted_position := Vector2i(-1, -1) 
 
-enum DrawMode {
-	NOTHING,
-	MARK_TERRAIN,
-	MARK_PEERING
+# Modes for painting
+enum PaintMode {
+	NO_PAINT,
+	PAINT_TYPE,
+	PAINT_PEERING
 }
 
-var draw_mode = DrawMode.NOTHING
+var paint_mode = PaintMode.NO_PAINT
 
+# Actual interactions for painting
+enum PaintAction {
+	NO_ACTION,
+	DRAW_TYPE,
+	ERASE_TYPE,
+	DRAW_PEERING,
+	ERASE_PEERING
+}
+
+var paint_action = PaintAction.NO_ACTION
 
 func is_tile_in_source(source: TileSetAtlasSource, coord: Vector2i) -> bool:
 	var origin = source.get_tile_at_coords(coord)
@@ -87,13 +98,11 @@ func draw_tile_data(td: TileData, rect: Rect2i) -> void:
 	if paint < 0 or paint >= BetterTerrain.terrain_count(tileset):
 		return
 	
-	get_canvas_transform().x *= 1.3
-	get_canvas_transform().y *= 1.3
-	terrain = BetterTerrain.get_terrain(tileset, paint)
+	var paint_terrain = BetterTerrain.get_terrain(tileset, paint)
 	for p in BetterTerrainData.get_terrain_peering_cells(tileset, terrain.type):
 		if paint in BetterTerrain.tile_peering_types(td, p):
 			var side_polygon = BetterTerrainData.peering_polygon(tileset, terrain.type, p)
-			draw_colored_polygon(BetterTerrainData.scale_polygon_to_rect(rect, side_polygon), Color(terrain.color, 0.6))
+			draw_colored_polygon(BetterTerrainData.scale_polygon_to_rect(rect, side_polygon), Color(paint_terrain.color, 0.6))
 
 
 func _draw():
@@ -146,33 +155,41 @@ func _input(event):
 
 func _gui_input(event):
 	if event is InputEventMouseButton and !event.pressed:
-		draw_mode = DrawMode.NOTHING
+		paint_action = PaintAction.NO_ACTION
 	
-	if paint >= 0 and event is InputEventMouseButton and event.pressed:
-		draw_mode = DrawMode.NOTHING
-		
+	var clicked = event is InputEventMouseButton and event.pressed
+	if paint >= 0 and clicked:
+		paint_action = PaintAction.NO_ACTION
+	
 		# Determine what to do until the button is released
 		var tile = tile_part_from_position(event.position)
 		if !tile.valid:
 			return
 		
-		if tile.has("peering"):
-			draw_mode = DrawMode.MARK_PEERING
-		elif BetterTerrain.get_tile_terrain_type(tile.data) != paint:
-			draw_mode = DrawMode.MARK_TERRAIN
+		match [paint_mode, event.button_index]:
+			[PaintMode.PAINT_TYPE, MOUSE_BUTTON_LEFT]: paint_action = PaintAction.DRAW_TYPE
+			[PaintMode.PAINT_TYPE, MOUSE_BUTTON_RIGHT]: paint_action = PaintAction.ERASE_TYPE
+			[PaintMode.PAINT_PEERING, MOUSE_BUTTON_LEFT]: paint_action = PaintAction.DRAW_PEERING
+			[PaintMode.PAINT_PEERING, MOUSE_BUTTON_RIGHT]: paint_action = PaintAction.ERASE_PEERING
 	
-	if event is InputEventMouseMotion and draw_mode != DrawMode.NOTHING:
+	if (clicked or event is InputEventMouseMotion) and paint_action != PaintAction.NO_ACTION:
 		var tile = tile_part_from_position(event.position)
 		if !tile.valid:
 			return
 		
-		var type = BetterTerrain.get_tile_terrain_type(tile.data)
-		if draw_mode == DrawMode.MARK_TERRAIN:
+		if paint_action == PaintAction.DRAW_TYPE or paint_action == PaintAction.ERASE_TYPE:
+			var type = BetterTerrain.get_tile_terrain_type(tile.data)
+			var goal = paint if paint_action == PaintAction.DRAW_TYPE else -1
 			if type != paint:
 				BetterTerrain.set_tile_terrain_type(tileset, tile.data, paint)
 				queue_redraw()
-		if draw_mode == DrawMode.MARK_PEERING:
+		elif paint_action == PaintAction.DRAW_PEERING:
 			if tile.has("peering"):
 				if !(paint in BetterTerrain.tile_peering_types(tile.data, tile.peering)):
 					BetterTerrain.add_tile_peering_type(tileset, tile.data, tile.peering, paint)
+					queue_redraw()
+		elif paint_action == PaintAction.ERASE_PEERING:
+			if tile.has("peering"):
+				if paint in BetterTerrain.tile_peering_types(tile.data, tile.peering):
+					BetterTerrain.remove_tile_peering_type(tileset, tile.data, tile.peering, paint)
 					queue_redraw()
