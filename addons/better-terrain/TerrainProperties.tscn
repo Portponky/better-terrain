@@ -1,10 +1,10 @@
 [gd_scene load_steps=6 format=3 uid="uid://fdjybw6e7whr"]
 
-[ext_resource type="Texture2D" uid="uid://dmr1116ul4aoh" path="res://addons/better-terrain/MatchSides.svg" id="1_8xux0"]
+[ext_resource type="Texture2D" uid="uid://dmr1116ul4aoh" path="res://addons/better-terrain/icons/MatchSides.svg" id="1_8xux0"]
 [ext_resource type="Script" path="res://addons/better-terrain/TerrainProperties.gd" id="1_52nx8"]
-[ext_resource type="Texture2D" uid="uid://b5w7mkh0nnknt" path="res://addons/better-terrain/MatchCorners.svg" id="2_nf30p"]
-[ext_resource type="Texture2D" uid="uid://3ojg3jd75wvr" path="res://addons/better-terrain/MatchSidesAndCorners.svg" id="3_twt37"]
-[ext_resource type="Texture2D" uid="uid://cdfrr8b20ageo" path="res://addons/better-terrain/NonModifying.svg" id="5_awp83"]
+[ext_resource type="Texture2D" uid="uid://b5w7mkh0nnknt" path="res://addons/better-terrain/icons/MatchCorners.svg" id="2_nf30p"]
+[ext_resource type="Texture2D" uid="uid://3ojg3jd75wvr" path="res://addons/better-terrain/icons/MatchSidesAndCorners.svg" id="3_twt37"]
+[ext_resource type="Texture2D" uid="uid://cdfrr8b20ageo" path="res://addons/better-terrain/icons/NonModifying.svg" id="5_awp83"]
 
 [node name="TerrainProperties" type="ConfirmationDialog"]
 title = "Edit terrain properties"
