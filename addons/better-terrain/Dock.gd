@@ -152,3 +152,4 @@ func _on_tree_cell_selected():
 		return
 	
 	tile_view.paint = selected.get_index()
+	tile_view.queue_redraw()

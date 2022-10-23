@@ -8,51 +8,13 @@ var paint = -1
 
 var highlighted_position := Vector2i(-1, -1) 
 
-func _ready():
-	pass
+enum DrawMode {
+	NOTHING,
+	MARK_TERRAIN,
+	MARK_PEERING
+}
 
-
-func _draw():
-	if !tileset:
-		return
-	
-	var colors = []
-	for i in BetterTerrain.terrain_count(tileset):
-		var color = BetterTerrain.get_terrain(tileset, i).color
-		color.a = 0.6
-		colors.append(color)
-	
-	var offset = Vector2i.ZERO
-	for s in tileset.get_source_count():
-		var source = tileset.get_source(tileset.get_source_id(s)) as TileSetAtlasSource
-		if !source:
-			continue
-		draw_texture_rect(checkerboard, Rect2(offset, source.texture.get_size()), true)
-		for t in source.get_tiles_count():
-			var coord = source.get_tile_id(t)
-			var rect = source.get_tile_texture_region(coord, 0)
-			var target_rect = Rect2i(offset + rect.position, rect.size)
-			var td = source.get_tile_data(coord, 0)
-			draw_texture_rect_region(source.texture, target_rect, rect, td.modulate)
-			
-			var type = BetterTerrain.get_tile_terrain_type(td)
-			if type == -1:
-				draw_rect(target_rect, Color(0.1, 0.1, 0.1, 0.5), true)
-			elif type >= 0 and type < colors.size():
-				draw_rect(target_rect, colors[type], true)
-			if target_rect.has_point(highlighted_position):
-				draw_rect(Rect2i(target_rect.position + Vector2i.ONE, target_rect.size - Vector2i.ONE), Color(1.0, 1.0, 1.0, 1.0), false)
-		
-		# Blank out unused or uninteresting tiles
-		var size = source.get_atlas_grid_size()
-		for y in size.y:
-			for x in size.x:
-				var pos = Vector2i(x, y)
-				if !is_tile_in_source(source, pos):
-					var atlas_pos = source.margins + pos * (source.separation + source.texture_region_size)
-					draw_rect(Rect2i(offset + atlas_pos, source.texture_region_size), Color(0.0, 0.0, 0.0, 0.8), true)
-		
-		offset.y += source.texture.get_height()
+var draw_mode = DrawMode.NOTHING
 
 
 func is_tile_in_source(source: TileSetAtlasSource, coord: Vector2i) -> bool:
@@ -84,25 +46,94 @@ func tile_part_from_position(position: Vector2i) -> Dictionary:
 			var target_rect = Rect2i(offset + rect.position, rect.size)
 			if !target_rect.has_point(position):
 				continue
+
+			var td = source.get_tile_data(coord, 0)
 			
 			var result = {
 				valid = true,
-				source_id = source_id,
-				coord = coord,
-				alternate = 0
+				data = td
 			}
 			
-			var td = source.get_tile_data(coord, 0)
-			if BetterTerrain.get_tile_terrain_type(td) in [-1, 3]:
+			var type = BetterTerrain.get_tile_terrain_type(td)
+			if type == -1:
 				return result
 			
-			# Take account of peering bit
+			var normalize_position = Vector2(position - target_rect.position) / Vector2(target_rect.size)
+			
+			var terrain = BetterTerrain.get_terrain(tileset, type)
+			for p in BetterTerrainData.get_terrain_peering_cells(tileset, terrain.type):
+				var side_polygon = BetterTerrainData.peering_polygon(tileset, terrain.type, p)
+				if Geometry2D.is_point_in_polygon(normalize_position, side_polygon):
+					result.peering = p
+					break
+			
 			return result
 		
 		offset.y += source.texture.get_height()
 	
 	return { valid = false }
 
+
+func draw_tile_data(td: TileData, rect: Rect2i) -> void:
+	var type = BetterTerrain.get_tile_terrain_type(td)
+	if type == -1:
+		draw_rect(rect, Color(0.1, 0.1, 0.1, 0.5), true)
+		return
+	
+	var terrain = BetterTerrain.get_terrain(tileset, type)
+	var center_polygon = BetterTerrainData.peering_polygon(tileset, terrain.type, -1)
+	draw_colored_polygon(BetterTerrainData.scale_polygon_to_rect(rect, center_polygon), Color(terrain.color, 0.6))
+	
+	if paint < 0 or paint >= BetterTerrain.terrain_count(tileset):
+		return
+	
+	get_canvas_transform().x *= 1.3
+	get_canvas_transform().y *= 1.3
+	terrain = BetterTerrain.get_terrain(tileset, paint)
+	for p in BetterTerrainData.get_terrain_peering_cells(tileset, terrain.type):
+		if paint in BetterTerrain.tile_peering_types(td, p):
+			var side_polygon = BetterTerrainData.peering_polygon(tileset, terrain.type, p)
+			draw_colored_polygon(BetterTerrainData.scale_polygon_to_rect(rect, side_polygon), Color(terrain.color, 0.6))
+
+
+func _draw():
+	if !tileset:
+		return
+	
+	var colors = []
+	for i in BetterTerrain.terrain_count(tileset):
+		var color = BetterTerrain.get_terrain(tileset, i).color
+		color.a = 0.6
+		colors.append(color)
+	
+	var offset = Vector2i.ZERO
+	for s in tileset.get_source_count():
+		var source = tileset.get_source(tileset.get_source_id(s)) as TileSetAtlasSource
+		if !source:
+			continue
+		draw_texture_rect(checkerboard, Rect2(offset, source.texture.get_size()), true)
+		for t in source.get_tiles_count():
+			var coord = source.get_tile_id(t)
+			var rect = source.get_tile_texture_region(coord, 0)
+			var target_rect = Rect2i(offset + rect.position, rect.size)
+			var td = source.get_tile_data(coord, 0)
+			draw_texture_rect_region(source.texture, target_rect, rect, td.modulate)
+			
+			draw_tile_data(td, target_rect)
+			
+			if target_rect.has_point(highlighted_position):
+				draw_rect(Rect2i(target_rect.position + Vector2i.ONE, target_rect.size - Vector2i.ONE), Color(1.0, 1.0, 1.0, 1.0), false)
+		
+		# Blank out unused or uninteresting tiles
+		var size = source.get_atlas_grid_size()
+		for y in size.y:
+			for x in size.x:
+				var pos = Vector2i(x, y)
+				if !is_tile_in_source(source, pos):
+					var atlas_pos = source.margins + pos * (source.separation + source.texture_region_size)
+					draw_rect(Rect2i(offset + atlas_pos, source.texture_region_size), Color(0.0, 0.0, 0.0, 0.8), true)
+		
+		offset.y += source.texture.get_height()
 
 
 func _input(event):
@@ -114,16 +145,34 @@ func _input(event):
 
 
 func _gui_input(event):
+	if event is InputEventMouseButton and !event.pressed:
+		draw_mode = DrawMode.NOTHING
+	
 	if paint >= 0 and event is InputEventMouseButton and event.pressed:
+		draw_mode = DrawMode.NOTHING
+		
+		# Determine what to do until the button is released
 		var tile = tile_part_from_position(event.position)
 		if !tile.valid:
 			return
 		
-		var source = tileset.get_source(tile.source_id) as TileSetAtlasSource
-		var td = source.get_tile_data(tile.coord, tile.alternate)
-		if !td:
+		if tile.has("peering"):
+			draw_mode = DrawMode.MARK_PEERING
+		elif BetterTerrain.get_tile_terrain_type(tile.data) != paint:
+			draw_mode = DrawMode.MARK_TERRAIN
+	
+	if event is InputEventMouseMotion and draw_mode != DrawMode.NOTHING:
+		var tile = tile_part_from_position(event.position)
+		if !tile.valid:
 			return
 		
-		if BetterTerrain.get_tile_terrain_type(td) != paint:
-			BetterTerrain.set_tile_terrain_type(tileset, td, paint)
-			queue_redraw()
+		var type = BetterTerrain.get_tile_terrain_type(tile.data)
+		if draw_mode == DrawMode.MARK_TERRAIN:
+			if type != paint:
+				BetterTerrain.set_tile_terrain_type(tileset, tile.data, paint)
+				queue_redraw()
+		if draw_mode == DrawMode.MARK_PEERING:
+			if tile.has("peering"):
+				if !(paint in BetterTerrain.tile_peering_types(tile.data, tile.peering)):
+					BetterTerrain.add_tile_peering_type(tileset, tile.data, tile.peering, paint)
+					queue_redraw()

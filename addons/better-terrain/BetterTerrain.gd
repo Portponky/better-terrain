@@ -3,7 +3,15 @@ extends Node
 
 const TERRAIN_META = "better_terrain"
 
-var tile_cache = {}
+var _tile_cache = {}
+
+enum TerrainType {
+	MATCH_SIDES,
+	MATCH_CORNERS,
+	MATCH_SIDES_AND_CORNERS,
+	NON_MODIFYING,
+	MAX
+}
 
 # Meta-data functions
 func _get_terrain_meta(ts: TileSet) -> Dictionary:
@@ -27,15 +35,15 @@ func _set_tile_meta(td: TileData, meta : Dictionary) -> void:
 
 
 func _get_cache(ts: TileSet) -> Array:
-	if tile_cache.has(ts):
-		return tile_cache[ts]
+	if _tile_cache.has(ts):
+		return _tile_cache[ts]
 	
-	tile_cache[ts] = []
-	var t = tile_cache[ts]
+	_tile_cache[ts] = []
+	var cache = _tile_cache[ts]
 
 	var ts_meta = _get_terrain_meta(ts)
 	for terrains in ts_meta.terrains.size():
-		t.append([])
+		cache.append([])
 	
 	for s in ts.get_source_count():
 		var source_id = ts.get_source_id(s)
@@ -47,60 +55,15 @@ func _get_cache(ts: TileSet) -> Array:
 			for a in source.get_alternative_tiles_count(coord):
 				var td := source.get_tile_data(coord, a)
 				var tile_meta = _get_tile_meta(td)
-				if tile_meta.type >= 0 and tile_meta.type < t.size():
-					t[tile_meta.type].append([source_id, coord, a])
+				if tile_meta.type >= 0 and tile_meta.type < cache.size():
+					cache[tile_meta.type].append([source_id, coord, a])
 	
-	return t
+	return cache
 
 
 func _purge_cache(ts: TileSet) -> void:
-	tile_cache.erase(ts)
+	_tile_cache.erase(ts)
 
-
-# Sanity check for peering bit
-# could probably be split into sides and corners
-func _verify_tileset_has_peering_bit(ts: TileSet, peering: int) -> bool:
-	if ts.tile_shape == TileSet.TILE_SHAPE_SQUARE or ts.tile_shape == TileSet.TILE_SHAPE_ISOMETRIC:
-		return peering in [
-			TileSet.CELL_NEIGHBOR_RIGHT_SIDE,
-			TileSet.CELL_NEIGHBOR_BOTTOM_RIGHT_CORNER,
-			TileSet.CELL_NEIGHBOR_BOTTOM_SIDE,
-			TileSet.CELL_NEIGHBOR_BOTTOM_LEFT_CORNER,
-			TileSet.CELL_NEIGHBOR_LEFT_SIDE,
-			TileSet.CELL_NEIGHBOR_TOP_LEFT_CORNER,
-			TileSet.CELL_NEIGHBOR_TOP_SIDE,
-			TileSet.CELL_NEIGHBOR_TOP_RIGHT_CORNER
-		]
-	if ts.tile_offset_axis == TileSet.TILE_OFFSET_AXIS_HORIZONTAL:
-		return peering in [
-			TileSet.CELL_NEIGHBOR_RIGHT_SIDE,
-			TileSet.CELL_NEIGHBOR_BOTTOM_RIGHT_CORNER,
-			TileSet.CELL_NEIGHBOR_BOTTOM_RIGHT_SIDE,
-			TileSet.CELL_NEIGHBOR_BOTTOM_CORNER,
-			TileSet.CELL_NEIGHBOR_BOTTOM_LEFT_SIDE,
-			TileSet.CELL_NEIGHBOR_BOTTOM_LEFT_CORNER,
-			TileSet.CELL_NEIGHBOR_LEFT_SIDE,
-			TileSet.CELL_NEIGHBOR_TOP_LEFT_CORNER,
-			TileSet.CELL_NEIGHBOR_TOP_LEFT_SIDE,
-			TileSet.CELL_NEIGHBOR_TOP_CORNER,
-			TileSet.CELL_NEIGHBOR_TOP_RIGHT_SIDE,
-			TileSet.CELL_NEIGHBOR_TOP_RIGHT_CORNER
-		]
-	
-	return peering in [
-		TileSet.CELL_NEIGHBOR_RIGHT_CORNER,
-		TileSet.CELL_NEIGHBOR_BOTTOM_RIGHT_SIDE,
-		TileSet.CELL_NEIGHBOR_BOTTOM_RIGHT_CORNER,
-		TileSet.CELL_NEIGHBOR_BOTTOM_SIDE,
-		TileSet.CELL_NEIGHBOR_BOTTOM_LEFT_CORNER,
-		TileSet.CELL_NEIGHBOR_BOTTOM_LEFT_SIDE,
-		TileSet.CELL_NEIGHBOR_LEFT_CORNER,
-		TileSet.CELL_NEIGHBOR_TOP_LEFT_SIDE,
-		TileSet.CELL_NEIGHBOR_TOP_LEFT_CORNER,
-		TileSet.CELL_NEIGHBOR_TOP_SIDE,
-		TileSet.CELL_NEIGHBOR_TOP_RIGHT_CORNER,
-		TileSet.CELL_NEIGHBOR_TOP_RIGHT_SIDE
-	]
 
 
 # port of get_overlapping_coords_and_peering_bits
@@ -138,14 +101,15 @@ func _update_tile(tm: TileMap, layer: int, coord: Vector2i, types: Dictionary) -
 	if best:
 		tm.set_cell(layer, coord, best[0], best[1], best[2])
 
+
 # Terrain types
 func add_terrain(ts: TileSet, name: String, color: Color, type: int) -> bool:
-	if !ts or name.is_empty() or type < 0 or type > 3:
+	if !ts or name.is_empty() or type < 0 or type >= TerrainType.MAX:
 		return false
 	
-	var t = _get_terrain_meta(ts)
-	t.terrains.push_back([name, color, type])
-	_set_terrain_meta(ts, t)
+	var ts_meta = _get_terrain_meta(ts)
+	ts_meta.terrains.push_back([name, color, type])
+	_set_terrain_meta(ts, ts_meta)
 	_purge_cache(ts)
 	return true
 
@@ -154,12 +118,12 @@ func remove_terrain(ts: TileSet, index: int) -> bool:
 	if !ts or index < 0:
 		return false
 	
-	var t = _get_terrain_meta(ts)
-	if index >= t.terrains.size():
+	var ts_meta = _get_terrain_meta(ts)
+	if index >= ts_meta.terrains.size():
 		return false
 	
-	t.terrains.remove_at(index)
-	_set_terrain_meta(ts, t)
+	ts_meta.terrains.remove_at(index)
+	_set_terrain_meta(ts, ts_meta)
 	
 	# remove all peering bits and tiles of type
 	
@@ -171,32 +135,32 @@ func terrain_count(ts: TileSet) -> int:
 	if !ts:
 		return 0
 	
-	var t = _get_terrain_meta(ts)
-	return t.terrains.size()
+	var ts_meta = _get_terrain_meta(ts)
+	return ts_meta.terrains.size()
 
 
 func get_terrain(ts: TileSet, index: int) -> Dictionary:
 	if !ts or index < 0:
 		return {}
 	
-	var t = _get_terrain_meta(ts)
-	if index >= t.terrains.size():
+	var ts_meta = _get_terrain_meta(ts)
+	if index >= ts_meta.terrains.size():
 		return {}
 	
-	var terrain = t.terrains[index]
+	var terrain = ts_meta.terrains[index]
 	return {name = terrain[0], color = terrain[1], type = terrain[2]}
 
 
 func set_terrain(ts: TileSet, index: int, name: String, color: Color, type: int) -> bool:
-	if !ts or name.is_empty() or index < 0 or type < 0 or type > 2:
+	if !ts or name.is_empty() or index < 0 or type < 0 or type >= TerrainType.MAX:
 		return false
 	
-	var t = _get_terrain_meta(ts)
-	if index >= t.terrains.size():
+	var ts_meta = _get_terrain_meta(ts)
+	if index >= ts_meta.terrains.size():
 		return false
 	
-	t.terrains[index] = [name, color, type]
-	_set_terrain_meta(ts, t)
+	ts_meta.terrains[index] = [name, color, type]
+	_set_terrain_meta(ts, ts_meta)
 	
 	# mask out peering bits?
 	
@@ -208,14 +172,14 @@ func swap_terrains(ts: TileSet, index1: int, index2: int) -> bool:
 	if !ts or index1 < 0 or index2 < 0 or index1 == index2:
 		return false
 	
-	var t = _get_terrain_meta(ts)
-	if index1 >= t.terrains.size() or index2 >= t.terrains.size():
+	var ts_meta = _get_terrain_meta(ts)
+	if index1 >= ts_meta.terrains.size() or index2 >= ts_meta.terrains.size():
 		return false
 	
-	var temp = t.terrains[index1]
-	t.terrains[index1] = t.terrains[index2]
-	t.terrains[index2] = temp
-	_set_terrain_meta(ts, t)
+	var temp = ts_meta.terrains[index1]
+	ts_meta.terrains[index1] = ts_meta.terrains[index2]
+	ts_meta.terrains[index2] = temp
+	_set_terrain_meta(ts, ts_meta)
 	
 	# swap all peering bits and tile types
 	
@@ -228,9 +192,9 @@ func set_tile_terrain_type(ts: TileSet, td: TileData, type: int) -> bool:
 	if !ts or !td or type < -1:
 		return false
 	
-	var t = _get_tile_meta(td)
-	t.type = type
-	_set_tile_meta(td, t)
+	var td_meta = _get_tile_meta(td)
+	td_meta.type = type
+	_set_tile_meta(td, td_meta)
 	_purge_cache(ts)
 	return true
 
@@ -238,24 +202,30 @@ func set_tile_terrain_type(ts: TileSet, td: TileData, type: int) -> bool:
 func get_tile_terrain_type(td: TileData) -> int:
 	if !td:
 		return -1
-	var t = _get_tile_meta(td)
-	return t.type
+	var td_meta = _get_tile_meta(td)
+	return td_meta.type
 
 
 func add_tile_peering_type(ts: TileSet, td: TileData, peering: int, type: int) -> bool:
 	if !ts or !td or peering < 0 or peering > 15 or type < 0:
 		return false
-	if !_verify_tileset_has_peering_bit(ts, peering):
+	
+	var ts_meta = _get_terrain_meta(ts)
+	var td_meta = _get_tile_meta(td)
+	if td_meta.type < 0 or td_meta.type >= ts_meta.terrains.size():
 		return false
 	
-	var t = _get_tile_meta(td)
-	if !t.has(peering):
-		t[peering] = [type]
-	elif !t[peering].has(type):
-		t[peering].append(type)
+	var connection_type = ts_meta.terrains[td_meta.type][2]
+	if !BetterTerrainData.is_terrain_peering_cell(ts, connection_type, peering):
+		return false
+	
+	if !td_meta.has(peering):
+		td_meta[peering] = [type]
+	elif !td_meta[peering].has(type):
+		td_meta[peering].append(type)
 	else:
 		return false
-	_set_tile_meta(td, t)
+	_set_tile_meta(td, td_meta)
 	_purge_cache(ts)
 	return true
 
@@ -264,15 +234,15 @@ func remove_tile_peering_type(ts: TileSet, td: TileData, peering: int, type: int
 	if !ts or !td or peering < 0 or peering > 15 or type < 0:
 		return false
 	
-	var t = _get_tile_meta(td)
-	if !t.has(peering):
+	var td_meta = _get_tile_meta(td)
+	if !td_meta.has(peering):
 		return false
-	if !t[peering].has(type):
+	if !td_meta[peering].has(type):
 		return false
-	t[peering].remove(type)
-	if t[peering].is_empty():
-		t.remove(peering)
-	_set_tile_meta(td, t)
+	td_meta[peering].remove(type)
+	if td_meta[peering].is_empty():
+		td_meta.remove(peering)
+	_set_tile_meta(td, td_meta)
 	_purge_cache(ts)
 	return true
 
@@ -281,8 +251,8 @@ func tile_peering_types(td: TileData, peering: int) -> Array:
 	if !td or peering < 0 or peering > 15:
 		return []
 	
-	var t = _get_tile_meta(td)
-	return t[peering] if t.has(peering) else []
+	var td_meta = _get_tile_meta(td)
+	return td_meta[peering] if td_meta.has(peering) else []
 
 
 # Painting
@@ -317,11 +287,15 @@ func get_cell(tm: TileMap, layer: int, coord: Vector2i) -> int:
 	if !tm or layer < 0 or layer >= tm.get_layers_count():
 		return -1
 	
+	if tm.get_cell_source_id(layer, coord) == -1:
+		return -1
+	
 	var t = tm.get_cell_tile_data(layer, coord)
 	if !t:
 		return -1
 	
 	return _get_tile_meta(t).type
+
 
 # needs tidied a bit
 # needs to support hex or other tilesets
@@ -329,7 +303,7 @@ func update_terrains(tm: TileMap, layer: int, top_left: Vector2i, bottom_right: 
 	if !tm or layer < 0 or layer >= tm.get_layers_count():
 		return
 	
-	var tm_meta = _get_terrain_meta(tm.tile_set)
+	var ts_meta = _get_terrain_meta(tm.tile_set)
 	var types = {}
 	for y in range(top_left.y - 1, bottom_right.y + 2):
 		for x in range(top_left.x - 1, bottom_right.x + 2):
@@ -340,6 +314,6 @@ func update_terrains(tm: TileMap, layer: int, top_left: Vector2i, bottom_right: 
 		for x in range(top_left.x, bottom_right.x + 1):
 			var coord = Vector2i(x, y)
 			var type = types[coord]
-			if type >= 0 and type < tm_meta.terrains.size() and tm_meta.terrains[type][2] != 3:
+			if type >= 0 and type < ts_meta.terrains.size() and ts_meta.terrains[type][2] != TerrainType.NON_MODIFYING:
 				_update_tile(tm, layer, Vector2i(x, y), types)
 
