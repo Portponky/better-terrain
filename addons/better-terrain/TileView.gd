@@ -180,8 +180,8 @@ func _gui_input(event):
 		if paint_action == PaintAction.DRAW_TYPE or paint_action == PaintAction.ERASE_TYPE:
 			var type = BetterTerrain.get_tile_terrain_type(tile.data)
 			var goal = paint if paint_action == PaintAction.DRAW_TYPE else -1
-			if type != paint:
-				BetterTerrain.set_tile_terrain_type(tileset, tile.data, paint)
+			if type != goal:
+				BetterTerrain.set_tile_terrain_type(tileset, tile.data, goal)
 				queue_redraw()
 		elif paint_action == PaintAction.DRAW_PEERING:
 			if tile.has("peering"):

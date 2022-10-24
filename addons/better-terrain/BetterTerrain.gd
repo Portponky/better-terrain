@@ -30,7 +30,7 @@ func _get_tile_meta(td: TileData) -> Dictionary:
 	}
 
 
-func _set_tile_meta(td: TileData, meta : Dictionary) -> void:
+func _set_tile_meta(td: TileData, meta) -> void:
 	td.set_meta(TERRAIN_META, meta)
 
 
