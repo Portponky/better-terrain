@@ -66,8 +66,24 @@ func _purge_cache(ts: TileSet) -> void:
 	_tile_cache.erase(ts)
 
 
-
-# port of get_overlapping_coords_and_peering_bits
+func _probe(tm: TileMap, coord: Vector2i, peering: int, types: Dictionary, goal: Array) -> int:
+	if peering % 2 == 0:
+		var neighbor = tm.get_neighbor_cell(coord, peering)
+		return 1 if goal.has(types[neighbor]) else -3
+	
+	# Fix this nonsense
+	var targets = []
+	match peering:
+		TileSet.CELL_NEIGHBOR_BOTTOM_RIGHT_CORNER: targets = [Vector2i(coord.x + 1, coord.y), Vector2i(coord.x, coord.y + 1), Vector2i(coord.x + 1, coord.y + 1)]
+		TileSet.CELL_NEIGHBOR_BOTTOM_LEFT_CORNER: targets = [Vector2i(coord.x - 1, coord.y), Vector2i(coord.x, coord.y + 1), Vector2i(coord.x - 1, coord.y + 1)]
+		TileSet.CELL_NEIGHBOR_TOP_LEFT_CORNER: targets = [Vector2i(coord.x - 1, coord.y), Vector2i(coord.x, coord.y - 1), Vector2i(coord.x - 1, coord.y - 1)]
+		TileSet.CELL_NEIGHBOR_TOP_RIGHT_CORNER: targets = [Vector2i(coord.x + 1, coord.y), Vector2i(coord.x, coord.y - 1), Vector2i(coord.x + 1, coord.y - 1)]
+	
+	var value = types[targets[0]]
+	for n in range(1, targets.size()):
+		value = min(value, types[targets[n]])
+	
+	return 1 if goal.has(value) else -3
 
 
 # tidy up
@@ -77,8 +93,8 @@ func _update_tile(tm: TileMap, layer: int, coord: Vector2i, types: Dictionary) -
 		return
 	var c = _get_cache(tm.tile_set)
 	
-	var best_score = -1
-	var best = null
+	var best_score = -1000 # Impossibly bad score
+	var best = []
 	for t in c[type]:
 		var source = tm.tile_set.get_source(t[0]) as TileSetAtlasSource
 		var td = source.get_tile_data(t[1], t[2])
@@ -89,18 +105,17 @@ func _update_tile(tm: TileMap, layer: int, coord: Vector2i, types: Dictionary) -
 			if !(peering is int):
 				continue
 			
-			var neighbor = tm.get_neighbor_cell(coord, peering)
-			if t_meta[peering].has(types[neighbor]):
-				score += 3
-			else:
-				score -= 1
+			score += _probe(tm, coord, peering, types, t_meta[peering])
 		
 		if score > best_score:
 			best_score = score
-			best = t
+			best = [t]
+		elif score == best_score:
+			best.append(t)
 	
-	if best:
-		tm.set_cell(layer, coord, best[0], best[1], best[2])
+	if !best.is_empty():
+		var choice = best[randi() % best.size()]
+		tm.set_cell(layer, coord, choice[0], choice[1], choice[2])
 
 
 # Terrain types
@@ -142,14 +157,14 @@ func terrain_count(ts: TileSet) -> int:
 
 func get_terrain(ts: TileSet, index: int) -> Dictionary:
 	if !ts or index < 0:
-		return {}
+		return {valid = false}
 	
 	var ts_meta = _get_terrain_meta(ts)
 	if index >= ts_meta.terrains.size():
-		return {}
+		return {valid = false}
 	
 	var terrain = ts_meta.terrains[index]
-	return {name = terrain[0], color = terrain[1], type = terrain[2]}
+	return {name = terrain[0], color = terrain[1], type = terrain[2], valid = true}
 
 
 func set_terrain(ts: TileSet, index: int, name: String, color: Color, type: int) -> bool:

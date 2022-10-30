@@ -92,6 +92,9 @@ func draw_tile_data(td: TileData, rect: Rect2i) -> void:
 		return
 	
 	var terrain = BetterTerrain.get_terrain(tileset, type)
+	if !terrain.valid:
+		return
+	
 	var center_polygon = BetterTerrainData.peering_polygon(tileset, terrain.type, -1)
 	draw_colored_polygon(BetterTerrainData.scale_polygon_to_rect(rect, center_polygon), Color(terrain.color, 0.6))
 	
