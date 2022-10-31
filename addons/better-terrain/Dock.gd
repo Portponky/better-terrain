@@ -19,9 +19,8 @@ extends Control
 @onready var tile_view := $VBoxContainer/HSplitContainer/Panel2/TileView
 
 @onready var terrain_icons = [
-	load("res://addons/better-terrain/icons/MatchSides.svg"),
-	load("res://addons/better-terrain/icons/MatchCorners.svg"),
 	load("res://addons/better-terrain/icons/MatchSidesAndCorners.svg"),
+	load("res://addons/better-terrain/icons/MatchCorners.svg"),
 	load("res://addons/better-terrain/icons/NonModifying.svg"),
 ]
 

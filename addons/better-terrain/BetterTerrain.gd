@@ -6,9 +6,8 @@ const TERRAIN_META = "better_terrain"
 var _tile_cache = {}
 
 enum TerrainType {
-	MATCH_SIDES,
-	MATCH_CORNERS,
-	MATCH_SIDES_AND_CORNERS,
+	MATCH_TILES,
+	MATCH_VERTICES,
 	NON_MODIFYING,
 	MAX
 }
@@ -82,7 +81,7 @@ func _probe(tm: TileMap, coord: Vector2i, peering: int, types: Dictionary, goal:
 	var value = types[targets[0]]
 	for n in range(1, targets.size()):
 		value = min(value, types[targets[n]])
-	
+
 	return 1 if goal.has(value) else -3
 
 
