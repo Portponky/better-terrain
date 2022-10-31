@@ -65,11 +65,37 @@ func _purge_cache(ts: TileSet) -> void:
 	_tile_cache.erase(ts)
 
 
-func _probe(tm: TileMap, coord: Vector2i, peering: int, types: Dictionary, goal: Array) -> int:
-	if peering % 2 == 0:
-		var neighbor = tm.get_neighbor_cell(coord, peering)
-		return 1 if goal.has(types[neighbor]) else -3
+func _update_tile_tiles(tm: TileMap, layer: int, coord: Vector2i, types: Dictionary) -> void:
+	var type = types[coord]
+	var c = _get_cache(tm.tile_set)
 	
+	var best_score = -1000 # Impossibly bad score
+	var best = []
+	for t in c[type]:
+		var source = tm.tile_set.get_source(t[0]) as TileSetAtlasSource
+		var td = source.get_tile_data(t[1], t[2])
+		var t_meta = _get_tile_meta(td)
+		
+		var score = 0
+		for peering in t_meta.keys():
+			if !(peering is int):
+				continue
+			
+			var neighbor = tm.get_neighbor_cell(coord, peering)
+			score += 1 if t_meta[peering].has(types[neighbor]) else -3
+		
+		if score > best_score:
+			best_score = score
+			best = [t]
+		elif score == best_score:
+			best.append(t)
+	
+	if !best.is_empty():
+		var choice = best[randi() % best.size()]
+		tm.set_cell(layer, coord, choice[0], choice[1], choice[2])
+
+
+func _probe(tm: TileMap, coord: Vector2i, peering: int, types: Dictionary, goal: Array) -> int:
 	# Fix this nonsense
 	var targets = []
 	match peering:
@@ -85,11 +111,8 @@ func _probe(tm: TileMap, coord: Vector2i, peering: int, types: Dictionary, goal:
 	return 1 if goal.has(value) else -3
 
 
-# tidy up
-func _update_tile(tm: TileMap, layer: int, coord: Vector2i, types: Dictionary) -> void:
+func _update_tile_vertices(tm: TileMap, layer: int, coord: Vector2i, types: Dictionary) -> void:
 	var type = types[coord]
-	if type == -1:
-		return
 	var c = _get_cache(tm.tile_set)
 	
 	var best_score = -1000 # Impossibly bad score
@@ -331,6 +354,8 @@ func update_terrains(tm: TileMap, layer: int, top_left: Vector2i, bottom_right: 
 		for x in range(top_left.x, bottom_right.x + 1):
 			var coord = Vector2i(x, y)
 			var type = types[coord]
-			if type >= 0 and type < ts_meta.terrains.size() and ts_meta.terrains[type][2] != TerrainType.NON_MODIFYING:
-				_update_tile(tm, layer, Vector2i(x, y), types)
+			if type >= 0 and type < ts_meta.terrains.size():
+				match ts_meta.terrains[type][2]:
+					TerrainType.MATCH_TILES: _update_tile_tiles(tm, layer, Vector2i(x, y), types)
+					TerrainType.MATCH_VERTICES: _update_tile_vertices(tm, layer, Vector2i(x, y), types)
 
