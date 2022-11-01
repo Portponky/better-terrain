@@ -178,7 +178,7 @@ func _on_paint_terrain_pressed():
 	tile_view.paint_mode = tile_view.PaintMode.PAINT_PEERING if paint_terrain.button_pressed else tile_view.PaintMode.NO_PAINT
 
 
-func canvas_draw(view: SubViewport, overlay: Control) -> void:
+func canvas_draw(overlay: Control) -> void:
 	var selected = terrain_tree.get_selected()
 	if !selected:
 		return
@@ -188,17 +188,17 @@ func canvas_draw(view: SubViewport, overlay: Control) -> void:
 	if !terrain.valid:
 		return
 	
-	var pos = view.global_canvas_transform.affine_inverse() * overlay.get_local_mouse_position()
+	var pos = tilemap.get_viewport_transform().affine_inverse() * overlay.get_local_mouse_position()
 	var tile = tilemap.local_to_map(tilemap.to_local(pos))
 	
 	var tile_size = tilemap.tile_set.tile_size
 	var tile_area = Rect2(tilemap.map_to_local(tile) - 0.5 * tile_size, tile_size)
-	var area = view.global_canvas_transform * tilemap.global_transform * tile_area
+	var area = tilemap.get_viewport_transform() * tilemap.global_transform * tile_area
 	
 	overlay.draw_rect(area, Color(terrain.color, 0.5), true)
 
 
-func canvas_input(view: SubViewport, event: InputEvent) -> bool:
+func canvas_input(event: InputEvent) -> bool:
 	var selected = terrain_tree.get_selected()
 	if !selected:
 		return false
@@ -222,7 +222,8 @@ func canvas_input(view: SubViewport, event: InputEvent) -> bool:
 			return false
 	
 	if (clicked or event is InputEventMouseMotion) and paint_mode != PaintMode.NO_PAINT:
-		var pos = view.global_canvas_transform.affine_inverse() * event.position
+		var tr = tilemap.get_viewport_transform() * tilemap.global_transform
+		var pos = tr.affine_inverse() * event.position
 		var target = tilemap.local_to_map(tilemap.to_local(pos))
 		
 		if paint_mode == PaintMode.PAINT:

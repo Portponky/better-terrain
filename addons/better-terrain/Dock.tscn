@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://cia2mxyx11o5c" path="res://addons/better-terrain/TileView.tscn" id="2_h2yoc"]
 [ext_resource type="Texture2D" uid="uid://bo2cjv08jkvf8" path="res://addons/better-terrain/icons/EditTerrain.svg" id="3_pqb1p"]
 
-[sub_resource type="Image" id="Image_xxu6j"]
+[sub_resource type="Image" id="Image_8f7ey"]
 data = {
 "data": PackedByteArray(255, 255, 255, 0, 255, 255, 255, 0, 255, 128, 128, 4, 255, 128, 128, 4, 255, 128, 128, 4, 255, 128, 128, 4, 255, 128, 128, 4, 255, 128, 128, 4, 255, 128, 128, 4, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 93, 93, 131, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 131, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 131, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 93, 93, 252, 255, 93, 93, 252, 255, 93, 93, 252, 255, 94, 94, 127, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 128, 128, 4, 255, 128, 128, 4, 255, 128, 128, 4, 255, 128, 128, 4, 255, 128, 128, 4, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 231, 255, 93, 93, 55, 255, 97, 97, 58, 255, 93, 93, 233, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 231, 255, 94, 94, 54, 255, 94, 94, 57, 255, 93, 93, 233, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 97, 97, 42, 255, 255, 255, 0, 255, 255, 255, 0, 255, 97, 97, 42, 255, 93, 93, 233, 255, 93, 93, 232, 255, 93, 93, 41, 255, 255, 255, 0, 255, 255, 255, 0, 255, 97, 97, 42, 255, 93, 93, 233, 255, 93, 93, 232, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 96, 96, 45, 255, 97, 97, 42, 255, 255, 255, 0, 255, 97, 97, 42, 255, 97, 97, 42, 255, 255, 255, 0, 255, 98, 98, 47, 255, 97, 97, 42, 255, 255, 255, 0, 255, 97, 97, 42, 255, 97, 97, 42, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 96, 96, 45, 255, 93, 93, 235, 255, 93, 93, 233, 255, 97, 97, 42, 255, 255, 255, 0, 255, 255, 255, 0, 255, 94, 94, 46, 255, 93, 93, 236, 255, 93, 93, 233, 255, 97, 97, 42, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 235, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 233, 255, 95, 95, 59, 255, 96, 96, 61, 255, 93, 93, 235, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 233, 255, 95, 95, 59, 255, 96, 96, 61, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 252, 255, 93, 93, 252, 255, 93, 93, 252, 255, 93, 93, 252, 255, 93, 93, 252, 255, 93, 93, 252, 255, 93, 93, 252, 255, 93, 93, 252, 255, 93, 93, 252, 255, 93, 93, 252, 255, 93, 93, 252, 255, 93, 93, 252, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0),
 "format": "RGBA8",
@@ -14,11 +14,11 @@ data = {
 "width": 16
 }
 
-[sub_resource type="ImageTexture" id="ImageTexture_372nm"]
-image = SubResource("Image_xxu6j")
+[sub_resource type="ImageTexture" id="ImageTexture_dqw2n"]
+image = SubResource("Image_8f7ey")
 
 [node name="Dock" type="Control"]
-custom_minimum_size = Vector2i(0, 100)
+custom_minimum_size = Vector2(0, 100)
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -46,7 +46,7 @@ offset_right = 24.0
 offset_bottom = 24.0
 tooltip_text = "Draw terrain"
 toggle_mode = true
-icon = SubResource("ImageTexture_372nm")
+icon = SubResource("ImageTexture_dqw2n")
 flat = true
 
 [node name="Rectangle" type="Button" parent="VBoxContainer/Toolbar"]
@@ -56,7 +56,7 @@ offset_right = 52.0
 offset_bottom = 24.0
 tooltip_text = "Fill a rectangle of terrain"
 toggle_mode = true
-icon = SubResource("ImageTexture_372nm")
+icon = SubResource("ImageTexture_dqw2n")
 flat = true
 
 [node name="Fill" type="Button" parent="VBoxContainer/Toolbar"]
@@ -66,7 +66,7 @@ offset_right = 80.0
 offset_bottom = 24.0
 tooltip_text = "Bucket fill terrain"
 toggle_mode = true
-icon = SubResource("ImageTexture_372nm")
+icon = SubResource("ImageTexture_dqw2n")
 flat = true
 
 [node name="VSeparator" type="VSeparator" parent="VBoxContainer/Toolbar"]
@@ -144,7 +144,7 @@ offset_left = 234.0
 offset_right = 258.0
 offset_bottom = 24.0
 tooltip_text = "Add terrain type"
-icon = SubResource("ImageTexture_372nm")
+icon = SubResource("ImageTexture_dqw2n")
 flat = true
 
 [node name="EditTerrain" type="Button" parent="VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar"]
@@ -153,7 +153,7 @@ offset_left = 262.0
 offset_right = 286.0
 offset_bottom = 24.0
 tooltip_text = "Edit terrain type"
-icon = SubResource("ImageTexture_372nm")
+icon = SubResource("ImageTexture_dqw2n")
 flat = true
 
 [node name="MoveUp" type="Button" parent="VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar"]
@@ -162,7 +162,7 @@ offset_left = 290.0
 offset_right = 314.0
 offset_bottom = 24.0
 tooltip_text = "Move selected terrain up"
-icon = SubResource("ImageTexture_372nm")
+icon = SubResource("ImageTexture_dqw2n")
 flat = true
 
 [node name="MoveDown" type="Button" parent="VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar"]
@@ -171,7 +171,7 @@ offset_left = 318.0
 offset_right = 342.0
 offset_bottom = 24.0
 tooltip_text = "Move selected terrain down"
-icon = SubResource("ImageTexture_372nm")
+icon = SubResource("ImageTexture_dqw2n")
 flat = true
 
 [node name="RemoveTerrain" type="Button" parent="VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar"]
@@ -180,12 +180,12 @@ offset_left = 346.0
 offset_right = 370.0
 offset_bottom = 24.0
 tooltip_text = "Remove selected terrain type(s)"
-icon = SubResource("ImageTexture_372nm")
+icon = SubResource("ImageTexture_dqw2n")
 flat = true
 
 [node name="Panel2" type="Panel" parent="VBoxContainer/HSplitContainer"]
 clip_contents = true
-custom_minimum_size = Vector2i(0, 80)
+custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 offset_left = 382.0
 offset_right = 1152.0
