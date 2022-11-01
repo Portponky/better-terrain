@@ -9,6 +9,7 @@ func _enter_tree() -> void:
 	add_autoload_singleton(AUTOLOAD_NAME, "res://addons/better-terrain/BetterTerrain.gd")
 	
 	dock = load("res://addons/better-terrain/Dock.tscn").instantiate()
+	dock.update_overlay.connect(self.update_overlays)
 	button = add_control_to_bottom_panel(dock, "Terrain")
 	button.visible = false
 
@@ -31,8 +32,7 @@ func _make_visible(visible) -> void:
 func _edit(object) -> void:
 	if object is TileMap:
 		dock.tilemap = object
-		if object.tile_set:
-			dock.tileset = object.tile_set
+		dock.tileset = object.tile_set
 	if object is TileSet:
 		dock.tileset = object
 	dock.reload()
@@ -40,7 +40,8 @@ func _edit(object) -> void:
 
 func _forward_canvas_draw_over_viewport(overlay: Control) -> void:
 	if dock.visible:
-		dock.canvas_draw(overlay)
+		var view = get_editor_interface().get_edited_scene_root().get_parent()
+		dock.canvas_draw(view, overlay)
 
 
 func _forward_canvas_gui_input(event: InputEvent) -> bool:
