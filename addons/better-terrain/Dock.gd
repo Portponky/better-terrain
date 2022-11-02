@@ -18,7 +18,7 @@ signal update_overlay
 @onready var remove_terrain_button := $VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar/RemoveTerrain
 
 @onready var terrain_tree := $VBoxContainer/HSplitContainer/VBoxContainer/Panel/Tree
-@onready var tile_view := $VBoxContainer/HSplitContainer/Panel2/TileView
+@onready var tile_view := $VBoxContainer/HSplitContainer/Panel/ScrollArea/TileView
 
 @onready var terrain_icons = [
 	load("res://addons/better-terrain/icons/MatchSidesAndCorners.svg"),
@@ -70,8 +70,7 @@ func reload() -> void:
 		new_terrain.set_icon(0, terrain_icons[terrain.type])
 		new_terrain.set_icon_modulate(0, terrain.color)
 	
-	tile_view.tileset = tileset
-	tile_view.queue_redraw()
+	tile_view.refresh_tileset(tileset)
 
 
 func generate_popup() -> ConfirmationDialog:
