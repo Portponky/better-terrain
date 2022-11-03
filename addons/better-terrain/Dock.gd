@@ -107,6 +107,7 @@ func reload() -> void:
 	if tilemap.get_layers_count() == 0:
 		layer_options.text = tr("No layers")
 		layer_options.disabled = true
+		layer = 0
 	else:
 		for n in tilemap.get_layers_count():
 			var name = tilemap.get_layer_name(n)
