@@ -31,6 +31,8 @@ const TERRAIN_PROPERTIES_SCENE := preload("res://addons/better-terrain/TerrainPr
 var tilemap : TileMap
 var tileset : TileSet
 
+var initial_click : Vector2i
+
 enum PaintMode {
 	NO_PAINT,
 	PAINT,
@@ -53,6 +55,34 @@ func _ready() -> void:
 	
 	# Make a root node for the terrain tree
 	terrain_tree.create_item()
+
+
+func _get_fill_cells(target: Vector2i):
+	var pick = BetterTerrain.get_cell(tilemap, 0, target)
+	var bounds = tilemap.get_used_rect()
+	
+	# No sets yet, so use a dictionary
+	var checked = {}
+	var pending = [target]
+	var goal = []
+	
+	while !pending.is_empty():
+		var p = pending.pop_front()
+		if checked.has(p):
+			continue
+		checked[p] = true
+		if !bounds.has_point(p) or BetterTerrain.get_cell(tilemap, 0, p) != pick:
+			continue
+		
+		goal.append(p)
+		pending.append_array([
+			p + Vector2i.RIGHT,
+			p + Vector2i.UP,
+			p + Vector2i.LEFT,
+			p + Vector2i.DOWN
+		])
+	
+	return goal
 
 
 func reload() -> void:
@@ -155,8 +185,20 @@ func _on_remove_terrain_pressed() -> void:
 
 
 func _on_draw_pressed():
-	pass
+	draw_button.button_pressed = true
+	rectangle_button.button_pressed = false
+	fill_button.button_pressed = false
 
+
+func _on_rectangle_pressed():
+	draw_button.button_pressed = false
+	rectangle_button.button_pressed = true
+	fill_button.button_pressed = false
+
+func _on_fill_pressed():
+	draw_button.button_pressed = false
+	rectangle_button.button_pressed = false
+	fill_button.button_pressed = true
 
 func _on_tree_cell_selected():
 	var selected = terrain_tree.get_selected()
@@ -224,14 +266,25 @@ func canvas_input(event: InputEvent) -> bool:
 		var tr = tilemap.get_viewport_transform() * tilemap.global_transform
 		var pos = tr.affine_inverse() * event.position
 		var target = tilemap.local_to_map(tilemap.to_local(pos))
+		if clicked:
+			initial_click = target
+		var type = selected.get_index()
 		
-		if paint_mode == PaintMode.PAINT:
-			var type = selected.get_index()
-			BetterTerrain.set_cell(tilemap, 0, target, type)
-		elif paint_mode == PaintMode.ERASE:
-			tilemap.erase_cell(0, target)
+		if draw_button.button_pressed:
+			if paint_mode == PaintMode.PAINT:
+				BetterTerrain.set_cell(tilemap, 0, target, type)
+			elif paint_mode == PaintMode.ERASE:
+				tilemap.erase_cell(0, target)
+			BetterTerrain.update_terrain_area(tilemap, 0, target - Vector2i.ONE, target + Vector2i.ONE)
+		elif fill_button.button_pressed:
+			var cells = _get_fill_cells(target)
+			if paint_mode == PaintMode.PAINT:
+				BetterTerrain.set_cells(tilemap, 0, cells, type)
+			elif paint_mode == PaintMode.ERASE:
+				for c in cells:
+					tilemap.erase_cell(0, c)
+			BetterTerrain.update_terrain_cells(tilemap, 0, cells)	
 		
-		BetterTerrain.update_terrains(tilemap, 0, target - Vector2i.ONE, target + Vector2i.ONE)
 		return true
 	
 	return false

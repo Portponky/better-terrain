@@ -140,6 +140,23 @@ func _update_tile_vertices(tm: TileMap, layer: int, coord: Vector2i, types: Dict
 		tm.set_cell(layer, coord, choice[0], choice[1], choice[2])
 
 
+func _update_tile(tm: TileMap, layer: int, coord: Vector2i, ts_meta: Dictionary, types: Dictionary) -> void:
+	var type = types[coord]
+	if type >= 0 and type < ts_meta.terrains.size():
+		match ts_meta.terrains[type][2]:
+			TerrainType.MATCH_TILES: _update_tile_tiles(tm, layer, coord, types)
+			TerrainType.MATCH_VERTICES: _update_tile_vertices(tm, layer, coord, types)
+
+
+func _widen(tm: TileMap, coords: Array) -> Array:
+	var result = {}
+	for c in coords:
+		result[c] = true
+		for t in tm.get_surrounding_tiles(c):
+			result[t] = true
+	return result.keys()
+
+
 # Terrain types
 func add_terrain(ts: TileSet, name: String, color: Color, type: int) -> bool:
 	if !ts or name.is_empty() or type < 0 or type >= TerrainType.MAX:
@@ -309,7 +326,8 @@ func set_cell(tm: TileMap, layer: int, coord: Vector2i, type: int) -> bool:
 	return true
 
 
-func set_cells(tm: TileMap, layer: int, coords: Array[Vector2i], type: int) -> bool:
+# Array not strongly typed
+func set_cells(tm: TileMap, layer: int, coords: Array, type: int) -> bool:
 	if !tm or layer < 0 or layer >= tm.get_layers_count() or type < 0:
 		return false
 	
@@ -337,25 +355,35 @@ func get_cell(tm: TileMap, layer: int, coord: Vector2i) -> int:
 	return _get_tile_meta(t).type
 
 
-# needs tidied a bit
-# needs to support hex or other tilesets
-func update_terrains(tm: TileMap, layer: int, top_left: Vector2i, bottom_right: Vector2i) -> void:
+func update_terrain_cells(tm: TileMap, layer: int, cells: Array) -> void:
 	if !tm or layer < 0 or layer >= tm.get_layers_count():
 		return
 	
+	var affected_cells = _widen(tm, cells)
+	var needed_cells = _widen(tm, affected_cells)
+	
+	var types = {}
+	for c in needed_cells:
+		types[c] = get_cell(tm, layer, c)
+	
 	var ts_meta = _get_terrain_meta(tm.tile_set)
+	for c in affected_cells:
+		_update_tile(tm, layer, c, ts_meta, types)
+
+
+func update_terrain_area(tm: TileMap, layer: int, top_left: Vector2i, bottom_right: Vector2i) -> void:
+	if !tm or layer < 0 or layer >= tm.get_layers_count():
+		return
+	
 	var types = {}
 	for y in range(top_left.y - 1, bottom_right.y + 2):
 		for x in range(top_left.x - 1, bottom_right.x + 2):
 			var coord = Vector2i(x, y)
 			types[coord] = get_cell(tm, layer, coord)
 	
+	var ts_meta = _get_terrain_meta(tm.tile_set)
 	for y in range(top_left.y, bottom_right.y + 1):
 		for x in range(top_left.x, bottom_right.x + 1):
 			var coord = Vector2i(x, y)
-			var type = types[coord]
-			if type >= 0 and type < ts_meta.terrains.size():
-				match ts_meta.terrains[type][2]:
-					TerrainType.MATCH_TILES: _update_tile_tiles(tm, layer, Vector2i(x, y), types)
-					TerrainType.MATCH_VERTICES: _update_tile_vertices(tm, layer, Vector2i(x, y), types)
+			_update_tile(tm, layer, coord, ts_meta, types)
 
