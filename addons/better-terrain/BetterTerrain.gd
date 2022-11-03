@@ -148,11 +148,27 @@ func _update_tile(tm: TileMap, layer: int, coord: Vector2i, ts_meta: Dictionary,
 			TerrainType.MATCH_VERTICES: _update_tile_vertices(tm, layer, coord, types)
 
 
-func _widen(tm: TileMap, coords: Array) -> Array:
+# This might be better placed in the data class
+func _get_surrounding_tiles(ts: TileSet, coord: Vector2i) -> Array:
+	if ts.tile_shape == TileSet.TILE_SHAPE_SQUARE or ts.tile_shape == TileSet.TILE_SHAPE_ISOMETRIC:
+		return [
+			coord + Vector2i.RIGHT,
+			coord + Vector2i.DOWN + Vector2i.RIGHT,
+			coord + Vector2i.DOWN,
+			coord + Vector2i.DOWN + Vector2i.LEFT,
+			coord + Vector2i.LEFT,
+			coord + Vector2i.UP + Vector2i.LEFT,
+			coord + Vector2i.UP,
+			coord + Vector2i.UP + Vector2i.RIGHT,
+		]
+	return []
+
+
+func _widen(ts: TileSet, coords: Array) -> Array:
 	var result = {}
 	for c in coords:
 		result[c] = true
-		for t in tm.get_surrounding_tiles(c):
+		for t in _get_surrounding_tiles(ts, c):
 			result[t] = true
 	return result.keys()
 
@@ -359,8 +375,8 @@ func update_terrain_cells(tm: TileMap, layer: int, cells: Array) -> void:
 	if !tm or layer < 0 or layer >= tm.get_layers_count():
 		return
 	
-	var affected_cells = _widen(tm, cells)
-	var needed_cells = _widen(tm, affected_cells)
+	var affected_cells = _widen(tm.tile_set, cells)
+	var needed_cells = _widen(tm.tile_set, affected_cells)
 	
 	var types = {}
 	for c in needed_cells:
