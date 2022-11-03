@@ -232,8 +232,18 @@ func canvas_draw(overlay: Control) -> void:
 	var pos = tilemap.get_viewport_transform().affine_inverse() * overlay.get_local_mouse_position()
 	var tile = tilemap.local_to_map(tilemap.to_local(pos))
 	
-	var tile_size = tilemap.tile_set.tile_size
+	var tile_size = Vector2(tilemap.tile_set.tile_size)
 	var tile_area = Rect2(tilemap.map_to_local(tile) - 0.5 * tile_size, tile_size)
+	
+	if rectangle_button.button_pressed and paint_mode != PaintMode.NO_PAINT:
+		# During fill operation
+		var tl = Vector2i(min(initial_click.x, tile.x), min(initial_click.y, tile.y))
+		var br = Vector2i(max(initial_click.x, tile.x), max(initial_click.y, tile.y))
+		tile_area = Rect2(
+			tilemap.map_to_local(tl) - 0.5 * tile_size,
+			tilemap.map_to_local(br) - tilemap.map_to_local(tl) + tile_size
+		)
+	
 	var area = tilemap.get_viewport_transform() * tilemap.global_transform * tile_area
 	
 	overlay.draw_rect(area, Color(terrain.color, 0.5), true)
@@ -248,6 +258,23 @@ func canvas_input(event: InputEvent) -> bool:
 		update_overlay.emit()
 	
 	if event is InputEventMouseButton and !event.pressed:
+		if rectangle_button.button_pressed and paint_mode != PaintMode.NO_PAINT:
+			var tr = tilemap.get_viewport_transform() * tilemap.global_transform
+			var pos = tr.affine_inverse() * event.position
+			var target = tilemap.local_to_map(tilemap.to_local(pos))
+			var type = selected.get_index()
+			
+			var tl = Vector2i(min(initial_click.x, target.x), min(initial_click.y, target.y))
+			var br = Vector2i(max(initial_click.x, target.x), max(initial_click.y, target.y))
+			
+			# Fill from initial_target to target
+			for y in range(tl.y, br.y + 1):
+				for x in range(tl.x, br.x + 1):
+					BetterTerrain.set_cell(tilemap, 0, Vector2i(x, y), type)
+			
+			BetterTerrain.update_terrain_area(tilemap, 0, tl - Vector2i.ONE, br + Vector2i.ONE)
+			update_overlay.emit()
+			
 		paint_mode = PaintMode.NO_PAINT
 		return true
 	
