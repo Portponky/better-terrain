@@ -270,7 +270,10 @@ func canvas_input(event: InputEvent) -> bool:
 			# Fill from initial_target to target
 			for y in range(tl.y, br.y + 1):
 				for x in range(tl.x, br.x + 1):
-					BetterTerrain.set_cell(tilemap, 0, Vector2i(x, y), type)
+					if paint_mode == PaintMode.PAINT:
+						BetterTerrain.set_cell(tilemap, 0, Vector2i(x, y), type)
+					else:
+						tilemap.erase_cell(0, Vector2i(x, y))
 			
 			BetterTerrain.update_terrain_area(tilemap, 0, tl - Vector2i.ONE, br + Vector2i.ONE)
 			update_overlay.emit()
