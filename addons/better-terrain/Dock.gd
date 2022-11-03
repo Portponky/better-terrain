@@ -11,6 +11,8 @@ signal update_overlay
 @onready var paint_type := $VBoxContainer/Toolbar/PaintType
 @onready var paint_terrain := $VBoxContainer/Toolbar/PaintTerrain
 
+@onready var layer_options = $VBoxContainer/Toolbar/LayerOptions
+
 @onready var add_terrain_button := $VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar/AddTerrain
 @onready var edit_terrain_button := $VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar/EditTerrain
 @onready var move_up_button := $VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar/MoveUp
@@ -31,6 +33,7 @@ const TERRAIN_PROPERTIES_SCENE := preload("res://addons/better-terrain/TerrainPr
 var tilemap : TileMap
 var tileset : TileSet
 
+var layer = 0
 var initial_click : Vector2i
 
 enum PaintMode {
@@ -58,7 +61,7 @@ func _ready() -> void:
 
 
 func _get_fill_cells(target: Vector2i):
-	var pick = BetterTerrain.get_cell(tilemap, 0, target)
+	var pick = BetterTerrain.get_cell(tilemap, layer, target)
 	var bounds = tilemap.get_used_rect()
 	
 	# No sets yet, so use a dictionary
@@ -71,7 +74,7 @@ func _get_fill_cells(target: Vector2i):
 		if checked.has(p):
 			continue
 		checked[p] = true
-		if !bounds.has_point(p) or BetterTerrain.get_cell(tilemap, 0, p) != pick:
+		if !bounds.has_point(p) or BetterTerrain.get_cell(tilemap, layer, p) != pick:
 			continue
 		
 		goal.append(p)
@@ -100,6 +103,19 @@ func reload() -> void:
 		new_terrain.set_icon(0, terrain_icons[terrain.type])
 		new_terrain.set_icon_modulate(0, terrain.color)
 	
+	layer_options.clear()
+	if tilemap.get_layers_count() == 0:
+		layer_options.text = tr("No layers")
+		layer_options.disabled = true
+	else:
+		for n in tilemap.get_layers_count():
+			var name = tilemap.get_layer_name(n)
+			if name.is_empty():
+				name = tr("Layer {0}").format([n])
+			layer_options.add_item(name, n)
+			layer_options.set_item_disabled(n, !tilemap.is_layer_enabled(n))
+		layer_options.disabled = false
+		layer_options.selected = layer
 	tile_view.refresh_tileset(tileset)
 
 
@@ -271,11 +287,11 @@ func canvas_input(event: InputEvent) -> bool:
 			for y in range(tl.y, br.y + 1):
 				for x in range(tl.x, br.x + 1):
 					if paint_mode == PaintMode.PAINT:
-						BetterTerrain.set_cell(tilemap, 0, Vector2i(x, y), type)
+						BetterTerrain.set_cell(tilemap, layer, Vector2i(x, y), type)
 					else:
-						tilemap.erase_cell(0, Vector2i(x, y))
+						tilemap.erase_cell(layer, Vector2i(x, y))
 			
-			BetterTerrain.update_terrain_area(tilemap, 0, tl - Vector2i.ONE, br + Vector2i.ONE)
+			BetterTerrain.update_terrain_area(tilemap, layer, tl - Vector2i.ONE, br + Vector2i.ONE)
 			update_overlay.emit()
 			
 		paint_mode = PaintMode.NO_PAINT
@@ -302,19 +318,23 @@ func canvas_input(event: InputEvent) -> bool:
 		
 		if draw_button.button_pressed:
 			if paint_mode == PaintMode.PAINT:
-				BetterTerrain.set_cell(tilemap, 0, target, type)
+				BetterTerrain.set_cell(tilemap, layer, target, type)
 			elif paint_mode == PaintMode.ERASE:
-				tilemap.erase_cell(0, target)
-			BetterTerrain.update_terrain_area(tilemap, 0, target - Vector2i.ONE, target + Vector2i.ONE)
+				tilemap.erase_cell(layer, target)
+			BetterTerrain.update_terrain_area(tilemap, layer, target - Vector2i.ONE, target + Vector2i.ONE)
 		elif fill_button.button_pressed:
 			var cells = _get_fill_cells(target)
 			if paint_mode == PaintMode.PAINT:
-				BetterTerrain.set_cells(tilemap, 0, cells, type)
+				BetterTerrain.set_cells(tilemap, layer, cells, type)
 			elif paint_mode == PaintMode.ERASE:
 				for c in cells:
-					tilemap.erase_cell(0, c)
-			BetterTerrain.update_terrain_cells(tilemap, 0, cells)	
+					tilemap.erase_cell(layer, c)
+			BetterTerrain.update_terrain_cells(tilemap, layer, cells)
 		
 		return true
 	
 	return false
+
+
+func _on_layer_options_item_selected(index):
+	layer = index
