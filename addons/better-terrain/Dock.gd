@@ -23,8 +23,8 @@ signal update_overlay
 @onready var tile_view := $VBoxContainer/HSplitContainer/Panel/ScrollArea/TileView
 
 @onready var terrain_icons = [
-	load("res://addons/better-terrain/icons/MatchSidesAndCorners.svg"),
-	load("res://addons/better-terrain/icons/MatchCorners.svg"),
+	load("res://addons/better-terrain/icons/MatchTiles.svg"),
+	load("res://addons/better-terrain/icons/MatchVertices.svg"),
 	load("res://addons/better-terrain/icons/NonModifying.svg"),
 ]
 

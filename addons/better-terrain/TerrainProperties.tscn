@@ -1,8 +1,8 @@
 [gd_scene load_steps=5 format=3 uid="uid://fdjybw6e7whr"]
 
 [ext_resource type="Script" path="res://addons/better-terrain/TerrainProperties.gd" id="1_52nx8"]
-[ext_resource type="Texture2D" uid="uid://w2mtfota6cqa" path="res://addons/better-terrain/icons/MatchCorners.svg" id="2_nf30p"]
-[ext_resource type="Texture2D" uid="uid://b4m7evscwmys0" path="res://addons/better-terrain/icons/MatchSidesAndCorners.svg" id="3_twt37"]
+[ext_resource type="Texture2D" uid="uid://d1h1p7pcwdnjk" path="res://addons/better-terrain/icons/MatchTiles.svg" id="2_ncc5p"]
+[ext_resource type="Texture2D" uid="uid://dfemy1g6okwlv" path="res://addons/better-terrain/icons/MatchVertices.svg" id="3_0nvmi"]
 [ext_resource type="Texture2D" uid="uid://1yr6yruwl63u" path="res://addons/better-terrain/icons/NonModifying.svg" id="5_awp83"]
 
 [node name="TerrainProperties" type="ConfirmationDialog"]
@@ -20,12 +20,14 @@ offset_bottom = 104.0
 columns = 2
 
 [node name="NameLabel" type="Label" parent="GridContainer"]
+layout_mode = 2
 offset_top = 2.0
 offset_right = 47.0
 offset_bottom = 28.0
 text = "Name"
 
 [node name="NameEdit" type="LineEdit" parent="GridContainer"]
+layout_mode = 2
 offset_left = 51.0
 offset_right = 301.0
 offset_bottom = 31.0
@@ -33,12 +35,14 @@ size_flags_horizontal = 3
 placeholder_text = "Terrain name"
 
 [node name="ColorLabel" type="Label" parent="GridContainer"]
+layout_mode = 2
 offset_top = 35.0
 offset_right = 47.0
 offset_bottom = 61.0
 text = "Color"
 
 [node name="ColorPicker" type="ColorPickerButton" parent="GridContainer"]
+layout_mode = 2
 offset_left = 51.0
 offset_top = 35.0
 offset_right = 301.0
@@ -48,12 +52,14 @@ color = Color(1, 0.262745, 0.498039, 1)
 edit_alpha = false
 
 [node name="TypeLabel" type="Label" parent="GridContainer"]
+layout_mode = 2
 offset_top = 67.0
 offset_right = 47.0
 offset_bottom = 93.0
 text = "Mode"
 
 [node name="TypeOption" type="OptionButton" parent="GridContainer"]
+layout_mode = 2
 offset_left = 51.0
 offset_top = 65.0
 offset_right = 301.0
@@ -61,10 +67,10 @@ offset_bottom = 96.0
 size_flags_horizontal = 3
 item_count = 3
 popup/item_0/text = "Match tiles"
-popup/item_0/icon = ExtResource("3_twt37")
+popup/item_0/icon = ExtResource("2_ncc5p")
 popup/item_0/id = 0
 popup/item_1/text = "Match vertices"
-popup/item_1/icon = ExtResource("2_nf30p")
+popup/item_1/icon = ExtResource("3_0nvmi")
 popup/item_1/id = 1
 popup/item_2/text = "Non-modifying"
 popup/item_2/icon = ExtResource("5_awp83")
