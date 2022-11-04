@@ -1,7 +1,7 @@
 @tool
 extends Node
 
-const TERRAIN_META = "better_terrain"
+const TERRAIN_META = "_better_terrain"
 
 var _tile_cache = {}
 
