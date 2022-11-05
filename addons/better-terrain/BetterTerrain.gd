@@ -104,11 +104,28 @@ func _probe(tm: TileMap, coord: Vector2i, peering: int, types: Dictionary, goal:
 		TileSet.CELL_NEIGHBOR_TOP_LEFT_CORNER: targets = [Vector2i(coord.x - 1, coord.y), Vector2i(coord.x, coord.y - 1), Vector2i(coord.x - 1, coord.y - 1)]
 		TileSet.CELL_NEIGHBOR_TOP_RIGHT_CORNER: targets = [Vector2i(coord.x + 1, coord.y), Vector2i(coord.x, coord.y - 1), Vector2i(coord.x + 1, coord.y - 1)]
 	
-	var value = types[targets[0]]
-	for n in range(1, targets.size()):
-		value = min(value, types[targets[n]])
-
-	return 1 if goal.has(value) else -3
+	var partial_match := false
+	var best = types[targets[0]]
+	for t in targets:
+		var test = types[t]
+		best = min(best, test)
+		if test in goal:
+			partial_match = true
+	
+	#3 - exact match on lowest type
+	if best in goal:
+		return 3
+	
+	#1 - any match of any type
+	if partial_match:
+		return 1
+	
+	#-1 - only match current terrain
+	if types[coord] in goal:
+		return -1
+	
+	#-3 - no kind of match at all
+	return -3
 
 
 func _update_tile_vertices(tm: TileMap, layer: int, coord: Vector2i, types: Dictionary) -> void:
