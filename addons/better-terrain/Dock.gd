@@ -35,6 +35,7 @@ var tileset : TileSet
 
 var layer = 0
 var initial_click : Vector2i
+var last_mouse_event_position : Vector2
 
 enum PaintMode {
 	NO_PAINT,
@@ -254,11 +255,10 @@ func canvas_draw(overlay: Control) -> void:
 	
 	if rectangle_button.button_pressed and paint_mode != PaintMode.NO_PAINT:
 		# During fill operation
-		var tl = Vector2i(min(initial_click.x, tile.x), min(initial_click.y, tile.y))
-		var br = Vector2i(max(initial_click.x, tile.x), max(initial_click.y, tile.y))
+		var area = Rect2i(initial_click, tile - initial_click).abs()
 		tile_area = Rect2(
-			tilemap.map_to_local(tl) - 0.5 * tile_size,
-			tilemap.map_to_local(br) - tilemap.map_to_local(tl) + tile_size
+			tilemap.map_to_local(area.position) - 0.5 * tile_size,
+			tilemap.map_to_local(area.end) - tilemap.map_to_local(area.position) + tile_size
 		)
 	
 	var area = tilemap.get_viewport_transform() * tilemap.global_transform * tile_area
@@ -272,27 +272,27 @@ func canvas_input(event: InputEvent) -> bool:
 		return false
 	
 	if event is InputEventMouseMotion:
+		last_mouse_event_position = event.position
 		update_overlay.emit()
 	
 	if event is InputEventMouseButton and !event.pressed:
 		if rectangle_button.button_pressed and paint_mode != PaintMode.NO_PAINT:
 			var tr = tilemap.get_viewport_transform() * tilemap.global_transform
-			var pos = tr.affine_inverse() * event.position
+			var pos = tr.affine_inverse() * last_mouse_event_position
 			var target = tilemap.local_to_map(tilemap.to_local(pos))
 			var type = selected.get_index()
 			
-			var tl = Vector2i(min(initial_click.x, target.x), min(initial_click.y, target.y))
-			var br = Vector2i(max(initial_click.x, target.x), max(initial_click.y, target.y))
+			var area = Rect2i(initial_click, target - initial_click).abs()
 			
 			# Fill from initial_target to target
-			for y in range(tl.y, br.y + 1):
-				for x in range(tl.x, br.x + 1):
+			for y in range(area.position.y, area.end.y + 1):
+				for x in range(area.position.x, area.end.x + 1):
 					if paint_mode == PaintMode.PAINT:
 						BetterTerrain.set_cell(tilemap, layer, Vector2i(x, y), type)
 					else:
 						tilemap.erase_cell(layer, Vector2i(x, y))
 			
-			BetterTerrain.update_terrain_area(tilemap, layer, tl - Vector2i.ONE, br + Vector2i.ONE)
+			BetterTerrain.update_terrain_area(tilemap, layer, area.position - Vector2i.ONE, area.end + 2 * Vector2i.ONE)
 			update_overlay.emit()
 			
 		paint_mode = PaintMode.NO_PAINT
