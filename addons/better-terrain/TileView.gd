@@ -116,13 +116,14 @@ func tile_part_from_position(position: Vector2i) -> Dictionary:
 			
 			var count = source.get_alternative_tiles_count(a[2])
 			var index = int((position.x - alt_offset.x) / (zoom_level * a[0].x)) + 1
+			var alt_id = source.get_alternative_tile_id(a[2], index)
 			var target_rect = Rect2(
 				alt_offset + Vector2.RIGHT * (index - 1) * zoom_level * a[0].x,
 				zoom_level * a[0]
 			)
 			
 			if index < count:
-				var td = source.get_tile_data(a[2], index)
+				var td = source.get_tile_data(a[2], alt_id)
 				return _build_tile_part_from_position(td, position, target_rect)
 	
 	else:
@@ -192,12 +193,13 @@ func _draw():
 			var alt_count = source.get_alternative_tiles_count(coord)
 			var target_rect : Rect2
 			for a in alt_count:
+				var alt_id = 0
 				if a == 0:
 					target_rect = Rect2(offset + zoom_level * rect.position, zoom_level * rect.size)
 				else:
 					target_rect = Rect2(alt_offset + zoom_level * (a - 1) * rect.size.x * Vector2.RIGHT, zoom_level * rect.size)
-				
-				var td = source.get_tile_data(coord, a)
+					alt_id = source.get_alternative_tile_id(coord, a)
+				var td = source.get_tile_data(coord, alt_id)
 				_draw_tile_data(source.texture, target_rect, rect, td)
 				if target_rect.has_point(highlighted_position):
 					highlight_rect = target_rect
