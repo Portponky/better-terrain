@@ -90,18 +90,393 @@ static func peering_polygon_square_vertices(peering: int) -> PackedVector2Array:
 	return result
 
 
+static func peering_polygon_isometric_tiles(peering: int) -> PackedVector2Array:
+	const t = 1.0 / 4.0
+	match peering:
+		-1: return PackedVector2Array([Vector2(2 * t, t), Vector2(3 * t, 2 * t), Vector2(2 * t, 3 * t), Vector2(t, 2 * t)])
+		TileSet.CELL_NEIGHBOR_RIGHT_CORNER:
+			return PackedVector2Array([Vector2(3 * t, 2 * t), Vector2(1, t), Vector2(1, 3 * t)])
+		TileSet.CELL_NEIGHBOR_BOTTOM_RIGHT_SIDE:
+			return PackedVector2Array([Vector2(3 * t, 2 * t), Vector2(1, 3 * t), Vector2(3 * t, 1), Vector2(2 * t, 3 * t)])
+		TileSet.CELL_NEIGHBOR_BOTTOM_CORNER:
+			return PackedVector2Array([Vector2(2 * t, 3 * t), Vector2(3 * t, 1), Vector2(t, 1)])
+		TileSet.CELL_NEIGHBOR_BOTTOM_LEFT_SIDE:
+			return PackedVector2Array([Vector2(t, 2 * t), Vector2(2 * t, 3 * t), Vector2(t, 1), Vector2(0, 3 * t)])
+		TileSet.CELL_NEIGHBOR_LEFT_CORNER:
+			return PackedVector2Array([Vector2(0, t), Vector2(t, 2 * t), Vector2(0, 3 * t)])
+		TileSet.CELL_NEIGHBOR_TOP_LEFT_SIDE:
+			return PackedVector2Array([Vector2(t, 0), Vector2(2 * t, t), Vector2(t, 2 * t), Vector2(0, t)])
+		TileSet.CELL_NEIGHBOR_TOP_CORNER:
+			return PackedVector2Array([Vector2(t, 0), Vector2(3 * t, 0), Vector2(2 * t, t)])
+		TileSet.CELL_NEIGHBOR_TOP_RIGHT_SIDE:
+			return PackedVector2Array([Vector2(3 * t, 0), Vector2(1, t), Vector2(3 * t, 2 * t), Vector2(2 * t, t)])
+	return PackedVector2Array()
+
+
+static func peering_polygon_isometric_vertices(peering: int) -> PackedVector2Array:
+	const t = 1.0 / 4.0
+	const ttt = 3.0 * t
+	match peering:
+		-1: return PackedVector2Array([Vector2(t, t), Vector2(ttt, t), Vector2(ttt, ttt), Vector2(t, ttt)])
+		TileSet.CELL_NEIGHBOR_RIGHT_CORNER:
+			return PackedVector2Array([Vector2(ttt, t), Vector2(1, 0), Vector2(1, 1), Vector2(ttt, ttt)])
+		TileSet.CELL_NEIGHBOR_BOTTOM_CORNER:
+			return PackedVector2Array([Vector2(t, ttt), Vector2(ttt, ttt), Vector2(1, 1), Vector2(0, 1)])
+		TileSet.CELL_NEIGHBOR_LEFT_CORNER:
+			return PackedVector2Array([Vector2(0, 0), Vector2(t, t), Vector2(t, ttt), Vector2(0, 1)])
+		TileSet.CELL_NEIGHBOR_TOP_CORNER:
+			return PackedVector2Array([Vector2(0, 0), Vector2(1, 0), Vector2(ttt, t), Vector2(t, t)])
+	return PackedVector2Array()
+
+
+static func peering_polygon_horizontal_tiles(peering: int) -> PackedVector2Array:
+	const e = 1.0 / (2.0 * sqrt(3.0))
+	const w = sqrt(3.0) / 8.0
+	const t = 1.0 / 2.0
+	const s = 1.0 / 8.0
+	match peering:
+		-1:
+			return PackedVector2Array([
+				Vector2(t, 2 * s),
+				Vector2(t + w, t - s),
+				Vector2(t + w, t + s),
+				Vector2(t, 6 * s),
+				Vector2(t - w, t + s),
+				Vector2(t - w, t - s)
+			])
+		TileSet.CELL_NEIGHBOR_RIGHT_SIDE:
+			return PackedVector2Array([
+				Vector2(t + w, t - s),
+				Vector2(1, t - e),
+				Vector2(1, t + e),
+				Vector2(t + w, t + s)
+			])
+		TileSet.CELL_NEIGHBOR_BOTTOM_RIGHT_SIDE:
+			return PackedVector2Array([
+				Vector2(t + w, t + s),
+				Vector2(1, t + e),
+				Vector2(t, 1),
+				Vector2(t, 6 * s)
+			])
+		TileSet.CELL_NEIGHBOR_BOTTOM_LEFT_SIDE:
+			return PackedVector2Array([
+				Vector2(t, 6 * s),
+				Vector2(t, 1),
+				Vector2(0, t + e),
+				Vector2(t - w, t + s)
+			])
+		TileSet.CELL_NEIGHBOR_LEFT_SIDE:
+			return PackedVector2Array([
+				Vector2(t - w, t + s),
+				Vector2(0, t + e),
+				Vector2(0, t - e),
+				Vector2(t - w, t - s)
+			])
+		TileSet.CELL_NEIGHBOR_TOP_LEFT_SIDE:
+			return PackedVector2Array([
+				Vector2(t - w, t - s),
+				Vector2(0, t - e),
+				Vector2(t, 0),
+				Vector2(t, 2 * s)
+			])
+		TileSet.CELL_NEIGHBOR_TOP_RIGHT_SIDE:
+			return PackedVector2Array([
+				Vector2(t, 2 * s),
+				Vector2(t, 0),
+				Vector2(1, t - e),
+				Vector2(t + w, t - s)
+			])
+	return PackedVector2Array()
+
+
+static func peering_polygon_horizontal_vertices(peering: int) -> PackedVector2Array:
+	const e = 1.0 / (2.0 * sqrt(3.0))
+	const w = sqrt(3.0) / 8.0
+	const t = 1.0 / 2.0
+	const s = 1.0 / 8.0
+	match peering:
+		-1:
+			return PackedVector2Array([
+				Vector2(t - s, t - w),
+				Vector2(t + s, t - w),
+				Vector2(6 * s, t),
+				Vector2(t + s, t + w),
+				Vector2(t - s, t + w),
+				Vector2(2 * s, t)
+			])
+		TileSet.CELL_NEIGHBOR_BOTTOM_RIGHT_CORNER:
+			return PackedVector2Array([
+				Vector2(6 * s, t),
+				Vector2(1, t),
+				Vector2(1, t + e),
+				Vector2(t + e, 1 - s),
+				Vector2(t + s, t +  w)
+			])
+		TileSet.CELL_NEIGHBOR_BOTTOM_CORNER:
+			return PackedVector2Array([
+				Vector2(t - s, t + w),
+				Vector2(t + s, t + w),
+				Vector2(t + e, 1 - s),
+				Vector2(t, 1),
+				Vector2(t - e, 1 - s)
+			])
+		TileSet.CELL_NEIGHBOR_BOTTOM_LEFT_CORNER:
+			return PackedVector2Array([
+				Vector2(0, t),
+				Vector2(2 * s, t),
+				Vector2(t - s, t +  w),
+				Vector2(t - e, 1 - s),
+				Vector2(0, t + e)
+			])
+		TileSet.CELL_NEIGHBOR_TOP_LEFT_CORNER:
+			return PackedVector2Array([
+				Vector2(t - e, s),
+				Vector2(t - s, t - w),
+				Vector2(2 * s, t),
+				Vector2(0, t),
+				Vector2(0, t - e)
+			])
+		TileSet.CELL_NEIGHBOR_TOP_CORNER:
+			return PackedVector2Array([
+				Vector2(t, 0),
+				Vector2(t + e, s),
+				Vector2(t + s, t - w),
+				Vector2(t - s, t - w),
+				Vector2(t - e, s)
+			])
+		TileSet.CELL_NEIGHBOR_TOP_RIGHT_CORNER:
+			return PackedVector2Array([
+				Vector2(t + e, s),
+				Vector2(1, t - e),
+				Vector2(1, t),
+				Vector2(6 * s, t),
+				Vector2(t + s, t - w)
+			])
+	return PackedVector2Array()
+
+
+static func peering_polygon_vertical_tiles(peering: int) -> PackedVector2Array:
+	const e = 1.0 / (2.0 * sqrt(3.0))
+	const w = sqrt(3.0) / 8.0
+	const t = 1.0 / 2.0
+	const s = 1.0 / 8.0
+	match peering:
+		-1:
+			return PackedVector2Array([
+				Vector2(t - s, t - w),
+				Vector2(t + s, t - w),
+				Vector2(6 * s, t),
+				Vector2(t + s, t + w),
+				Vector2(t - s, t + w),
+				Vector2(2 * s, t)
+			])
+		TileSet.CELL_NEIGHBOR_BOTTOM_RIGHT_SIDE:
+			return PackedVector2Array([
+				Vector2(6 * s, t),
+				Vector2(1, t),
+				Vector2(t + e, 1),
+				Vector2(t + s, t + w)
+			])
+		TileSet.CELL_NEIGHBOR_BOTTOM_SIDE:
+			return PackedVector2Array([
+				Vector2(t - s, t + w),
+				Vector2(t + s, t + w),
+				Vector2(t + e, 1),
+				Vector2(t - e, 1)
+			])
+		TileSet.CELL_NEIGHBOR_BOTTOM_LEFT_SIDE:
+			return PackedVector2Array([
+				Vector2(0, t),
+				Vector2(2 * s, t),
+				Vector2(t - s, t + w),
+				Vector2(t - e, 1)
+			])
+		TileSet.CELL_NEIGHBOR_TOP_LEFT_SIDE:
+			return PackedVector2Array([
+				Vector2(t - e, 0),
+				Vector2(t - s, t - w),
+				Vector2(2 * s, t),
+				Vector2(0, t)
+			])
+		TileSet.CELL_NEIGHBOR_TOP_SIDE:
+			return PackedVector2Array([
+				Vector2(t - e, 0),
+				Vector2(t + e, 0),
+				Vector2(t + s, t - w),
+				Vector2(t - s, t - w)
+			])
+		TileSet.CELL_NEIGHBOR_TOP_RIGHT_SIDE:
+			return PackedVector2Array([
+				Vector2(t + e, 0),
+				Vector2(1, t),
+				Vector2(6 * s, t),
+				Vector2(t + s, t - w)
+			])
+	return PackedVector2Array()
+
+
+static func peering_polygon_vertical_vertices(peering: int) -> PackedVector2Array:
+	const e = 1.0 / (2.0 * sqrt(3.0))
+	const w = sqrt(3.0) / 8.0
+	const t = 1.0 / 2.0
+	const s = 1.0 / 8.0
+	match peering:
+		-1:
+			return PackedVector2Array([
+				Vector2(t, 2 * s),
+				Vector2(t + w, t - s),
+				Vector2(t + w, t + s),
+				Vector2(t, 6 * s),
+				Vector2(t - w, t + s),
+				Vector2(t - w, t - s)
+			])
+		TileSet.CELL_NEIGHBOR_RIGHT_CORNER:
+			return PackedVector2Array([
+				Vector2(1 - s, t - e),
+				Vector2(1, t),
+				Vector2(1 - s, t + e),
+				Vector2(t + w, t + s),
+				Vector2(t + w, t - s)
+			])
+		TileSet.CELL_NEIGHBOR_BOTTOM_RIGHT_CORNER:			
+			return PackedVector2Array([
+				Vector2(t + w, t + s),
+				Vector2(1 - s, t + e),
+				Vector2(t + e, 1),
+				Vector2(t, 1),
+				Vector2(t, 6 * s)
+			])
+		TileSet.CELL_NEIGHBOR_BOTTOM_LEFT_CORNER:
+			return PackedVector2Array([
+				Vector2(t - w, t + s),
+				Vector2(t, 6 * s),
+				Vector2(t, 1),
+				Vector2(t - e, 1),
+				Vector2(s, t + e)
+			])
+		TileSet.CELL_NEIGHBOR_LEFT_CORNER:
+			return PackedVector2Array([
+				Vector2(s, t - e),
+				Vector2(t - w, t - s),
+				Vector2(t - w, t + s),
+				Vector2(s, t + e),
+				Vector2(0, t)
+			])
+		TileSet.CELL_NEIGHBOR_TOP_LEFT_CORNER:
+			return PackedVector2Array([
+				Vector2(t - e, 0),
+				Vector2(t, 0),
+				Vector2(t, 2 * s),
+				Vector2(t - w, t - s),
+				Vector2(s, t - e)
+			])
+		TileSet.CELL_NEIGHBOR_TOP_RIGHT_CORNER:
+			return PackedVector2Array([
+				Vector2(t, 0),
+				Vector2(t + e, 0),
+				Vector2(1 - s, t - e),
+				Vector2(t + w, t - s),
+				Vector2(t, 2 * s)
+			])
+	return PackedVector2Array()
+
+
 static func peering_polygon(ts: TileSet, type: int, peering: int) -> PackedVector2Array:
 	if ts.tile_shape == TileSet.TILE_SHAPE_SQUARE:
 		match type:
 			BetterTerrain.TerrainType.MATCH_TILES: return peering_polygon_square_tiles(peering)
 			BetterTerrain.TerrainType.MATCH_VERTICES: return peering_polygon_square_vertices(peering)
+	elif ts.tile_shape == TileSet.TILE_SHAPE_ISOMETRIC:
+		match type:
+			BetterTerrain.TerrainType.MATCH_TILES: return peering_polygon_isometric_tiles(peering)
+			BetterTerrain.TerrainType.MATCH_VERTICES:  return peering_polygon_isometric_vertices(peering)
+	elif ts.tile_offset_axis == TileSet.TILE_OFFSET_AXIS_HORIZONTAL:
+		match type:
+			BetterTerrain.TerrainType.MATCH_TILES: return peering_polygon_horizontal_tiles(peering)
+			BetterTerrain.TerrainType.MATCH_VERTICES: return peering_polygon_horizontal_vertices(peering)
+	else:
+		match type:
+			BetterTerrain.TerrainType.MATCH_TILES: return peering_polygon_vertical_tiles(peering)
+			BetterTerrain.TerrainType.MATCH_VERTICES: return peering_polygon_vertical_vertices(peering)
 	
-	var result : PackedVector2Array
-	return result
+	return PackedVector2Array()
+
+
+static func cell_polygon(ts: TileSet) -> PackedVector2Array:
+	if ts.tile_shape == TileSet.TILE_SHAPE_SQUARE:
+		return PackedVector2Array([Vector2(0, 0), Vector2(1, 0), Vector2(1, 1), Vector2(0, 1)])
+	if ts.tile_shape == TileSet.TILE_SHAPE_ISOMETRIC:
+		const t = 1.0 / 2.0
+		return PackedVector2Array([Vector2(t, 0), Vector2(1, t), Vector2(t, 1), Vector2(0, t)])
+	return PackedVector2Array()
 
 
 static func scale_polygon_to_rect(rect: Rect2i, polygon: PackedVector2Array) -> PackedVector2Array:
 	for i in polygon.size():
 		polygon[i].x = rect.position.x + rect.size.x * polygon[i].x
-		polygon[i].y = rect.position.y + rect.size.x * polygon[i].y
+		polygon[i].y = rect.position.y + rect.size.y * polygon[i].y
 	return polygon
+
+
+static func neighboring_coords(tm: TileMap, coord: Vector2i, peerings: Array) -> Array:
+	var result = []
+	for p in peerings:
+		result.append(tm.get_neighbor_cell(coord, p))
+	return result
+
+
+static func associated_vertex_cells(tm: TileMap, coord: Vector2i, corner: int) -> Array:
+	# get array of associated peering bits
+	if tm.tile_set.tile_shape in [TileSet.TILE_SHAPE_SQUARE, TileSet.TILE_SHAPE_ISOMETRIC]:
+		match corner:
+			# Square
+			TileSet.CELL_NEIGHBOR_BOTTOM_RIGHT_CORNER:
+				return neighboring_coords(tm, coord, [0, 3, 4])
+			TileSet.CELL_NEIGHBOR_BOTTOM_LEFT_CORNER:
+				return neighboring_coords(tm, coord, [4, 7, 8])
+			TileSet.CELL_NEIGHBOR_TOP_LEFT_CORNER:
+				return neighboring_coords(tm, coord, [8, 11, 12])
+			TileSet.CELL_NEIGHBOR_TOP_RIGHT_CORNER:
+				return neighboring_coords(tm, coord, [12, 15, 0])
+			# Isometric
+			TileSet.CELL_NEIGHBOR_RIGHT_CORNER:
+				return neighboring_coords(tm, coord, [14, 1, 2])
+			TileSet.CELL_NEIGHBOR_BOTTOM_CORNER:
+				return neighboring_coords(tm, coord, [2, 5, 6])
+			TileSet.CELL_NEIGHBOR_LEFT_CORNER:
+				return neighboring_coords(tm, coord, [6, 9, 10])
+			TileSet.CELL_NEIGHBOR_TOP_CORNER:
+				return neighboring_coords(tm, coord, [10, 13, 14])
+	
+	if tm.tile_set.tile_offset_axis == TileSet.TILE_OFFSET_AXIS_HORIZONTAL:
+		match corner:
+			TileSet.CELL_NEIGHBOR_BOTTOM_RIGHT_CORNER:
+				return neighboring_coords(tm, coord, [0, 2])
+			TileSet.CELL_NEIGHBOR_BOTTOM_CORNER:
+				return neighboring_coords(tm, coord, [2, 6])
+			TileSet.CELL_NEIGHBOR_BOTTOM_LEFT_CORNER:
+				return neighboring_coords(tm, coord, [6, 8])
+			TileSet.CELL_NEIGHBOR_TOP_LEFT_CORNER:
+				return neighboring_coords(tm, coord, [8, 10])
+			TileSet.CELL_NEIGHBOR_TOP_CORNER:
+				return neighboring_coords(tm, coord, [10, 14])
+			TileSet.CELL_NEIGHBOR_TOP_RIGHT_CORNER:
+				return neighboring_coords(tm, coord, [14, 0])
+	
+	# TileSet.TILE_OFFSET_AXIS_VERTICAL
+	match corner:
+		TileSet.CELL_NEIGHBOR_RIGHT_CORNER:
+			return neighboring_coords(tm, coord, [14, 2])
+		TileSet.CELL_NEIGHBOR_BOTTOM_RIGHT_CORNER:
+			return neighboring_coords(tm, coord, [2, 4])
+		TileSet.CELL_NEIGHBOR_BOTTOM_LEFT_CORNER:
+			return neighboring_coords(tm, coord, [4, 6])
+		TileSet.CELL_NEIGHBOR_LEFT_CORNER:
+			return neighboring_coords(tm, coord, [6, 10])
+		TileSet.CELL_NEIGHBOR_TOP_LEFT_CORNER:
+			return neighboring_coords(tm, coord, [10, 12])
+		TileSet.CELL_NEIGHBOR_TOP_RIGHT_CORNER:
+			return neighboring_coords(tm, coord, [12, 14])
+	
+	return []
+

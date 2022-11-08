@@ -96,13 +96,7 @@ func _update_tile_tiles(tm: TileMap, layer: int, coord: Vector2i, types: Diction
 
 
 func _probe(tm: TileMap, coord: Vector2i, peering: int, types: Dictionary, goal: Array) -> int:
-	# Fix this nonsense
-	var targets = []
-	match peering:
-		TileSet.CELL_NEIGHBOR_BOTTOM_RIGHT_CORNER: targets = [Vector2i(coord.x + 1, coord.y), Vector2i(coord.x, coord.y + 1), Vector2i(coord.x + 1, coord.y + 1)]
-		TileSet.CELL_NEIGHBOR_BOTTOM_LEFT_CORNER: targets = [Vector2i(coord.x - 1, coord.y), Vector2i(coord.x, coord.y + 1), Vector2i(coord.x - 1, coord.y + 1)]
-		TileSet.CELL_NEIGHBOR_TOP_LEFT_CORNER: targets = [Vector2i(coord.x - 1, coord.y), Vector2i(coord.x, coord.y - 1), Vector2i(coord.x - 1, coord.y - 1)]
-		TileSet.CELL_NEIGHBOR_TOP_RIGHT_CORNER: targets = [Vector2i(coord.x + 1, coord.y), Vector2i(coord.x, coord.y - 1), Vector2i(coord.x + 1, coord.y - 1)]
+	var targets = BetterTerrainData.associated_vertex_cells(tm, coord, peering)
 	
 	var partial_match := false
 	var best = types[targets[0]]
@@ -112,20 +106,20 @@ func _probe(tm: TileMap, coord: Vector2i, peering: int, types: Dictionary, goal:
 		if test in goal:
 			partial_match = true
 	
-	#3 - exact match on lowest type
+	# Best - exact match on lowest type
 	if best in goal:
 		return 3
 	
-	#1 - any match of any type
+	# Bad - any match of any type
 	if partial_match:
-		return 1
-	
-	#-1 - only match current terrain
-	if types[coord] in goal:
 		return -1
 	
-	#-3 - no kind of match at all
-	return -3
+	# Worse - only match current terrain
+	if types[coord] in goal:
+		return -3
+	
+	# Worst - no kind of match at all
+	return -5
 
 
 func _update_tile_vertices(tm: TileMap, layer: int, coord: Vector2i, types: Dictionary) -> void:
@@ -165,27 +159,12 @@ func _update_tile(tm: TileMap, layer: int, coord: Vector2i, ts_meta: Dictionary,
 			TerrainType.MATCH_VERTICES: _update_tile_vertices(tm, layer, coord, types)
 
 
-# This might be better placed in the data class
-func _get_surrounding_tiles(ts: TileSet, coord: Vector2i) -> Array:
-	if ts.tile_shape == TileSet.TILE_SHAPE_SQUARE or ts.tile_shape == TileSet.TILE_SHAPE_ISOMETRIC:
-		return [
-			coord + Vector2i.RIGHT,
-			coord + Vector2i.DOWN + Vector2i.RIGHT,
-			coord + Vector2i.DOWN,
-			coord + Vector2i.DOWN + Vector2i.LEFT,
-			coord + Vector2i.LEFT,
-			coord + Vector2i.UP + Vector2i.LEFT,
-			coord + Vector2i.UP,
-			coord + Vector2i.UP + Vector2i.RIGHT,
-		]
-	return []
-
-
-func _widen(ts: TileSet, coords: Array) -> Array:
+func _widen(tm: TileMap, coords: Array) -> Array:
 	var result = {}
 	for c in coords:
 		result[c] = true
-		for t in _get_surrounding_tiles(ts, c):
+		var neighbors = BetterTerrainData.neighboring_coords(tm, c, BetterTerrainData.get_terrain_peering_cells(tm.tile_set, TerrainType.MATCH_TILES))
+		for t in neighbors:
 			result[t] = true
 	return result.keys()
 
@@ -392,8 +371,8 @@ func update_terrain_cells(tm: TileMap, layer: int, cells: Array) -> void:
 	if !tm or layer < 0 or layer >= tm.get_layers_count():
 		return
 	
-	var affected_cells = _widen(tm.tile_set, cells)
-	var needed_cells = _widen(tm.tile_set, affected_cells)
+	var affected_cells = _widen(tm, cells)
+	var needed_cells = _widen(tm, affected_cells)
 	
 	var types = {}
 	for c in needed_cells:
