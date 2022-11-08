@@ -480,3 +480,12 @@ static func associated_vertex_cells(tm: TileMap, coord: Vector2i, corner: int) -
 	
 	return []
 
+
+static func cells_adjacent_for_fill(ts: TileSet) -> Array:
+	if ts.tile_shape == TileSet.TILE_SHAPE_SQUARE:
+		return [0, 4, 8, 12]
+	if ts.tile_shape == TileSet.TILE_SHAPE_ISOMETRIC:
+		return [2, 6, 10, 14]
+	if ts.tile_offset_axis == TileSet.TILE_OFFSET_AXIS_HORIZONTAL:
+		return terrain_peering_horiztonal_tiles
+	return terrain_peering_vertical_tiles

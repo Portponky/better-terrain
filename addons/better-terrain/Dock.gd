@@ -64,6 +64,7 @@ func _ready() -> void:
 func _get_fill_cells(target: Vector2i):
 	var pick = BetterTerrain.get_cell(tilemap, layer, target)
 	var bounds = tilemap.get_used_rect()
+	var neighbors = BetterTerrainData.cells_adjacent_for_fill(tileset)
 	
 	# No sets yet, so use a dictionary
 	var checked = {}
@@ -79,12 +80,7 @@ func _get_fill_cells(target: Vector2i):
 			continue
 		
 		goal.append(p)
-		pending.append_array([
-			p + Vector2i.RIGHT,
-			p + Vector2i.UP,
-			p + Vector2i.LEFT,
-			p + Vector2i.DOWN
-		])
+		pending.append_array(BetterTerrainData.neighboring_coords(tilemap, p, neighbors))
 	
 	return goal
 
