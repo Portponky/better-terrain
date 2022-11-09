@@ -148,7 +148,12 @@ func tile_part_from_position(position: Vector2i) -> Dictionary:
 
 
 func _draw_tile_data(texture: Texture2D, rect: Rect2, src_rect: Rect2, td: TileData) -> void:
-	draw_texture_rect_region(texture, rect, src_rect, td.modulate)
+	var flipped_rect = rect
+	if td.flip_h:
+		flipped_rect.size.x = -rect.size.x
+	if td.flip_v:
+		flipped_rect.size.y = -rect.size.y
+	draw_texture_rect_region(texture, flipped_rect, src_rect, td.modulate, td.transpose)
 	
 	var type = BetterTerrain.get_tile_terrain_type(td)
 	if type == -1:
