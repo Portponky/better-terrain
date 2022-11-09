@@ -246,20 +246,23 @@ func canvas_draw(overlay: Control) -> void:
 	var pos = tilemap.get_viewport_transform().affine_inverse() * overlay.get_local_mouse_position()
 	var tile = tilemap.local_to_map(tilemap.to_local(pos))
 	
-	var tile_size = Vector2(tilemap.tile_set.tile_size)
-	var tile_area = Rect2(tilemap.map_to_local(tile) - 0.5 * tile_size, tile_size)
-	
 	if rectangle_button.button_pressed and paint_mode != PaintMode.NO_PAINT:
-		# During fill operation
 		var area = Rect2i(initial_click, tile - initial_click).abs()
-		tile_area = Rect2(
-			tilemap.map_to_local(area.position) - 0.5 * tile_size,
-			tilemap.map_to_local(area.end) - tilemap.map_to_local(area.position) + tile_size
-		)
-	
-	var area = tilemap.get_viewport_transform() * tilemap.global_transform * tile_area
-	
-	overlay.draw_rect(area, Color(terrain.color, 0.5), true)
+		var fill_polygon = PackedVector2Array()
+		fill_polygon.append(tilemap.map_to_local(area.position))
+		fill_polygon.append(tilemap.map_to_local(Vector2i(area.position.x, area.end.y)))
+		fill_polygon.append(tilemap.map_to_local(area.end))
+		fill_polygon.append(tilemap.map_to_local(Vector2i(area.end.x, area.position.y)))
+		
+		fill_polygon = tilemap.get_viewport_transform() * tilemap.global_transform * fill_polygon
+		
+		overlay.draw_colored_polygon(fill_polygon, Color(terrain.color, 0.5))
+	else:
+		var tile_size = Vector2(tilemap.tile_set.tile_size)
+		var tile_area = Rect2(tilemap.map_to_local(tile) - 0.5 * tile_size, tile_size)
+		var area = tilemap.get_viewport_transform() * tilemap.global_transform * tile_area
+		
+		overlay.draw_rect(area, Color(terrain.color, 0.5), true)
 
 
 func canvas_input(event: InputEvent) -> bool:
