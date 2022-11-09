@@ -288,7 +288,7 @@ func canvas_input(event: InputEvent) -> bool:
 					else:
 						tilemap.erase_cell(layer, Vector2i(x, y))
 			
-			BetterTerrain.update_terrain_area(tilemap, layer, area.position - Vector2i.ONE, area.end + 2 * Vector2i.ONE)
+			BetterTerrain.update_terrain_area(tilemap, layer, area)
 			update_overlay.emit()
 			
 		paint_mode = PaintMode.NO_PAINT
@@ -318,7 +318,7 @@ func canvas_input(event: InputEvent) -> bool:
 				BetterTerrain.set_cell(tilemap, layer, target, type)
 			elif paint_mode == PaintMode.ERASE:
 				tilemap.erase_cell(layer, target)
-			BetterTerrain.update_terrain_area(tilemap, layer, target - Vector2i.ONE, target + Vector2i.ONE)
+			BetterTerrain.update_terrain_cell(tilemap, layer, target)
 		elif fill_button.button_pressed:
 			var cells = _get_fill_cells(target)
 			if paint_mode == PaintMode.PAINT:

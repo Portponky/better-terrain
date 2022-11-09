@@ -169,6 +169,18 @@ func _widen(tm: TileMap, coords: Array) -> Array:
 	return result.keys()
 
 
+func _widen_with_exclusion(tm: TileMap, coords: Array, exclusion: Rect2i) -> Array:
+	var result = {}
+	for c in coords:
+		if !exclusion.has_point(c):
+			result[c] = true
+		var neighbors = BetterTerrainData.neighboring_coords(tm, c, BetterTerrainData.get_terrain_peering_cells(tm.tile_set, TerrainType.MATCH_TILES))
+		for t in neighbors:
+			if !exclusion.has_point(t):
+				result[t] = true
+	return result.keys()
+
+
 # Terrain types
 func add_terrain(ts: TileSet, name: String, color: Color, type: int) -> bool:
 	if !ts or name.is_empty() or type < 0 or type >= TerrainType.MAX:
@@ -367,35 +379,59 @@ func get_cell(tm: TileMap, layer: int, coord: Vector2i) -> int:
 	return _get_tile_meta(t).type
 
 
-func update_terrain_cells(tm: TileMap, layer: int, cells: Array) -> void:
+func update_terrain_cells(tm: TileMap, layer: int, cells: Array, and_surrounding_cells := true) -> void:
 	if !tm or layer < 0 or layer >= tm.get_layers_count():
 		return
 	
-	var affected_cells = _widen(tm, cells)
-	var needed_cells = _widen(tm, affected_cells)
+	if and_surrounding_cells:
+		cells = _widen(tm, cells)
+	var needed_cells = _widen(tm, cells)
 	
 	var types = {}
 	for c in needed_cells:
 		types[c] = get_cell(tm, layer, c)
 	
 	var ts_meta = _get_terrain_meta(tm.tile_set)
-	for c in affected_cells:
+	for c in cells:
 		_update_tile(tm, layer, c, ts_meta, types)
 
 
-func update_terrain_area(tm: TileMap, layer: int, top_left: Vector2i, bottom_right: Vector2i) -> void:
+#helper
+func update_terrain_cell(tm: TileMap, layer: int, cell: Vector2i, and_surrounding_cells := true) -> void:
+	update_terrain_cells(tm, layer, [cell], and_surrounding_cells)
+
+
+func update_terrain_area(tm: TileMap, layer: int, area: Rect2i, and_surrounding_cells := true) -> void:
 	if !tm or layer < 0 or layer >= tm.get_layers_count():
 		return
 	
+	var edges = []
+	for x in range(area.position.x, area.end.x + 1):
+		edges.append(Vector2i(x, area.position.y))
+		edges.append(Vector2i(x, area.end.y))
+	for y in range(area.position.y + 1, area.end.y):
+		edges.append(Vector2i(area.position.x, y))
+		edges.append(Vector2i(area.end.x, y))
+	
+	var additional_cells = []
+	var needed_cells = _widen_with_exclusion(tm, edges, area)
+	
+	if and_surrounding_cells:
+		additional_cells = needed_cells
+		needed_cells = _widen_with_exclusion(tm, needed_cells, area)
+	
 	var types = {}
-	for y in range(top_left.y - 1, bottom_right.y + 2):
-		for x in range(top_left.x - 1, bottom_right.x + 2):
+	for y in range(area.position.y, area.end.y + 1):
+		for x in range(area.position.x, area.position.x + 1):
 			var coord = Vector2i(x, y)
 			types[coord] = get_cell(tm, layer, coord)
+	for c in needed_cells:
+		types[c] = get_cell(tm, layer, c)
 	
 	var ts_meta = _get_terrain_meta(tm.tile_set)
-	for y in range(top_left.y, bottom_right.y + 1):
-		for x in range(top_left.x, bottom_right.x + 1):
+	for y in range(area.position.y, area.end.y + 1):
+		for x in range(area.position.x, area.position.x + 1):
 			var coord = Vector2i(x, y)
 			_update_tile(tm, layer, coord, ts_meta, types)
-
+	for c in additional_cells:
+		_update_tile(tm, layer, c, ts_meta, types)
