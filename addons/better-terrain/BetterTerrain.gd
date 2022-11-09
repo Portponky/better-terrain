@@ -405,13 +405,17 @@ func update_terrain_area(tm: TileMap, layer: int, area: Rect2i, and_surrounding_
 	if !tm or layer < 0 or layer >= tm.get_layers_count():
 		return
 	
+	# Normalize area and extend so tiles cover inclusive space
+	area = area.abs()
+	area.size += Vector2i.ONE
+	
 	var edges = []
-	for x in range(area.position.x, area.end.x + 1):
+	for x in range(area.position.x, area.end.x):
 		edges.append(Vector2i(x, area.position.y))
-		edges.append(Vector2i(x, area.end.y))
-	for y in range(area.position.y + 1, area.end.y):
+		edges.append(Vector2i(x, area.end.y - 1))
+	for y in range(area.position.y + 1, area.end.y - 1):
 		edges.append(Vector2i(area.position.x, y))
-		edges.append(Vector2i(area.end.x, y))
+		edges.append(Vector2i(area.end.x - 1, y))
 	
 	var additional_cells = []
 	var needed_cells = _widen_with_exclusion(tm, edges, area)
@@ -421,16 +425,16 @@ func update_terrain_area(tm: TileMap, layer: int, area: Rect2i, and_surrounding_
 		needed_cells = _widen_with_exclusion(tm, needed_cells, area)
 	
 	var types = {}
-	for y in range(area.position.y, area.end.y + 1):
-		for x in range(area.position.x, area.position.x + 1):
+	for y in range(area.position.y, area.end.y):
+		for x in range(area.position.x, area.end.x):
 			var coord = Vector2i(x, y)
 			types[coord] = get_cell(tm, layer, coord)
 	for c in needed_cells:
 		types[c] = get_cell(tm, layer, c)
 	
 	var ts_meta = _get_terrain_meta(tm.tile_set)
-	for y in range(area.position.y, area.end.y + 1):
-		for x in range(area.position.x, area.position.x + 1):
+	for y in range(area.position.y, area.end.y):
+		for x in range(area.position.x, area.end.x):
 			var coord = Vector2i(x, y)
 			_update_tile(tm, layer, coord, ts_meta, types)
 	for c in additional_cells:
