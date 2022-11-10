@@ -164,8 +164,9 @@ func _draw_tile_data(texture: Texture2D, rect: Rect2, src_rect: Rect2, td: TileD
 	if !terrain.valid:
 		return
 	
+	var transform = Transform2D(0.0, rect.size, 0.0, rect.position)
 	var center_polygon = BetterTerrainData.peering_polygon(tileset, terrain.type, -1)
-	draw_colored_polygon(BetterTerrainData.scale_polygon_to_rect(rect, center_polygon), Color(terrain.color, 0.6))
+	draw_colored_polygon(transform * center_polygon, Color(terrain.color, 0.6))
 	
 	if paint < 0 or paint >= BetterTerrain.terrain_count(tileset):
 		return
@@ -174,7 +175,7 @@ func _draw_tile_data(texture: Texture2D, rect: Rect2, src_rect: Rect2, td: TileD
 	for p in BetterTerrainData.get_terrain_peering_cells(tileset, terrain.type):
 		if paint in BetterTerrain.tile_peering_types(td, p):
 			var side_polygon = BetterTerrainData.peering_polygon(tileset, terrain.type, p)
-			draw_colored_polygon(BetterTerrainData.scale_polygon_to_rect(rect, side_polygon), Color(paint_terrain.color, 0.6))
+			draw_colored_polygon(transform * side_polygon, Color(paint_terrain.color, 0.6))
 
 
 func _draw():

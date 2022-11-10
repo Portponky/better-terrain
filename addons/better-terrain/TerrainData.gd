@@ -411,13 +411,6 @@ static func cell_polygon(ts: TileSet) -> PackedVector2Array:
 	return PackedVector2Array()
 
 
-static func scale_polygon_to_rect(rect: Rect2i, polygon: PackedVector2Array) -> PackedVector2Array:
-	for i in polygon.size():
-		polygon[i].x = rect.position.x + rect.size.x * polygon[i].x
-		polygon[i].y = rect.position.y + rect.size.y * polygon[i].y
-	return polygon
-
-
 static func neighboring_coords(tm: TileMap, coord: Vector2i, peerings: Array) -> Array:
 	var result = []
 	for p in peerings:
