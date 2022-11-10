@@ -3,6 +3,10 @@ extends Control
 
 signal update_overlay
 
+# The maximum individual tiles the overlay will draw before shortcutting the display
+# To prevent editor lag when drawing large rectangles or filling large areas
+const MAX_CANVAS_RENDER_TILES = 1500
+
 # Buttons
 @onready var draw_button := $VBoxContainer/Toolbar/Draw
 @onready var rectangle_button := $VBoxContainer/Toolbar/Rectangle
@@ -35,7 +39,7 @@ var tileset : TileSet
 
 var layer = 0
 var initial_click : Vector2i
-var last_mouse_event_position : Vector2
+var current_position : Vector2i
 
 enum PaintMode {
 	NO_PAINT,
@@ -243,20 +247,34 @@ func canvas_draw(overlay: Control) -> void:
 	if !terrain.valid:
 		return
 	
-	var pos = tilemap.get_viewport_transform().affine_inverse() * overlay.get_local_mouse_position()
-	var tile = tilemap.local_to_map(tilemap.to_local(pos))
 	var tiles = []
+	var transform = tilemap.get_viewport_transform() * tilemap.global_transform
 	
 	if rectangle_button.button_pressed and paint_mode != PaintMode.NO_PAINT:
-		var area = Rect2i(initial_click, tile - initial_click).abs()
+		var area = Rect2i(initial_click, current_position - initial_click).abs()
+
+		# Shortcut fill for large areas
+		if area.size.x > 1 and area.size.y > 1 and area.size.x * area.size.y > MAX_CANVAS_RENDER_TILES:
+			var shortcut = PackedVector2Array([
+				tilemap.map_to_local(area.position),
+				tilemap.map_to_local(Vector2i(area.end.x, area.position.y)),
+				tilemap.map_to_local(area.end),
+				tilemap.map_to_local(Vector2i(area.position.x, area.end.y))
+			])
+			overlay.draw_colored_polygon(transform * shortcut, Color(terrain.color, 0.5))
+			return
+		
 		for y in range(area.position.y, area.end.y + 1):
 			for x in range(area.position.x, area.end.x + 1):
 				tiles.append(Vector2i(x, y))
+	elif fill_button.button_pressed:
+		tiles = _get_fill_cells(current_position)
+		if tiles.size() > MAX_CANVAS_RENDER_TILES:
+			tiles.resize(MAX_CANVAS_RENDER_TILES)
 	else:
-		tiles.append(tile)
+		tiles.append(current_position)
 	
 	var shape = BetterTerrainData.cell_polygon(tileset)
-	var transform = tilemap.get_viewport_transform() * tilemap.global_transform
 	for t in tiles:
 		var tile_transform = Transform2D(0.0, tilemap.tile_set.tile_size, 0.0, tilemap.map_to_local(t))
 		overlay.draw_colored_polygon(transform * tile_transform * shape, Color(terrain.color, 0.5))
@@ -268,17 +286,18 @@ func canvas_input(event: InputEvent) -> bool:
 		return false
 	
 	if event is InputEventMouseMotion:
-		last_mouse_event_position = event.position
+		var tr = tilemap.get_viewport_transform() * tilemap.global_transform
+		var pos = tr.affine_inverse() * Vector2(event.position)
+		var event_position = tilemap.local_to_map(tilemap.to_local(pos))
+		if event_position == current_position:
+			return false
+		current_position = event_position
 		update_overlay.emit()
 	
 	if event is InputEventMouseButton and !event.pressed:
 		if rectangle_button.button_pressed and paint_mode != PaintMode.NO_PAINT:
-			var tr = tilemap.get_viewport_transform() * tilemap.global_transform
-			var pos = tr.affine_inverse() * last_mouse_event_position
-			var target = tilemap.local_to_map(tilemap.to_local(pos))
 			var type = selected.get_index()
-			
-			var area = Rect2i(initial_click, target - initial_click).abs()
+			var area = Rect2i(initial_click, current_position - initial_click).abs()
 			
 			# Fill from initial_target to target
 			for y in range(area.position.y, area.end.y + 1):
@@ -306,21 +325,18 @@ func canvas_input(event: InputEvent) -> bool:
 			return false
 	
 	if (clicked or event is InputEventMouseMotion) and paint_mode != PaintMode.NO_PAINT:
-		var tr = tilemap.get_viewport_transform() * tilemap.global_transform
-		var pos = tr.affine_inverse() * event.position
-		var target = tilemap.local_to_map(tilemap.to_local(pos))
 		if clicked:
-			initial_click = target
+			initial_click = current_position
 		var type = selected.get_index()
 		
 		if draw_button.button_pressed:
 			if paint_mode == PaintMode.PAINT:
-				BetterTerrain.set_cell(tilemap, layer, target, type)
+				BetterTerrain.set_cell(tilemap, layer, current_position, type)
 			elif paint_mode == PaintMode.ERASE:
-				tilemap.erase_cell(layer, target)
-			BetterTerrain.update_terrain_cell(tilemap, layer, target)
+				tilemap.erase_cell(layer, current_position)
+			BetterTerrain.update_terrain_cell(tilemap, layer, current_position)
 		elif fill_button.button_pressed:
-			var cells = _get_fill_cells(target)
+			var cells = _get_fill_cells(current_position)
 			if paint_mode == PaintMode.PAINT:
 				BetterTerrain.set_cells(tilemap, layer, cells, type)
 			elif paint_mode == PaintMode.ERASE:
