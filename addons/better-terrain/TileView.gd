@@ -72,7 +72,7 @@ func is_tile_in_source(source: TileSetAtlasSource, coord: Vector2i) -> bool:
 	
 	# Animation frames are not needed
 	var size = source.get_tile_size_in_atlas(origin)
-	return coord.x < origin.x + size.x
+	return coord.x < origin.x + size.x and coord.y < origin.y + size.y
 
 
 func _build_tile_part_from_position(td: TileData, position: Vector2i, rect: Rect2) -> Dictionary:
