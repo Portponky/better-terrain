@@ -403,12 +403,31 @@ static func peering_polygon(ts: TileSet, type: int, peering: int) -> PackedVecto
 
 
 static func cell_polygon(ts: TileSet) -> PackedVector2Array:
-	if ts.tile_shape == TileSet.TILE_SHAPE_SQUARE:
-		return PackedVector2Array([Vector2(0, 0), Vector2(1, 0), Vector2(1, 1), Vector2(0, 1)])
+	const t = 1.0 / 2.0
+	if ts.tile_shape in [TileSet.TILE_SHAPE_SQUARE, TileSet.TILE_SHAPE_HALF_OFFSET_SQUARE]:
+		return PackedVector2Array([Vector2(-t, -t), Vector2(t, -t), Vector2(t, t), Vector2(-t, t)])
 	if ts.tile_shape == TileSet.TILE_SHAPE_ISOMETRIC:
-		const t = 1.0 / 2.0
-		return PackedVector2Array([Vector2(t, 0), Vector2(1, t), Vector2(t, 1), Vector2(0, t)])
-	return PackedVector2Array()
+		return PackedVector2Array([Vector2(0, -t), Vector2(t, 0), Vector2(0, t), Vector2(-t, 0)])
+	
+	const e = t - 1.0 / (2.0 * sqrt(3.0))
+	if ts.tile_offset_axis == TileSet.TILE_OFFSET_AXIS_HORIZONTAL:
+		return PackedVector2Array([
+			Vector2(0, -t),
+			Vector2(t, -e),
+			Vector2(t, e),
+			Vector2(0, t),
+			Vector2(-t, e),
+			Vector2(-t, -e),
+		])
+	
+	return PackedVector2Array([
+		Vector2(-t, 0),
+		Vector2(-e, -t),
+		Vector2(e, -t),
+		Vector2(t, 0),
+		Vector2(e, t),
+		Vector2(-e, t),
+	])
 
 
 static func neighboring_coords(tm: TileMap, coord: Vector2i, peerings: Array) -> Array:

@@ -245,24 +245,21 @@ func canvas_draw(overlay: Control) -> void:
 	
 	var pos = tilemap.get_viewport_transform().affine_inverse() * overlay.get_local_mouse_position()
 	var tile = tilemap.local_to_map(tilemap.to_local(pos))
+	var tiles = []
 	
 	if rectangle_button.button_pressed and paint_mode != PaintMode.NO_PAINT:
 		var area = Rect2i(initial_click, tile - initial_click).abs()
-		var fill_polygon = PackedVector2Array()
-		fill_polygon.append(tilemap.map_to_local(area.position))
-		fill_polygon.append(tilemap.map_to_local(Vector2i(area.position.x, area.end.y)))
-		fill_polygon.append(tilemap.map_to_local(area.end))
-		fill_polygon.append(tilemap.map_to_local(Vector2i(area.end.x, area.position.y)))
-		
-		fill_polygon = tilemap.get_viewport_transform() * tilemap.global_transform * fill_polygon
-		
-		overlay.draw_colored_polygon(fill_polygon, Color(terrain.color, 0.5))
+		for y in range(area.position.y, area.end.y + 1):
+			for x in range(area.position.x, area.end.x + 1):
+				tiles.append(Vector2i(x, y))
 	else:
-		var tile_size = Vector2(tilemap.tile_set.tile_size)
-		var tile_area = Rect2(tilemap.map_to_local(tile) - 0.5 * tile_size, tile_size)
-		var area = tilemap.get_viewport_transform() * tilemap.global_transform * tile_area
-		
-		overlay.draw_rect(area, Color(terrain.color, 0.5), true)
+		tiles.append(tile)
+	
+	var shape = BetterTerrainData.cell_polygon(tileset)
+	var transform = tilemap.get_viewport_transform() * tilemap.global_transform
+	for t in tiles:
+		var tile_transform = Transform2D(0.0, tilemap.tile_set.tile_size, 0.0, tilemap.map_to_local(t))
+		overlay.draw_colored_polygon(transform * tile_transform * shape, Color(terrain.color, 0.5))
 
 
 func canvas_input(event: InputEvent) -> bool:
