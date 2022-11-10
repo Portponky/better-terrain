@@ -344,6 +344,7 @@ func canvas_input(event: InputEvent) -> bool:
 					tilemap.erase_cell(layer, c)
 			BetterTerrain.update_terrain_cells(tilemap, layer, cells)
 		
+		update_overlay.emit()
 		return true
 	
 	return false
