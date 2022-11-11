@@ -10,11 +10,15 @@ const terrain_peering_horiztonal_tiles := [0, 2, 6, 8, 10, 14]
 const terrain_peering_horiztonal_vertices := [3, 5, 7, 11, 13, 15]
 const terrain_peering_vertical_tiles := [2, 4, 6, 10, 12, 14]
 const terrain_peering_vertical_vertices := [1, 3, 7, 9, 11, 15]
+const terrain_peering_non_modifying := []
 
 
 static func get_terrain_peering_cells(ts: TileSet, type: int) -> Array:
-	if !ts or type < 0 or type >= BetterTerrain.TerrainType.MAX or type == BetterTerrain.TerrainType.NON_MODIFYING:
+	if !ts or type < 0 or type >= BetterTerrain.TerrainType.MAX:
 		return []
+	
+	if type == BetterTerrain.TerrainType.NON_MODIFYING:
+		return terrain_peering_non_modifying
 	
 	match [ts.tile_shape, type]:
 		[TileSet.TILE_SHAPE_SQUARE, BetterTerrain.TerrainType.MATCH_TILES]:
@@ -381,7 +385,24 @@ static func peering_polygon_vertical_vertices(peering: int) -> PackedVector2Arra
 	return PackedVector2Array()
 
 
+static func peering_non_modifying():
+	const t = 1.0 / 3.0
+	return PackedVector2Array([
+		Vector2(t, 0),
+		Vector2(2 * t, 0),
+		Vector2(1, t),
+		Vector2(1, 2 * t),
+		Vector2(2 * t, 1),
+		Vector2(t, 1),
+		Vector2(0, 2 * t),
+		Vector2(0, t)
+	])
+
+
 static func peering_polygon(ts: TileSet, type: int, peering: int) -> PackedVector2Array:
+	if type == BetterTerrain.TerrainType.NON_MODIFYING:
+		return peering_non_modifying()
+	
 	if ts.tile_shape == TileSet.TILE_SHAPE_SQUARE:
 		match type:
 			BetterTerrain.TerrainType.MATCH_TILES: return peering_polygon_square_tiles(peering)
