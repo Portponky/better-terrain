@@ -133,7 +133,7 @@ func _on_add_terrain_pressed() -> void:
 	
 	var popup = generate_popup()
 	popup.terrain_name = "New terrain"
-	popup.terrain_color = Color.AQUAMARINE
+	popup.terrain_color = Color.from_hsv(randf(), 0.3 + 0.7 * randf(), 0.6 + 0.4 * randf())
 	popup.terrain_type = 0
 	popup.popup_centered()
 	await popup.visibility_changed
