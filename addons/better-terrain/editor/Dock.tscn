@@ -1,9 +1,9 @@
 [gd_scene load_steps=7 format=3 uid="uid://de8b6h6ieal7r"]
 
-[ext_resource type="Script" path="res://addons/better-terrain/Dock.gd" id="1_raoha"]
+[ext_resource type="Script" path="res://addons/better-terrain/editor/Dock.gd" id="1_raoha"]
 [ext_resource type="Texture2D" uid="uid://c6lxq2y7mpb18" path="res://addons/better-terrain/icons/EditType.svg" id="2_cpm2t"]
 [ext_resource type="Texture2D" uid="uid://bo2cjv08jkvf8" path="res://addons/better-terrain/icons/EditTerrain.svg" id="3_pqb1p"]
-[ext_resource type="Script" path="res://addons/better-terrain/TileView.gd" id="4_nqppq"]
+[ext_resource type="Script" path="res://addons/better-terrain/editor/TileView.gd" id="4_nqppq"]
 
 [sub_resource type="Image" id="Image_s1w05"]
 data = {

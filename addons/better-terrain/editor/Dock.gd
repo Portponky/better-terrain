@@ -32,7 +32,7 @@ const MAX_CANVAS_RENDER_TILES = 1500
 	load("res://addons/better-terrain/icons/NonModifying.svg"),
 ]
 
-const TERRAIN_PROPERTIES_SCENE := preload("res://addons/better-terrain/TerrainProperties.tscn")
+const TERRAIN_PROPERTIES_SCENE := preload("res://addons/better-terrain/editor/TerrainProperties.tscn")
 
 var tilemap : TileMap
 var tileset : TileSet

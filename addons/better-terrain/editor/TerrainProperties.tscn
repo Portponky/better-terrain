@@ -1,6 +1,6 @@
 [gd_scene load_steps=5 format=3 uid="uid://fdjybw6e7whr"]
 
-[ext_resource type="Script" path="res://addons/better-terrain/TerrainProperties.gd" id="1_52nx8"]
+[ext_resource type="Script" path="res://addons/better-terrain/editor/TerrainProperties.gd" id="1_52nx8"]
 [ext_resource type="Texture2D" uid="uid://d1h1p7pcwdnjk" path="res://addons/better-terrain/icons/MatchTiles.svg" id="2_ncc5p"]
 [ext_resource type="Texture2D" uid="uid://dfemy1g6okwlv" path="res://addons/better-terrain/icons/MatchVertices.svg" id="3_0nvmi"]
 [ext_resource type="Texture2D" uid="uid://1yr6yruwl63u" path="res://addons/better-terrain/icons/NonModifying.svg" id="5_awp83"]

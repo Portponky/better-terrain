@@ -8,7 +8,7 @@ var button : Button
 func _enter_tree() -> void:
 	add_autoload_singleton(AUTOLOAD_NAME, "res://addons/better-terrain/BetterTerrain.gd")
 	
-	dock = load("res://addons/better-terrain/Dock.tscn").instantiate()
+	dock = load("res://addons/better-terrain/editor/Dock.tscn").instantiate()
 	dock.update_overlay.connect(self.update_overlays)
 	button = add_control_to_bottom_panel(dock, "Terrain")
 	button.visible = false
