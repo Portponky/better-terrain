@@ -263,7 +263,7 @@ func remove_terrain(ts: TileSet, index: int) -> bool:
 							fixed_peering.append(p - 1)
 					
 					if fixed_peering.is_empty():
-						td_meta.remove(peering)
+						td_meta.erase(peering)
 					else:
 						td_meta[peering] = fixed_peering
 				
