@@ -92,6 +92,9 @@ func _build_tile_part_from_position(td: TileData, position: Vector2i, rect: Rect
 	var normalize_position = (Vector2(position) - rect.position) / rect.size
 	
 	var terrain = BetterTerrain.get_terrain(tileset, type)
+	if !terrain.valid:
+		return { valid = false }
+	
 	for p in BetterTerrainData.get_terrain_peering_cells(tileset, terrain.type):
 		var side_polygon = BetterTerrainData.peering_polygon(tileset, terrain.type, p)
 		if Geometry2D.is_point_in_polygon(normalize_position, side_polygon):
