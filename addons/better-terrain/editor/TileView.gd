@@ -120,13 +120,14 @@ func tile_part_from_position(position: Vector2i) -> Dictionary:
 			
 			var count = source.get_alternative_tiles_count(a[2])
 			var index = int((position.x - alt_offset.x) / (zoom_level * a[0].x)) + 1
-			var alt_id = source.get_alternative_tile_id(a[2], index)
-			var target_rect = Rect2(
-				alt_offset + Vector2.RIGHT * (index - 1) * zoom_level * a[0].x,
-				zoom_level * a[0]
-			)
 			
 			if index < count:
+				var alt_id = source.get_alternative_tile_id(a[2], index)
+				var target_rect = Rect2(
+					alt_offset + Vector2.RIGHT * (index - 1) * zoom_level * a[0].x,
+					zoom_level * a[0]
+				)
+				
 				var td = source.get_tile_data(a[2], alt_id)
 				return _build_tile_part_from_position(td, position, target_rect)
 	
@@ -248,29 +249,21 @@ func _draw():
 		draw_rect(Rect2(highlight_rect.position + Vector2.ONE, highlight_rect.size - Vector2.ONE), Color.WHITE, false)
 
 
-func _input(event):
-	if event is InputEventMouseMotion:
-		var e = make_input_local(event)
-		highlighted_position = e.position
-		var tile_part = tile_part_from_position(highlighted_position)
-		if highlighted_tile_part and tile_part.valid == highlighted_tile_part.valid:
-			if !tile_part.valid:
-				return
-			if tile_part.data == highlighted_tile_part.data:
-				return
-		highlighted_tile_part = tile_part
-		queue_redraw()
-
-
 func _gui_input(event):
 	if event is InputEventMouseButton and !event.pressed:
 		paint_action = PaintAction.NO_ACTION
+	
+	if event is InputEventMouseMotion:
+		highlighted_position = event.position
+		var tile = tile_part_from_position(event.position)
+		if tile.valid != highlighted_tile_part.valid or (tile.valid and tile.data != highlighted_tile_part.data):
+			queue_redraw()
+		highlighted_tile_part = tile
 	
 	var clicked = event is InputEventMouseButton and event.pressed
 	if paint >= 0 and clicked:
 		paint_action = PaintAction.NO_ACTION
 	
-		# Determine what to do until the button is released
 		if !highlighted_tile_part.valid:
 			return
 		
