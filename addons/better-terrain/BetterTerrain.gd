@@ -79,10 +79,10 @@ func _clear_invalid_peering_bits(ts: TileSet) -> void:
 				var td = source.get_tile_data(coord, alternate)
 				
 				var td_meta = _get_tile_meta(td)
-				if td_meta.type == -1:
+				if td_meta.type < 0 or td_meta.type >= ts_meta.size():
 					continue
 				
-				var type = ts_meta[td_meta.type][2]
+				var type = ts_meta.terrains[td_meta.type][2]
 				var valid_peering_types = BetterTerrainData.get_terrain_peering_cells(ts, type)
 				for peering in td_meta.keys():
 					if !(peering is int):
