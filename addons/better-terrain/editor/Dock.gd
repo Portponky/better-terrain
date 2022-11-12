@@ -133,7 +133,8 @@ func tiles_changed() -> void:
 
 func tileset_changed():
 	# Bring terrain data up to date with complex tileset changes
-	pass
+	if tileset:
+		BetterTerrain._clear_invalid_peering_bits(tileset)
 	
 	# Rebuild ui for any other changes
 	tiles_changed()
@@ -205,6 +206,8 @@ func _on_move_pressed(down: bool) -> void:
 			item.move_after(item2)
 		else:
 			item.move_before(item2)
+		tile_view.paint = item.get_index()
+		tile_view.queue_redraw()
 
 
 func _on_remove_terrain_pressed() -> void:
@@ -218,6 +221,8 @@ func _on_remove_terrain_pressed() -> void:
 	
 	if BetterTerrain.remove_terrain(tileset, item.get_index()):
 		item.free()
+		tile_view.paint = -1
+		tile_view.queue_redraw()
 
 
 func _on_draw_pressed():
