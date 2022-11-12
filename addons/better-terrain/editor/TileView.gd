@@ -7,6 +7,7 @@ var tileset: TileSet
 
 var paint = -1
 var highlighted_position := Vector2i(-1, -1) 
+var highlighted_tile_part := { valid = false }
 var zoom_level := 1.0
 
 var tiles_size : Vector2
@@ -244,14 +245,20 @@ func _draw():
 		alt_offset.y += zoom_level * a[0].y
 	
 	if highlight_rect.has_area():
-		draw_rect(Rect2(highlight_rect.position + Vector2.ONE, highlight_rect.size - Vector2.ONE), Color(1.0, 1.0, 1.0, 1.0), false)
+		draw_rect(Rect2(highlight_rect.position + Vector2.ONE, highlight_rect.size - Vector2.ONE), Color.WHITE, false)
 
 
 func _input(event):
 	if event is InputEventMouseMotion:
 		var e = make_input_local(event)
 		highlighted_position = e.position
-		# don't redraw on every mouse motion
+		var tile_part = tile_part_from_position(highlighted_position)
+		if highlighted_tile_part and tile_part.valid == highlighted_tile_part.valid:
+			if !tile_part.valid:
+				return
+			if tile_part.data == highlighted_tile_part.data:
+				return
+		highlighted_tile_part = tile_part
 		queue_redraw()
 
 
@@ -264,8 +271,7 @@ func _gui_input(event):
 		paint_action = PaintAction.NO_ACTION
 	
 		# Determine what to do until the button is released
-		var tile = tile_part_from_position(event.position)
-		if !tile.valid:
+		if !highlighted_tile_part.valid:
 			return
 		
 		match [paint_mode, event.button_index]:
@@ -275,25 +281,24 @@ func _gui_input(event):
 			[PaintMode.PAINT_PEERING, MOUSE_BUTTON_RIGHT]: paint_action = PaintAction.ERASE_PEERING
 	
 	if (clicked or event is InputEventMouseMotion) and paint_action != PaintAction.NO_ACTION:
-		var tile = tile_part_from_position(event.position)
-		if !tile.valid:
+		if !highlighted_tile_part.valid:
 			return
 		
 		if paint_action == PaintAction.DRAW_TYPE or paint_action == PaintAction.ERASE_TYPE:
-			var type = BetterTerrain.get_tile_terrain_type(tile.data)
+			var type = BetterTerrain.get_tile_terrain_type(highlighted_tile_part.data)
 			var goal = paint if paint_action == PaintAction.DRAW_TYPE else -1
 			if type != goal:
-				BetterTerrain.set_tile_terrain_type(tileset, tile.data, goal)
+				BetterTerrain.set_tile_terrain_type(tileset, highlighted_tile_part.data, goal)
 				queue_redraw()
 		elif paint_action == PaintAction.DRAW_PEERING:
-			if tile.has("peering"):
-				if !(paint in BetterTerrain.tile_peering_types(tile.data, tile.peering)):
-					BetterTerrain.add_tile_peering_type(tileset, tile.data, tile.peering, paint)
+			if highlighted_tile_part.has("peering"):
+				if !(paint in BetterTerrain.tile_peering_types(highlighted_tile_part.data, highlighted_tile_part.peering)):
+					BetterTerrain.add_tile_peering_type(tileset, highlighted_tile_part.data, highlighted_tile_part.peering, paint)
 					queue_redraw()
 		elif paint_action == PaintAction.ERASE_PEERING:
-			if tile.has("peering"):
-				if paint in BetterTerrain.tile_peering_types(tile.data, tile.peering):
-					BetterTerrain.remove_tile_peering_type(tileset, tile.data, tile.peering, paint)
+			if highlighted_tile_part.has("peering"):
+				if paint in BetterTerrain.tile_peering_types(highlighted_tile_part.data, highlighted_tile_part.peering):
+					BetterTerrain.remove_tile_peering_type(tileset, highlighted_tile_part.data, highlighted_tile_part.peering, paint)
 					queue_redraw()
 
 
