@@ -42,6 +42,9 @@ func refresh_tileset(ts: TileSet) -> void:
 	alternate_size = Vector2.ZERO
 	alternate_lookup = []
 	
+	if !tileset:
+		return
+	
 	for s in tileset.get_source_count():
 		var source_id = tileset.get_source_id(s)
 		var source = tileset.get_source(source_id) as TileSetAtlasSource

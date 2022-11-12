@@ -89,7 +89,12 @@ func _get_fill_cells(target: Vector2i):
 	return goal
 
 
-func reload() -> void:
+func tiles_about_to_change() -> void:
+	if tileset.changed.is_connected(tileset_changed):
+		tileset.changed.disconnect(tileset_changed)
+
+
+func tiles_changed() -> void:
 	# clear terrains
 	var root = terrain_tree.get_root()
 	var children = root.get_children()
@@ -117,8 +122,20 @@ func reload() -> void:
 			layer_options.add_item(name, n)
 			layer_options.set_item_disabled(n, !tilemap.is_layer_enabled(n))
 		layer_options.disabled = false
+		layer = min(layer, tilemap.get_layers_count() - 1)
 		layer_options.selected = layer
 	tile_view.refresh_tileset(tileset)
+	
+	if !tileset.changed.is_connected(tileset_changed):
+		tileset.changed.connect(tileset_changed)
+
+
+func tileset_changed():
+	# Bring terrain data up to date with complex tileset changes
+	pass
+	
+	# Rebuild ui for any other changes
+	tiles_changed()
 
 
 func generate_popup() -> ConfirmationDialog:
