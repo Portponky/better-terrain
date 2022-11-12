@@ -214,12 +214,25 @@ func _on_remove_terrain_pressed() -> void:
 	if !tileset:
 		return
 	
-	# Confirmation dialog
 	var item = terrain_tree.get_selected()
 	if !item:
 		return
 	
-	if BetterTerrain.remove_terrain(tileset, item.get_index()):
+	# store confirmation in array to pass by ref
+	var confirmed = [false]
+	var popup = ConfirmationDialog.new()
+	popup.dialog_text = tr("Are you sure you want to remove {0}?").format([item.get_text(0)])
+	popup.dialog_hide_on_ok = false
+	popup.confirmed.connect(func():
+		confirmed[0] = true
+		popup.hide()
+	)
+	add_child(popup)
+	popup.popup_centered()
+	await popup.visibility_changed
+	popup.queue_free()
+	
+	if confirmed[0] and BetterTerrain.remove_terrain(tileset, item.get_index()):
 		item.free()
 		tile_view.paint = -1
 		tile_view.queue_redraw()
