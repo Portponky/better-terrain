@@ -305,3 +305,9 @@ func _on_zoom_value_changed(value):
 		custom_minimum_size.x += ALTERNATE_TILE_MARGIN + zoom_level * alternate_size.x
 	custom_minimum_size.y = zoom_level * max(tiles_size.y, alternate_size.y)
 	queue_redraw()
+
+
+func clear_highlighted_tile():
+	highlighted_position = -Vector2i.ONE
+	highlighted_tile_part = { valid = false }
+	queue_redraw()
