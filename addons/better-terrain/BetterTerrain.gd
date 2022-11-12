@@ -338,7 +338,7 @@ func tile_peering_types(td: TileData, peering: int) -> Array:
 
 # Painting
 func set_cell(tm: TileMap, layer: int, coord: Vector2i, type: int) -> bool:
-	if !tm or layer < 0 or layer >= tm.get_layers_count() or type < 0:
+	if !tm or !tm.tile_set or layer < 0 or layer >= tm.get_layers_count() or type < 0:
 		return false
 	
 	var cache = _get_cache(tm.tile_set)
@@ -352,7 +352,7 @@ func set_cell(tm: TileMap, layer: int, coord: Vector2i, type: int) -> bool:
 
 # Array not strongly typed
 func set_cells(tm: TileMap, layer: int, coords: Array, type: int) -> bool:
-	if !tm or layer < 0 or layer >= tm.get_layers_count() or type < 0:
+	if !tm or !tm.tile_set or layer < 0 or layer >= tm.get_layers_count() or type < 0:
 		return false
 	
 	var cache = _get_cache(tm.tile_set)
@@ -366,7 +366,7 @@ func set_cells(tm: TileMap, layer: int, coords: Array, type: int) -> bool:
 
 
 func get_cell(tm: TileMap, layer: int, coord: Vector2i) -> int:
-	if !tm or layer < 0 or layer >= tm.get_layers_count():
+	if !tm or !tm.tile_set or layer < 0 or layer >= tm.get_layers_count():
 		return -1
 	
 	if tm.get_cell_source_id(layer, coord) == -1:
@@ -380,7 +380,7 @@ func get_cell(tm: TileMap, layer: int, coord: Vector2i) -> int:
 
 
 func update_terrain_cells(tm: TileMap, layer: int, cells: Array, and_surrounding_cells := true) -> void:
-	if !tm or layer < 0 or layer >= tm.get_layers_count():
+	if !tm or !tm.tile_set or layer < 0 or layer >= tm.get_layers_count():
 		return
 	
 	if and_surrounding_cells:
@@ -402,7 +402,7 @@ func update_terrain_cell(tm: TileMap, layer: int, cell: Vector2i, and_surroundin
 
 
 func update_terrain_area(tm: TileMap, layer: int, area: Rect2i, and_surrounding_cells := true) -> void:
-	if !tm or layer < 0 or layer >= tm.get_layers_count():
+	if !tm or !tm.tile_set or layer < 0 or layer >= tm.get_layers_count():
 		return
 	
 	# Normalize area and extend so tiles cover inclusive space

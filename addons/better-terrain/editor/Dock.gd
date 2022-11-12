@@ -90,7 +90,7 @@ func _get_fill_cells(target: Vector2i):
 
 
 func tiles_about_to_change() -> void:
-	if tileset.changed.is_connected(tileset_changed):
+	if tileset and tileset.changed.is_connected(tileset_changed):
 		tileset.changed.disconnect(tileset_changed)
 
 
@@ -100,6 +100,7 @@ func tiles_changed() -> void:
 	var children = root.get_children()
 	for child in children:
 		root.remove_child(child)
+		child.free()
 	
 	# load terrains from tileset
 	for i in BetterTerrain.terrain_count(tileset):
@@ -126,7 +127,7 @@ func tiles_changed() -> void:
 		layer_options.selected = layer
 	tile_view.refresh_tileset(tileset)
 	
-	if !tileset.changed.is_connected(tileset_changed):
+	if tileset and !tileset.changed.is_connected(tileset_changed):
 		tileset.changed.connect(tileset_changed)
 
 
