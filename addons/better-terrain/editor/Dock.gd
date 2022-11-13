@@ -333,7 +333,7 @@ func canvas_input(event: InputEvent) -> bool:
 	if event is InputEventMouseMotion:
 		var tr = tilemap.get_viewport_transform() * tilemap.global_transform
 		var pos = tr.affine_inverse() * Vector2(event.position)
-		var event_position = tilemap.local_to_map(tilemap.to_local(pos))
+		var event_position = tilemap.local_to_map(pos)
 		if event_position == current_position:
 			return false
 		current_position = event_position
