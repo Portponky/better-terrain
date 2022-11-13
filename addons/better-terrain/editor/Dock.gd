@@ -69,7 +69,7 @@ func _ready() -> void:
 func _get_fill_cells(target: Vector2i):
 	var pick = BetterTerrain.get_cell(tilemap, layer, target)
 	var bounds = tilemap.get_used_rect()
-	var neighbors = BetterTerrainData.cells_adjacent_for_fill(tileset)
+	var neighbors = BetterTerrain.data.cells_adjacent_for_fill(tileset)
 	
 	# No sets yet, so use a dictionary
 	var checked = {}
@@ -85,7 +85,7 @@ func _get_fill_cells(target: Vector2i):
 			continue
 		
 		goal.append(p)
-		pending.append_array(BetterTerrainData.neighboring_coords(tilemap, p, neighbors))
+		pending.append_array(BetterTerrain.data.neighboring_coords(tilemap, p, neighbors))
 	
 	return goal
 
@@ -318,7 +318,7 @@ func canvas_draw(overlay: Control) -> void:
 	else:
 		tiles.append(current_position)
 	
-	var shape = BetterTerrainData.cell_polygon(tileset)
+	var shape = BetterTerrain.data.cell_polygon(tileset)
 	for t in tiles:
 		var tile_transform = Transform2D(0.0, tilemap.tile_set.tile_size, 0.0, tilemap.map_to_local(t))
 		overlay.draw_colored_polygon(transform * tile_transform * shape, Color(terrain.color, 0.5))

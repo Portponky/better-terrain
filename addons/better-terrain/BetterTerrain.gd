@@ -4,6 +4,9 @@ extends Node
 const TERRAIN_META = "_better_terrain"
 
 var _tile_cache = {}
+var data := load("res://addons/better-terrain/BetterTerrainData.gd"):
+	get:
+		return data
 
 enum TerrainType {
 	MATCH_TILES,
@@ -83,7 +86,7 @@ func _clear_invalid_peering_bits(ts: TileSet) -> void:
 					continue
 				
 				var type = ts_meta.terrains[td_meta.type][2]
-				var valid_peering_types = BetterTerrainData.get_terrain_peering_cells(ts, type)
+				var valid_peering_types = data.get_terrain_peering_cells(ts, type)
 				for peering in td_meta.keys():
 					if !(peering is int):
 						continue
@@ -125,7 +128,7 @@ func _update_tile_tiles(tm: TileMap, layer: int, coord: Vector2i, types: Diction
 
 
 func _probe(tm: TileMap, coord: Vector2i, peering: int, types: Dictionary, goal: Array) -> int:
-	var targets = BetterTerrainData.associated_vertex_cells(tm, coord, peering)
+	var targets = data.associated_vertex_cells(tm, coord, peering)
 	
 	var partial_match := false
 	var best = types[targets[0]]
@@ -192,7 +195,7 @@ func _widen(tm: TileMap, coords: Array) -> Array:
 	var result = {}
 	for c in coords:
 		result[c] = true
-		var neighbors = BetterTerrainData.neighboring_coords(tm, c, BetterTerrainData.get_terrain_peering_cells(tm.tile_set, TerrainType.MATCH_TILES))
+		var neighbors = data.neighboring_coords(tm, c, data.get_terrain_peering_cells(tm.tile_set, TerrainType.MATCH_TILES))
 		for t in neighbors:
 			result[t] = true
 	return result.keys()
@@ -203,7 +206,7 @@ func _widen_with_exclusion(tm: TileMap, coords: Array, exclusion: Rect2i) -> Arr
 	for c in coords:
 		if !exclusion.has_point(c):
 			result[c] = true
-		var neighbors = BetterTerrainData.neighboring_coords(tm, c, BetterTerrainData.get_terrain_peering_cells(tm.tile_set, TerrainType.MATCH_TILES))
+		var neighbors = data.neighboring_coords(tm, c, data.get_terrain_peering_cells(tm.tile_set, TerrainType.MATCH_TILES))
 		for t in neighbors:
 			if !exclusion.has_point(t):
 				result[t] = true
@@ -396,7 +399,7 @@ func add_tile_peering_type(ts: TileSet, td: TileData, peering: int, type: int) -
 		return false
 	
 	var connection_type = ts_meta.terrains[td_meta.type][2]
-	if !BetterTerrainData.is_terrain_peering_cell(ts, connection_type, peering):
+	if !data.is_terrain_peering_cell(ts, connection_type, peering):
 		return false
 	
 	if !td_meta.has(peering):

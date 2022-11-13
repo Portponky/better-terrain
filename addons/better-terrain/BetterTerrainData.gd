@@ -1,5 +1,4 @@
 @tool
-class_name BetterTerrainData
 
 # Based on TileSet.CELL_NEIGHBOR_* but reduced to ints for brevity
 const terrain_peering_square_tiles := [0, 3, 4, 7, 8, 11, 12, 15]

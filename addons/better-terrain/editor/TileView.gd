@@ -95,8 +95,8 @@ func _build_tile_part_from_position(td: TileData, position: Vector2i, rect: Rect
 	if !terrain.valid:
 		return { valid = false }
 	
-	for p in BetterTerrainData.get_terrain_peering_cells(tileset, terrain.type):
-		var side_polygon = BetterTerrainData.peering_polygon(tileset, terrain.type, p)
+	for p in BetterTerrain.data.get_terrain_peering_cells(tileset, terrain.type):
+		var side_polygon = BetterTerrain.data.peering_polygon(tileset, terrain.type, p)
 		if Geometry2D.is_point_in_polygon(normalize_position, side_polygon):
 			result.peering = p
 			break
@@ -173,16 +173,16 @@ func _draw_tile_data(texture: Texture2D, rect: Rect2, src_rect: Rect2, td: TileD
 		return
 	
 	var transform = Transform2D(0.0, rect.size, 0.0, rect.position)
-	var center_polygon = BetterTerrainData.peering_polygon(tileset, terrain.type, -1)
+	var center_polygon = BetterTerrain.data.peering_polygon(tileset, terrain.type, -1)
 	draw_colored_polygon(transform * center_polygon, Color(terrain.color, 0.6))
 	
 	if paint < 0 or paint >= BetterTerrain.terrain_count(tileset):
 		return
 	
 	var paint_terrain = BetterTerrain.get_terrain(tileset, paint)
-	for p in BetterTerrainData.get_terrain_peering_cells(tileset, terrain.type):
+	for p in BetterTerrain.data.get_terrain_peering_cells(tileset, terrain.type):
 		if paint in BetterTerrain.tile_peering_types(td, p):
-			var side_polygon = BetterTerrainData.peering_polygon(tileset, terrain.type, p)
+			var side_polygon = BetterTerrain.data.peering_polygon(tileset, terrain.type, p)
 			draw_colored_polygon(transform * side_polygon, Color(paint_terrain.color, 0.6))
 
 
