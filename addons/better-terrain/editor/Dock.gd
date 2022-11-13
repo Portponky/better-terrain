@@ -38,6 +38,7 @@ var tilemap : TileMap
 var tileset : TileSet
 
 var layer = 0
+var draw_overlay := false
 var initial_click : Vector2i
 var current_position : Vector2i
 
@@ -273,7 +274,14 @@ func _on_paint_terrain_pressed():
 	tile_view.paint_mode = tile_view.PaintMode.PAINT_PEERING if paint_terrain.button_pressed else tile_view.PaintMode.NO_PAINT
 
 
+func _on_layer_options_item_selected(index):
+	layer = index
+
+
 func canvas_draw(overlay: Control) -> void:
+	if !draw_overlay:
+		return
+	
 	var selected = terrain_tree.get_selected()
 	if !selected:
 		return
@@ -321,6 +329,7 @@ func canvas_input(event: InputEvent) -> bool:
 	if !selected:
 		return false
 	
+	draw_overlay = true
 	if event is InputEventMouseMotion:
 		var tr = tilemap.get_viewport_transform() * tilemap.global_transform
 		var pos = tr.affine_inverse() * Vector2(event.position)
@@ -386,5 +395,6 @@ func canvas_input(event: InputEvent) -> bool:
 	return false
 
 
-func _on_layer_options_item_selected(index):
-	layer = index
+func canvas_mouse_exit() -> void:
+	draw_overlay = false
+	update_overlay.emit()
