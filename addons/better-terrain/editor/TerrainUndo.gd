@@ -51,3 +51,56 @@ func create_tile_restore_point_area(undo_manager: EditorUndoRedoManager, tm: Til
 func restore_tiles(tm: TileMap, layer: int, restore: Array):
 	for r in restore:
 		tm.set_cell(layer, r[0], r[1], r[2], r[3])
+
+
+func create_peering_restore_point(undo_manager: EditorUndoRedoManager, ts: TileSet, protect: int):
+	var restore = []
+	
+	for s in ts.get_source_count():
+		var source_id := ts.get_source_id(s)
+		var source := ts.get_source(source_id) as TileSetAtlasSource
+		if !source:
+			continue
+		
+		for t in source.get_tiles_count():
+			var coord := source.get_tile_id(t)
+			for a in source.get_alternative_tiles_count(coord):
+				var alternate := source.get_alternative_tile_id(coord, a)
+				
+				var td = source.get_tile_data(coord, alternate)
+				var tile_type = BetterTerrain.get_tile_terrain_type(td)
+				if tile_type == -1:
+					continue
+				
+				var to_restore := tile_type == protect
+				
+				var terrain = BetterTerrain.get_terrain(ts, tile_type)
+				var cells = BetterTerrain.data.get_terrain_peering_cells(ts, terrain.type)
+				for c in cells:
+					if protect in BetterTerrain.tile_peering_types(td, c):
+						to_restore = true
+						break
+				
+				if !to_restore:
+					continue
+				
+				var peering_dict = {}
+				for c in cells:
+					peering_dict[c] = BetterTerrain.tile_peering_types(td, c)
+				restore.append([source_id, coord, alternate, tile_type, peering_dict])
+	
+	undo_manager.add_undo_method(self, &"restore_peering", ts, restore)
+
+
+func restore_peering(ts: TileSet, restore: Array):
+	for r in restore:
+		var source = ts.get_source(r[0]) as TileSetAtlasSource
+		var td = source.get_tile_data(r[1], r[2])
+		BetterTerrain.set_tile_terrain_type(ts, td, r[3])
+		var peering_types = r[4]
+		for peering in peering_types:
+			var types = BetterTerrain.tile_peering_types(td, peering)
+			for t in types:
+				BetterTerrain.remove_tile_peering_type(ts, td, peering, t)
+			for t in peering_types[peering]:
+				BetterTerrain.add_tile_peering_type(ts, td, peering, t)

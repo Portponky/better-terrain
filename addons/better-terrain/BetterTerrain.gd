@@ -435,7 +435,7 @@ func tile_peering_types(td: TileData, peering: int) -> Array:
 		return []
 	
 	var td_meta = _get_tile_meta(td)
-	return td_meta[peering] if td_meta.has(peering) else []
+	return td_meta[peering].duplicate() if td_meta.has(peering) else []
 
 
 # Painting
