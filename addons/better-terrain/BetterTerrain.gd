@@ -114,7 +114,7 @@ func _update_tile_tiles(tm: TileMap, layer: int, coord: Vector2i, types: Diction
 				continue
 			
 			var neighbor = tm.get_neighbor_cell(coord, peering)
-			score += 1 if td_meta[peering].has(types[neighbor]) else -3
+			score += 3 if td_meta[peering].has(types[neighbor]) else -10
 		
 		if score > best_score:
 			best_score = score
