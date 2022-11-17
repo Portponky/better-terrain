@@ -15,6 +15,7 @@ const MAX_CANVAS_RENDER_TILES = 1500
 @onready var paint_type := $VBoxContainer/Toolbar/PaintType
 @onready var paint_terrain := $VBoxContainer/Toolbar/PaintTerrain
 
+@onready var clean_button := $VBoxContainer/Toolbar/Clean
 @onready var layer_options = $VBoxContainer/Toolbar/LayerOptions
 
 @onready var add_terrain_button := $VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar/AddTerrain
@@ -44,6 +45,7 @@ var layer = 0
 var draw_overlay := false
 var initial_click : Vector2i
 var current_position : Vector2i
+var tileset_dirty := false
 
 enum PaintMode {
 	NO_PAINT,
@@ -97,25 +99,29 @@ func _get_fill_cells(target: Vector2i):
 
 
 func tiles_about_to_change() -> void:
-	if tileset and tileset.changed.is_connected(tileset_changed):
-		tileset.changed.disconnect(tileset_changed)
+	if tileset and tileset.changed.is_connected(queue_tiles_changed):
+		tileset.changed.disconnect(queue_tiles_changed)
 
 
 func tiles_changed() -> void:
 	# clear terrains
 	var root = terrain_tree.get_root()
-	var children = root.get_children()
-	for child in children:
-		root.remove_child(child)
-		child.free()
 	
 	# load terrains from tileset
-	for i in BetterTerrain.terrain_count(tileset):
+	var terrain_count = BetterTerrain.terrain_count(tileset)
+	for i in terrain_count:
 		var terrain = BetterTerrain.get_terrain(tileset, i)
-		var new_terrain = terrain_tree.create_item(root)
-		new_terrain.set_text(0, terrain.name)
-		new_terrain.set_icon(0, terrain_icons[terrain.type])
-		new_terrain.set_icon_modulate(0, terrain.color)
+		if i >= root.get_child_count():
+			terrain_tree.create_item(root)
+		var item = root.get_child(i)
+		item.set_text(0, terrain.name)
+		item.set_icon(0, terrain_icons[terrain.type])
+		item.set_icon_modulate(0, terrain.color)
+	
+	while terrain_count > root.get_child_count():
+		var child = root.remove_child(root.get_child_count() - 1)
+		root.remove_child(child)
+		child.free()
 	
 	layer_options.clear()
 	if tilemap.get_layers_count() == 0:
@@ -132,19 +138,49 @@ func tiles_changed() -> void:
 		layer_options.disabled = false
 		layer = min(layer, tilemap.get_layers_count() - 1)
 		layer_options.selected = layer
+	
+	var selected = terrain_tree.get_selected()
+	tile_view.paint = selected.get_index() if selected else -1
 	tile_view.refresh_tileset(tileset)
 	
-	if tileset and !tileset.changed.is_connected(tileset_changed):
-		tileset.changed.connect(tileset_changed)
-
-
-func tileset_changed():
-	# Bring terrain data up to date with complex tileset changes
-	if tileset:
-		BetterTerrain._clear_invalid_peering_bits(tileset)
+	if tileset and !tileset.changed.is_connected(queue_tiles_changed):
+		tileset.changed.connect(queue_tiles_changed)
 	
-	# Rebuild ui for any other changes
-	tiles_changed()
+	clean_button.visible = BetterTerrain._has_invalid_peering_types(tileset)
+	
+	tileset_dirty = false
+
+
+func queue_tiles_changed():
+	# Bring terrain data up to date with complex tileset changes
+	if !tileset or tileset_dirty:
+		return
+	
+	tileset_dirty = true
+	call_deferred(&"tiles_changed")
+
+
+func _on_clean_pressed():
+	var confirmed = [false]
+	var popup = ConfirmationDialog.new()
+	popup.dialog_text = tr("Tile set changes have caused terrain to become invalid. Remove invalid terrain data?")
+	popup.dialog_hide_on_ok = false
+	popup.confirmed.connect(func():
+		confirmed[0] = true
+		popup.hide()
+	)
+	add_child(popup)
+	popup.popup_centered()
+	await popup.visibility_changed
+	popup.queue_free()
+	
+	if confirmed[0]:
+		undo_manager.create_action("Clean invalid terrain peering data", UndoRedo.MERGE_DISABLE, tileset)
+		undo_manager.add_do_method(BetterTerrain, &"_clear_invalid_peering_types", tileset)
+		undo_manager.add_do_method(self, &"tiles_changed")
+		terrain_undo.create_peering_restore_point(undo_manager, tileset)
+		undo_manager.add_undo_method(self, &"tiles_changed")
+		undo_manager.commit_action()
 
 
 func generate_popup() -> ConfirmationDialog:
@@ -192,7 +228,7 @@ func _on_edit_terrain_pressed() -> void:
 		undo_manager.add_do_method(self, &"perform_edit_terrain", item.get_index(), popup.terrain_name, popup.terrain_color, popup.terrain_type)
 		undo_manager.add_undo_method(self, &"perform_edit_terrain", item.get_index(), t.name, t.color, t.type)
 		if t.type != popup.terrain_type:
-			terrain_undo.create_peering_restore_point(undo_manager, tileset, item.get_index())
+			terrain_undo.create_peering_restore_point_specific(undo_manager, tileset, item.get_index())
 		undo_manager.commit_action()
 	popup.queue_free()
 
@@ -245,7 +281,7 @@ func _on_remove_terrain_pressed() -> void:
 		undo_manager.add_undo_method(self, &"perform_add_terrain", t.name, t.color, t.type)
 		for n in range(terrain_tree.get_root().get_child_count() - 1, item.get_index(), -1):
 			undo_manager.add_undo_method(self, &"perform_swap_terrain", n, n - 1)
-		terrain_undo.create_peering_restore_point(undo_manager, tileset, item.get_index())
+		terrain_undo.create_peering_restore_point_specific(undo_manager, tileset, item.get_index())
 		undo_manager.commit_action()
 
 
