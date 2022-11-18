@@ -68,33 +68,53 @@ func _purge_cache(ts: TileSet) -> void:
 	_tile_cache.erase(ts)
 
 
-func _clear_invalid_peering_bits(ts: TileSet) -> void:
+func _clear_invalid_peering_types(ts: TileSet) -> void:
 	var ts_meta = _get_terrain_meta(ts)
 	
-	for s in ts.get_source_count():
-		var source := ts.get_source(ts.get_source_id(s)) as TileSetAtlasSource
-		if !source:
-			continue
-		for t in source.get_tiles_count():
-			var coord := source.get_tile_id(t)
-			for a in source.get_alternative_tiles_count(coord):
-				var alternate = source.get_alternative_tile_id(coord, a)
-				var td = source.get_tile_data(coord, alternate)
-				
-				var td_meta = _get_tile_meta(td)
-				if td_meta.type < 0 or td_meta.type >= ts_meta.size():
+	var cache = _get_cache(ts)
+	for t in cache.size():
+		var type = ts_meta.terrains[t][2]
+		var valid_peering_types = data.get_terrain_peering_cells(ts, type)
+		
+		for c in cache[t]:
+			var source = ts.get_source(c[0]) as TileSetAtlasSource
+			var td = source.get_tile_data(c[1], c[2])
+			var td_meta = _get_tile_meta(td)
+			
+			for peering in td_meta.keys():
+				if !(peering is int):
 					continue
-				
-				var type = ts_meta.terrains[td_meta.type][2]
-				var valid_peering_types = data.get_terrain_peering_cells(ts, type)
-				for peering in td_meta.keys():
-					if !(peering is int):
-						continue
-					if valid_peering_types.has(peering):
-						continue
-					td_meta.erase(peering)
-				
-				_set_tile_meta(td, td_meta)
+				if valid_peering_types.has(peering):
+					continue
+				td_meta.erase(peering)
+			
+			_set_tile_meta(td, td_meta)
+	
+	# Not strictly necessary
+	_purge_cache(ts)
+
+
+func _has_invalid_peering_types(ts: TileSet) -> bool:
+	var ts_meta = _get_terrain_meta(ts)
+	
+	var cache = _get_cache(ts)
+	for t in cache.size():
+		var type = ts_meta.terrains[t][2]
+		var valid_peering_types = data.get_terrain_peering_cells(ts, type)
+		
+		for c in cache[t]:
+			var source = ts.get_source(c[0]) as TileSetAtlasSource
+			var td = source.get_tile_data(c[1], c[2])
+			var td_meta = _get_tile_meta(td)
+			
+			for peering in td_meta.keys():
+				if !(peering is int):
+					continue
+				if !valid_peering_types.has(peering):
+					return true
+	
+	return false
+
 
 
 func _update_tile_tiles(tm: TileMap, layer: int, coord: Vector2i, types: Dictionary) -> void:
@@ -307,7 +327,7 @@ func set_terrain(ts: TileSet, index: int, name: String, color: Color, type: int)
 	if index >= ts_meta.terrains.size():
 		return false
 	
-	_clear_invalid_peering_bits(ts)
+	_clear_invalid_peering_types(ts)
 	
 	ts_meta.terrains[index] = [name, color, type]
 	_set_terrain_meta(ts, ts_meta)
@@ -398,10 +418,6 @@ func add_tile_peering_type(ts: TileSet, td: TileData, peering: int, type: int) -
 	if td_meta.type < 0 or td_meta.type >= ts_meta.terrains.size():
 		return false
 	
-	var connection_type = ts_meta.terrains[td_meta.type][2]
-	if !data.is_terrain_peering_cell(ts, connection_type, peering):
-		return false
-	
 	if !td_meta.has(peering):
 		td_meta[peering] = [type]
 	elif !td_meta[peering].has(type):
@@ -430,12 +446,24 @@ func remove_tile_peering_type(ts: TileSet, td: TileData, peering: int, type: int
 	return true
 
 
+func tile_peering_keys(td: TileData) -> Array:
+	if !td:
+		return []
+	
+	var td_meta = _get_tile_meta(td)
+	var result = []
+	for k in td_meta:
+		if k is int:
+			result.append(k)
+	return result
+
+
 func tile_peering_types(td: TileData, peering: int) -> Array:
 	if !td or peering < 0 or peering > 15:
 		return []
 	
 	var td_meta = _get_tile_meta(td)
-	return td_meta[peering] if td_meta.has(peering) else []
+	return td_meta[peering].duplicate() if td_meta.has(peering) else []
 
 
 # Painting

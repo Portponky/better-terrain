@@ -14,6 +14,9 @@ var tiles_size : Vector2
 var alternate_size : Vector2
 var alternate_lookup := []
 
+var undo_manager : EditorUndoRedoManager
+var terrain_undo
+
 # Modes for painting
 enum PaintMode {
 	NO_PAINT,
@@ -79,29 +82,22 @@ func is_tile_in_source(source: TileSetAtlasSource, coord: Vector2i) -> bool:
 	return coord.x < origin.x + size.x and coord.y < origin.y + size.y
 
 
-func _build_tile_part_from_position(td: TileData, position: Vector2i, rect: Rect2) -> Dictionary:
-	var result = {
-		valid = true,
-		data = td
-	}
-	
-	var type = BetterTerrain.get_tile_terrain_type(td)
+func _build_tile_part_from_position(result: Dictionary, position: Vector2i, rect: Rect2) -> void:
+	var type = BetterTerrain.get_tile_terrain_type(result.data)
 	if type == -1:
-		return result
+		return
 	
 	var normalize_position = (Vector2(position) - rect.position) / rect.size
 	
 	var terrain = BetterTerrain.get_terrain(tileset, type)
 	if !terrain.valid:
-		return { valid = false }
+		return
 	
 	for p in BetterTerrain.data.get_terrain_peering_cells(tileset, terrain.type):
 		var side_polygon = BetterTerrain.data.peering_polygon(tileset, terrain.type, p)
 		if Geometry2D.is_point_in_polygon(normalize_position, side_polygon):
 			result.peering = p
 			break
-	
-	return result
 
 
 func tile_part_from_position(position: Vector2i) -> Dictionary:
@@ -131,8 +127,15 @@ func tile_part_from_position(position: Vector2i) -> Dictionary:
 					zoom_level * a[0]
 				)
 				
-				var td = source.get_tile_data(a[2], alt_id)
-				return _build_tile_part_from_position(td, position, target_rect)
+				var result = {
+					valid = true,
+					source_id = a[1],
+					coord = a[2],
+					alternate = alt_id,
+					data = source.get_tile_data(a[2], alt_id)
+				}
+				_build_tile_part_from_position(result, position, target_rect)
+				return result
 	
 	else:
 		for s in tileset.get_source_count():
@@ -147,8 +150,15 @@ func tile_part_from_position(position: Vector2i) -> Dictionary:
 				if !target_rect.has_point(position):
 					continue
 				
-				var td = source.get_tile_data(coord, 0)
-				return _build_tile_part_from_position(td, position, target_rect)
+				var result = {
+					valid = true,
+					source_id = source_id,
+					coord = coord,
+					alternate = 0,
+					data = source.get_tile_data(coord, 0)
+				}
+				_build_tile_part_from_position(result, position, target_rect)
+				return result
 			
 			offset.y += zoom_level * source.texture.get_height()
 	
@@ -284,18 +294,40 @@ func _gui_input(event):
 			var type = BetterTerrain.get_tile_terrain_type(highlighted_tile_part.data)
 			var goal = paint if paint_action == PaintAction.DRAW_TYPE else -1
 			if type != goal:
-				BetterTerrain.set_tile_terrain_type(tileset, highlighted_tile_part.data, goal)
-				queue_redraw()
+				undo_manager.create_action("Set tile terrain type", UndoRedo.MERGE_DISABLE, tileset)
+				undo_manager.add_do_method(BetterTerrain, &"set_tile_terrain_type", tileset, highlighted_tile_part.data, goal)
+				undo_manager.add_do_method(self, &"queue_redraw")
+				if goal == -1:
+					terrain_undo.create_peering_restore_point_tile(
+						undo_manager,
+						tileset,
+						highlighted_tile_part.source_id,
+						highlighted_tile_part.coord,
+						highlighted_tile_part.alternate
+					)
+				else:
+					undo_manager.add_undo_method(BetterTerrain, &"set_tile_terrain_type", tileset, highlighted_tile_part.data, type)
+				undo_manager.add_undo_method(self, &"queue_redraw")
+				undo_manager.commit_action()
 		elif paint_action == PaintAction.DRAW_PEERING:
 			if highlighted_tile_part.has("peering"):
 				if !(paint in BetterTerrain.tile_peering_types(highlighted_tile_part.data, highlighted_tile_part.peering)):
-					BetterTerrain.add_tile_peering_type(tileset, highlighted_tile_part.data, highlighted_tile_part.peering, paint)
-					queue_redraw()
+					undo_manager.create_action("Set tile terrain peering type", UndoRedo.MERGE_DISABLE, tileset)
+					undo_manager.add_do_method(BetterTerrain, &"add_tile_peering_type", tileset, highlighted_tile_part.data, highlighted_tile_part.peering, paint)
+					undo_manager.add_do_method(self, &"queue_redraw")
+					undo_manager.add_undo_method(BetterTerrain, &"remove_tile_peering_type", tileset, highlighted_tile_part.data, highlighted_tile_part.peering, paint)
+					undo_manager.add_undo_method(self, &"queue_redraw")
+					undo_manager.commit_action()
 		elif paint_action == PaintAction.ERASE_PEERING:
 			if highlighted_tile_part.has("peering"):
 				if paint in BetterTerrain.tile_peering_types(highlighted_tile_part.data, highlighted_tile_part.peering):
-					BetterTerrain.remove_tile_peering_type(tileset, highlighted_tile_part.data, highlighted_tile_part.peering, paint)
-					queue_redraw()
+					undo_manager.create_action("Set tile terrain peering type", UndoRedo.MERGE_DISABLE, tileset)
+					undo_manager.add_do_method(BetterTerrain, &"remove_tile_peering_type", tileset, highlighted_tile_part.data, highlighted_tile_part.peering, paint)
+					undo_manager.add_do_method(self, &"queue_redraw")
+					undo_manager.add_undo_method(BetterTerrain, &"add_tile_peering_type", tileset, highlighted_tile_part.data, highlighted_tile_part.peering, paint)
+					undo_manager.add_undo_method(self, &"queue_redraw")
+					undo_manager.commit_action()
+
 
 
 func _on_zoom_value_changed(value):

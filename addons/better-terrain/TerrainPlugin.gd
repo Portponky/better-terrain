@@ -11,6 +11,7 @@ func _enter_tree() -> void:
 	dock = load("res://addons/better-terrain/editor/Dock.tscn").instantiate()
 	dock.update_overlay.connect(self.update_overlays)
 	get_editor_interface().get_editor_main_screen().mouse_exited.connect(dock.canvas_mouse_exit)
+	dock.undo_manager = get_undo_redo()
 	button = add_control_to_bottom_panel(dock, "Terrain")
 	button.visible = false
 
