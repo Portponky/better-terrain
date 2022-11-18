@@ -3,6 +3,8 @@ Terrain plugin for Godot 4's tilemap.
 
 This plugin implements autotile-style terrain system with multiple connections. It works with the existing tilemaps and tilesets alongside Godot 4 features.
 
+![Example of terrain system in use](https://user-images.githubusercontent.com/33663279/202700714-d4d78da4-3741-4d57-bc75-5c8f99d7543e.png)
+
 ### Why?
 
 Godot 4 has a terrain system built-in to its tilemap node. This system has some tricky behaviors and is tailored towards a very specific usage of tilemaps, rather than a more general case. It's also quite slow, and the API is difficult to use at runtime. There are very large functional gaps caused by the replacement of the Godot 3 autotile system.
