@@ -140,8 +140,7 @@ func tiles_changed() -> void:
 		layer = min(layer, tilemap.get_layers_count() - 1)
 		layer_options.selected = layer
 	
-	var selected = terrain_tree.get_selected()
-	tile_view.paint = selected.get_index() if selected else -1
+	update_tile_view_paint()
 	tile_view.refresh_tileset(tileset)
 	
 	if tileset and !tileset.changed.is_connected(queue_tiles_changed):
@@ -182,6 +181,12 @@ func _on_clean_pressed():
 		terrain_undo.create_peering_restore_point(undo_manager, tileset)
 		undo_manager.add_undo_method(self, &"tiles_changed")
 		undo_manager.commit_action()
+
+
+func update_tile_view_paint() -> void:
+	var selected = terrain_tree.get_selected()
+	tile_view.paint = selected.get_index() if selected else -1
+	tile_view.queue_redraw()
 
 
 func generate_popup() -> ConfirmationDialog:
@@ -301,8 +306,7 @@ func perform_remove_terrain(index: int) -> void:
 	var item = root.get_child(index)
 	if BetterTerrain.remove_terrain(tileset, index):
 		item.free()
-		tile_view.paint = -1
-		tile_view.queue_redraw()
+		update_tile_view_paint()
 
 
 func perform_swap_terrain(index1: int, index2: int) -> void:
@@ -316,9 +320,7 @@ func perform_swap_terrain(index1: int, index2: int) -> void:
 	if BetterTerrain.swap_terrains(tileset, lower, higher):
 		item2.move_before(item1)
 		item1.move_after(root.get_child(higher))
-		var selected = terrain_tree.get_selected()
-		tile_view.paint = selected.get_index() if selected else -1
-		tile_view.queue_redraw()
+		update_tile_view_paint()
 
 
 func perform_edit_terrain(index: int, name: String, color: Color, type: int) -> void:
@@ -349,15 +351,6 @@ func _on_fill_pressed():
 	draw_button.button_pressed = false
 	rectangle_button.button_pressed = false
 	fill_button.button_pressed = true
-
-
-func _on_tree_cell_selected():
-	var selected = terrain_tree.get_selected()
-	if !selected:
-		return
-	
-	tile_view.paint = selected.get_index()
-	tile_view.queue_redraw()
 
 
 func _on_paint_type_pressed():
