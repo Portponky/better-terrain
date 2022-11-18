@@ -6,6 +6,7 @@ signal update_overlay
 # The maximum individual tiles the overlay will draw before shortcutting the display
 # To prevent editor lag when drawing large rectangles or filling large areas
 const MAX_CANVAS_RENDER_TILES = 1500
+const TERRAIN_PROPERTIES_SCENE := preload("res://addons/better-terrain/editor/TerrainProperties.tscn")
 
 # Buttons
 @onready var draw_button := $VBoxContainer/Toolbar/Draw
@@ -33,13 +34,11 @@ const MAX_CANVAS_RENDER_TILES = 1500
 	load("res://addons/better-terrain/icons/NonModifying.svg"),
 ]
 
-var terrain_undo
-
-const TERRAIN_PROPERTIES_SCENE := preload("res://addons/better-terrain/editor/TerrainProperties.tscn")
-
 var tilemap : TileMap
 var tileset : TileSet
+
 var undo_manager : EditorUndoRedoManager
+var terrain_undo
 
 var layer = 0
 var draw_overlay := false
@@ -72,6 +71,8 @@ func _ready() -> void:
 	
 	terrain_undo = load("res://addons/better-terrain/editor/TerrainUndo.gd").new()
 	add_child(terrain_undo)
+	tile_view.undo_manager = undo_manager
+	tile_view.terrain_undo = terrain_undo
 
 
 func _get_fill_cells(target: Vector2i):

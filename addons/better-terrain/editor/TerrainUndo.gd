@@ -119,6 +119,20 @@ func create_peering_restore_point_specific(undo_manager: EditorUndoRedoManager, 
 	undo_manager.add_undo_method(self, &"restore_peering", ts, restore)
 
 
+func create_peering_restore_point_tile(undo_manager: EditorUndoRedoManager, ts: TileSet, source_id: int, coord: Vector2i, alternate: int):
+	var source = ts.get_source(source_id) as TileSetAtlasSource
+	var td = source.get_tile_data(coord, alternate)
+	var tile_type = BetterTerrain.get_tile_terrain_type(td)
+	
+	var restore = []
+	var peering_dict = {}
+	for c in BetterTerrain.tile_peering_keys(td):
+		peering_dict[c] = BetterTerrain.tile_peering_types(td, c)
+	restore.append([source_id, coord, alternate, tile_type, peering_dict])
+	
+	undo_manager.add_undo_method(self, &"restore_peering", ts, restore)
+
+
 func restore_peering(ts: TileSet, restore: Array):
 	for r in restore:
 		var source = ts.get_source(r[0]) as TileSetAtlasSource
