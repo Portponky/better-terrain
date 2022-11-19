@@ -119,8 +119,8 @@ func tiles_changed() -> void:
 		item.set_icon(0, terrain_icons[terrain.type])
 		item.set_icon_modulate(0, terrain.color)
 	
-	while terrain_count > root.get_child_count():
-		var child = root.remove_child(root.get_child_count() - 1)
+	while terrain_count < root.get_child_count():
+		var child = root.get_child(root.get_child_count() - 1)
 		root.remove_child(child)
 		child.free()
 	

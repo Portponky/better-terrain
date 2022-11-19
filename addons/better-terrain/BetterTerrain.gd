@@ -17,7 +17,7 @@ enum TerrainType {
 
 # Meta-data functions
 func _get_terrain_meta(ts: TileSet) -> Dictionary:
-	return ts.get_meta(TERRAIN_META) if ts.has_meta(TERRAIN_META) else {
+	return ts.get_meta(TERRAIN_META) if ts and ts.has_meta(TERRAIN_META) else {
 		terrains = []
 	}
 
@@ -39,6 +39,9 @@ func _set_tile_meta(td: TileData, meta) -> void:
 func _get_cache(ts: TileSet) -> Array:
 	if _tile_cache.has(ts):
 		return _tile_cache[ts]
+	
+	if !ts:
+		return []
 	
 	_tile_cache[ts] = []
 	var cache = _tile_cache[ts]
