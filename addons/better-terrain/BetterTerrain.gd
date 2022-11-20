@@ -62,7 +62,7 @@ func _get_cache(ts: TileSet) -> Array:
 				var td := source.get_tile_data(coord, alternate)
 				var tile_meta = _get_tile_meta(td)
 				if tile_meta.type >= 0 and tile_meta.type < cache.size():
-					cache[tile_meta.type].append([source_id, coord, alternate])
+					cache[tile_meta.type].append([source_id, coord, alternate, tile_meta])
 	
 	return cache
 
@@ -106,9 +106,7 @@ func _has_invalid_peering_types(ts: TileSet) -> bool:
 		var valid_peering_types = data.get_terrain_peering_cells(ts, type)
 		
 		for c in cache[t]:
-			var source = ts.get_source(c[0]) as TileSetAtlasSource
-			var td = source.get_tile_data(c[1], c[2])
-			var td_meta = _get_tile_meta(td)
+			var td_meta = c[3]
 			
 			for peering in td_meta.keys():
 				if !(peering is int):
@@ -127,9 +125,7 @@ func _update_tile_tiles(tm: TileMap, layer: int, coord: Vector2i, types: Diction
 	var best_score = -1000 # Impossibly bad score
 	var best = []
 	for t in c[type]:
-		var source = tm.tile_set.get_source(t[0]) as TileSetAtlasSource
-		var td = source.get_tile_data(t[1], t[2])
-		var td_meta = _get_tile_meta(td)
+		var td_meta = t[3]
 		
 		var score = 0
 		for peering in td_meta.keys():
@@ -184,9 +180,7 @@ func _update_tile_vertices(tm: TileMap, layer: int, coord: Vector2i, types: Dict
 	var best_score = -1000 # Impossibly bad score
 	var best = []
 	for t in c[type]:
-		var source = tm.tile_set.get_source(t[0]) as TileSetAtlasSource
-		var td = source.get_tile_data(t[1], t[2])
-		var t_meta = _get_tile_meta(td)
+		var t_meta = t[3]
 		
 		var score = 0
 		for peering in t_meta.keys():
