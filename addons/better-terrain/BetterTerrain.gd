@@ -120,20 +120,17 @@ func _has_invalid_peering_types(ts: TileSet) -> bool:
 
 func _update_tile_tiles(tm: TileMap, layer: int, coord: Vector2i, types: Dictionary) -> void:
 	var type = types[coord]
-	var c = _get_cache(tm.tile_set)
+	var c := _get_cache(tm.tile_set)
 	
-	var best_score = -1000 # Impossibly bad score
-	var best = []
+	var best_score := -1000 # Impossibly bad score
+	var best := []
 	for t in c[type]:
 		var td_meta = t[3]
 		
-		var score = 0
+		var score := 0
 		for peering in td_meta.keys():
-			if !(peering is int):
-				continue
-			
-			var neighbor = tm.get_neighbor_cell(coord, peering)
-			score += 3 if td_meta[peering].has(types[neighbor]) else -10
+			if peering is int:
+				score += 3 if td_meta[peering].has(types[tm.get_neighbor_cell(coord, peering)]) else -10
 		
 		if score > best_score:
 			best_score = score
@@ -177,17 +174,15 @@ func _update_tile_vertices(tm: TileMap, layer: int, coord: Vector2i, types: Dict
 	var type = types[coord]
 	var c = _get_cache(tm.tile_set)
 	
-	var best_score = -1000 # Impossibly bad score
+	var best_score := -1000 # Impossibly bad score
 	var best = []
 	for t in c[type]:
 		var t_meta = t[3]
 		
-		var score = 0
+		var score := 0
 		for peering in t_meta.keys():
-			if !(peering is int):
-				continue
-			
-			score += _probe(tm, coord, peering, types, t_meta[peering])
+			if peering is int:
+				score += _probe(tm, coord, peering, types, t_meta[peering])
 		
 		if score > best_score:
 			best_score = score
