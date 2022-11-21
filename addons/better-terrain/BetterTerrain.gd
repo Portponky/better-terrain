@@ -113,7 +113,7 @@ func _has_invalid_peering_types(ts: TileSet) -> bool:
 	return false
 
 
-func _update_tile_tiles(tm: TileMap, layer: int, coord: Vector2i, types: Dictionary) -> void:
+func _update_tile_tiles(tm: TileMap, layer: int, coord: Vector2i, types: Dictionary):
 	var type = types[coord]
 	var c := _get_cache(tm.tile_set)
 	
@@ -132,9 +132,10 @@ func _update_tile_tiles(tm: TileMap, layer: int, coord: Vector2i, types: Diction
 		elif score == best_score:
 			best.append(t)
 	
-	if !best.is_empty():
-		var choice = best[randi() % best.size()]
-		tm.set_cell(layer, coord, choice[0], choice[1], choice[2])
+	if best.is_empty():
+		return null
+	
+	return best[randi() % best.size()]
 
 
 func _probe(tm: TileMap, coord: Vector2i, peering: int, types: Dictionary, goal: Array) -> int:
@@ -164,7 +165,7 @@ func _probe(tm: TileMap, coord: Vector2i, peering: int, types: Dictionary, goal:
 	return -5
 
 
-func _update_tile_vertices(tm: TileMap, layer: int, coord: Vector2i, types: Dictionary) -> void:
+func _update_tile_vertices(tm: TileMap, layer: int, coord: Vector2i, types: Dictionary):
 	var type = types[coord]
 	var c = _get_cache(tm.tile_set)
 	
@@ -183,19 +184,39 @@ func _update_tile_vertices(tm: TileMap, layer: int, coord: Vector2i, types: Dict
 		elif score == best_score:
 			best.append(t)
 	
-	if !best.is_empty():
-		var choice = best[randi() % best.size()]
-		tm.set_cell(layer, coord, choice[0], choice[1], choice[2])
+	if best.is_empty():
+		return null
+	
+	return best[randi() % best.size()]
 
 
-func _update_tile(tm: TileMap, layer: int, coord: Vector2i, ts_meta: Dictionary, types: Dictionary) -> void:
+func _update_tile_immediate(tm: TileMap, layer: int, coord: Vector2i, ts_meta: Dictionary, types: Dictionary) -> void:
+	var type = types[coord]
+	if type < 0 or type >= ts_meta.terrains.size():
+		return
+	
+	var placement
+	var terrain = ts_meta.terrains[type]
+	if terrain[2] == TerrainType.MATCH_TILES:
+		placement = _update_tile_tiles(tm, layer, coord, types)
+	elif terrain[2] == TerrainType.MATCH_VERTICES:
+		placement = _update_tile_vertices(tm, layer, coord, types)
+	else:
+		return
+	
+	if placement:
+		tm.set_cell(layer, coord, placement[0], placement[1], placement[2])
+
+
+func _update_tile_deferred(tm: TileMap, layer: int, coord: Vector2i, ts_meta: Dictionary, types: Dictionary):
 	var type = types[coord]
 	if type >= 0 and type < ts_meta.terrains.size():
 		var terrain = ts_meta.terrains[type]
 		if terrain[2] == TerrainType.MATCH_TILES:
-			_update_tile_tiles(tm, layer, coord, types)
+			return _update_tile_tiles(tm, layer, coord, types)
 		elif terrain[2] == TerrainType.MATCH_VERTICES:
-			_update_tile_vertices(tm, layer, coord, types)
+			return _update_tile_vertices(tm, layer, coord, types)
+	return null
 
 
 func _widen(tm: TileMap, coords: Array) -> Array:
@@ -512,7 +533,7 @@ func update_terrain_cells(tm: TileMap, layer: int, cells: Array, and_surrounding
 	
 	var ts_meta = _get_terrain_meta(tm.tile_set)
 	for c in cells:
-		_update_tile(tm, layer, c, ts_meta, types)
+		_update_tile_immediate(tm, layer, c, ts_meta, types)
 
 
 #helper
@@ -555,6 +576,54 @@ func update_terrain_area(tm: TileMap, layer: int, area: Rect2i, and_surrounding_
 	for y in range(area.position.y, area.end.y):
 		for x in range(area.position.x, area.end.x):
 			var coord = Vector2i(x, y)
-			_update_tile(tm, layer, coord, ts_meta, types)
+			_update_tile_immediate(tm, layer, coord, ts_meta, types)
 	for c in additional_cells:
-		_update_tile(tm, layer, c, ts_meta, types)
+		_update_tile_immediate(tm, layer, c, ts_meta, types)
+
+
+# Threaded actions
+func create_terrain_changeset(tm: TileMap, layer: int, paint: Dictionary):
+	# Force cache rebuild if required
+	var _cache = _get_cache(tm.tile_set)
+	
+	var cells = paint.keys()
+	var needed_cells = _widen(tm, cells)
+	
+	var types = {}
+	for c in needed_cells:
+		types[c] = paint[c] if paint.has(c) else get_cell(tm, layer, c)
+	
+	var placements = []
+	placements.resize(cells.size())
+	
+	var ts_meta = _get_terrain_meta(tm.tile_set)
+	var work = func(n: int):
+		placements[n] = _update_tile_deferred(tm, layer, cells[n], ts_meta, types)
+	
+	return {
+		"valid": true,
+		"tilemap": tm,
+		"layer": layer,
+		"cells": cells,
+		"placements": placements,
+		"group_id": WorkerThreadPool.add_group_task(work, cells.size(), -1, false, "BetterTerrain")
+	}
+
+
+func is_terrain_changeset_ready(change: Dictionary) -> bool:
+	if !change.has("group_id"):
+		return false
+	
+	return WorkerThreadPool.is_group_task_completed(change.group_id)
+
+
+func wait_for_terrain_changeset(change: Dictionary) -> void:
+	if change.has("group_id"):
+		WorkerThreadPool.wait_for_group_task_completion(change.group_id)
+
+
+func apply_terrain_changeset(change: Dictionary):
+	for n in change.cells.size():
+		var placement = change.placements[n]
+		if placement:
+			change.tilemap.set_cell(change.layer, change.cells[n], placement[0], placement[1], placement[2])
