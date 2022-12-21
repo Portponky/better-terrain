@@ -6,7 +6,6 @@ extends Control
 var tileset: TileSet
 
 var paint = -1
-var highlighted_position := Vector2i(-1, -1) 
 var highlighted_tile_part := { valid = false }
 var zoom_level := 1.0
 
@@ -83,6 +82,7 @@ func is_tile_in_source(source: TileSetAtlasSource, coord: Vector2i) -> bool:
 
 
 func _build_tile_part_from_position(result: Dictionary, position: Vector2i, rect: Rect2) -> void:
+	result.rect = rect
 	var type = BetterTerrain.get_tile_terrain_type(result.data)
 	if type == -1:
 		return
@@ -97,6 +97,7 @@ func _build_tile_part_from_position(result: Dictionary, position: Vector2i, rect
 		var side_polygon = BetterTerrain.data.peering_polygon(tileset, terrain.type, p)
 		if Geometry2D.is_point_in_polygon(normalize_position, side_polygon):
 			result.peering = p
+			result.polygon = side_polygon
 			break
 
 
@@ -200,7 +201,6 @@ func _draw():
 	if !tileset:
 		return
 	
-	var highlight_rect: Rect2
 	var offset = Vector2.ZERO
 	var alt_offset = Vector2.RIGHT * (zoom_level * tiles_size.x + ALTERNATE_TILE_MARGIN)
 	
@@ -225,8 +225,6 @@ func _draw():
 					alt_id = source.get_alternative_tile_id(coord, a)
 				var td = source.get_tile_data(coord, alt_id)
 				_draw_tile_data(source.texture, target_rect, rect, td)
-				if target_rect.has_point(highlighted_position):
-					highlight_rect = target_rect
 			
 			if alt_count > 1:
 				alt_offset.y += zoom_level * rect.size.y
@@ -258,8 +256,13 @@ func _draw():
 			draw_rect(area, Color(0.0, 0.0, 0.0, 0.8), true)
 		alt_offset.y += zoom_level * a[0].y
 	
-	if highlight_rect.has_area():
-		draw_rect(Rect2(highlight_rect.position + Vector2.ONE, highlight_rect.size - Vector2.ONE), Color.WHITE, false)
+	if highlighted_tile_part.valid:
+		if paint_mode == PaintMode.PAINT_PEERING and highlighted_tile_part.has("polygon"):
+			var transform = Transform2D(0.0, highlighted_tile_part.rect.size - 2 * Vector2.ONE, 0.0, highlighted_tile_part.rect.position + Vector2.ONE)
+			draw_colored_polygon(transform * highlighted_tile_part.polygon, Color(Color.WHITE, 0.2))
+		if paint_mode != PaintMode.NO_PAINT:
+			var inner_rect = Rect2(highlighted_tile_part.rect.position + Vector2.ONE, highlighted_tile_part.rect.size - 2 * Vector2.ONE) 
+			draw_rect(inner_rect, Color.WHITE, false)
 
 
 func _gui_input(event):
@@ -267,16 +270,16 @@ func _gui_input(event):
 		paint_action = PaintAction.NO_ACTION
 	
 	if event is InputEventMouseMotion:
-		highlighted_position = event.position
 		var tile = tile_part_from_position(event.position)
-		if tile.valid != highlighted_tile_part.valid or (tile.valid and tile.data != highlighted_tile_part.data):
+		if tile.valid != highlighted_tile_part.valid or\
+			(tile.valid and tile.data != highlighted_tile_part.data) or\
+			(tile.valid and tile.get("peering") != highlighted_tile_part.get("peering")):
 			queue_redraw()
 		highlighted_tile_part = tile
 	
 	var clicked = event is InputEventMouseButton and event.pressed
 	if paint >= 0 and clicked:
 		paint_action = PaintAction.NO_ACTION
-	
 		if !highlighted_tile_part.valid:
 			return
 		
@@ -329,7 +332,6 @@ func _gui_input(event):
 					undo_manager.commit_action()
 
 
-
 func _on_zoom_value_changed(value):
 	zoom_level = value
 	custom_minimum_size.x = zoom_level * tiles_size.x
@@ -340,6 +342,5 @@ func _on_zoom_value_changed(value):
 
 
 func clear_highlighted_tile():
-	highlighted_position = -Vector2i.ONE
 	highlighted_tile_part = { valid = false }
 	queue_redraw()

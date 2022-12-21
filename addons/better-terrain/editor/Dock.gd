@@ -17,7 +17,7 @@ const TERRAIN_PROPERTIES_SCENE := preload("res://addons/better-terrain/editor/Te
 @onready var paint_terrain := $VBoxContainer/Toolbar/PaintTerrain
 
 @onready var clean_button := $VBoxContainer/Toolbar/Clean
-@onready var layer_options = $VBoxContainer/Toolbar/LayerOptions
+@onready var layer_options := $VBoxContainer/Toolbar/LayerOptions
 
 @onready var add_terrain_button := $VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar/AddTerrain
 @onready var edit_terrain_button := $VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar/EditTerrain
