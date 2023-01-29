@@ -130,7 +130,8 @@ func _update_tile_tiles(tm: TileMap, layer: int, coord: Vector2i, types: Diction
 			var neighbor_type: int = types[tm.get_neighbor_cell(coord, peering)]
 			if (neighbor_type > -1):
 				var neighbor_data = get_terrain(tm.tile_set, neighbor_type)
-				if t[5] == neighbor_data.group or td_meta[peering].has(types[tm.get_neighbor_cell(coord, peering)]):
+				if (t[5] != &"" and neighbor_data.group != &"" and t[5] == neighbor_data.group)\
+				or td_meta[peering].has(types[tm.get_neighbor_cell(coord, peering)]):
 					score += 3
 				else:
 					score -= 10
