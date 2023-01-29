@@ -7,7 +7,7 @@
 
 [node name="TerrainProperties" type="ConfirmationDialog"]
 title = "Edit terrain properties"
-size = Vector2i(317, 153)
+size = Vector2i(317, 190)
 visible = true
 dialog_hide_on_ok = false
 script = ExtResource("1_52nx8")
@@ -75,5 +75,20 @@ popup/item_1/id = 1
 popup/item_2/text = "Non-modifying"
 popup/item_2/icon = ExtResource("5_awp83")
 popup/item_2/id = 2
+
+[node name="GroupLabel" type="Label" parent="GridContainer"]
+layout_mode = 2
+offset_top = 2.0
+offset_right = 47.0
+offset_bottom = 129.0
+text = "Group"
+
+[node name="GroupEdit" type="LineEdit" parent="GridContainer"]
+layout_mode = 2
+offset_left = 51.0
+offset_right = 301.0
+offset_bottom = 132.0
+size_flags_horizontal = 3
+placeholder_text = "Group name"
 
 [connection signal="confirmed" from="." to="." method="_on_confirmed"]

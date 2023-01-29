@@ -11,7 +11,6 @@ const terrain_peering_vertical_tiles := [2, 4, 6, 10, 12, 14]
 const terrain_peering_vertical_vertices := [1, 3, 7, 9, 11, 15]
 const terrain_peering_non_modifying := []
 
-
 static func get_terrain_peering_cells(ts: TileSet, type: int) -> Array:
 	if !ts or type < 0 or type >= BetterTerrain.TerrainType.MAX:
 		return []

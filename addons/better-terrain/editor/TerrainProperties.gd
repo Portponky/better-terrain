@@ -4,6 +4,7 @@ extends ConfirmationDialog
 @onready var name_edit := $GridContainer/NameEdit
 @onready var color_picker := $GridContainer/ColorPicker
 @onready var type_option := $GridContainer/TypeOption
+@onready var group_edit := $GridContainer/GroupEdit
 
 var accepted := false
 
@@ -19,6 +20,9 @@ var terrain_type : int:
 	set(value): type_option.selected = value
 	get: return type_option.selected
 
+var terrain_group : StringName:
+	set(value): group_edit.text = value
+	get: return group_edit.text
 
 func _on_confirmed() -> void:
 	# confirm valid name

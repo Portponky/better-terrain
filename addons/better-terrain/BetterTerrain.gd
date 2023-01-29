@@ -63,8 +63,9 @@ func _get_cache(ts: TileSet) -> Array:
 				var tile_meta = _get_tile_meta(td)
 				if tile_meta.type >= 0 and tile_meta.type < cache.size():
 					var peering_keys = tile_meta.keys()
+					var group: StringName = ts_meta.terrains[tile_meta.type][3]
 					peering_keys.erase("type")
-					cache[tile_meta.type].append([source_id, coord, alternate, tile_meta, peering_keys])
+					cache[tile_meta.type].append([source_id, coord, alternate, tile_meta, peering_keys, group])
 	
 	return cache
 
@@ -124,8 +125,17 @@ func _update_tile_tiles(tm: TileMap, layer: int, coord: Vector2i, types: Diction
 		
 		var score := 0
 		for peering in t[4]:
-			score += 3 if td_meta[peering].has(types[tm.get_neighbor_cell(coord, peering)]) else -10
-		
+			if (not(peering is int)):
+				continue
+			var neighbor_type: int = types[tm.get_neighbor_cell(coord, peering)]
+			if (neighbor_type > -1):
+				var neighbor_data = get_terrain(tm.tile_set, neighbor_type)
+				if t[5] == neighbor_data.group or td_meta[peering].has(types[tm.get_neighbor_cell(coord, peering)]):
+					score += 3
+				else:
+					score -= 10
+			else:
+				score -= 10
 		if score > best_score:
 			best_score = score
 			best = [t]
@@ -242,12 +252,12 @@ func _widen_with_exclusion(tm: TileMap, coords: Array, exclusion: Rect2i) -> Arr
 
 
 # Terrain types
-func add_terrain(ts: TileSet, name: String, color: Color, type: int) -> bool:
+func add_terrain(ts: TileSet, name: String, color: Color, type: int, group: StringName) -> bool:
 	if !ts or name.is_empty() or type < 0 or type >= TerrainType.MAX:
 		return false
 	
 	var ts_meta = _get_terrain_meta(ts)
-	ts_meta.terrains.push_back([name, color, type])
+	ts_meta.terrains.push_back([name, color, type, group])
 	_set_terrain_meta(ts, ts_meta)
 	_purge_cache(ts)
 	return true
@@ -324,10 +334,13 @@ func get_terrain(ts: TileSet, index: int) -> Dictionary:
 		return {valid = false}
 	
 	var terrain = ts_meta.terrains[index]
-	return {name = terrain[0], color = terrain[1], type = terrain[2], valid = true}
+	var group: StringName = ""
+	if (terrain.size() > 3):
+		group = terrain[3]
+	return {name = terrain[0], color = terrain[1], type = terrain[2], group = group, valid = true}
 
 
-func set_terrain(ts: TileSet, index: int, name: String, color: Color, type: int) -> bool:
+func set_terrain(ts: TileSet, index: int, name: String, color: Color, type: int, group: StringName) -> bool:
 	if !ts or name.is_empty() or index < 0 or type < 0 or type >= TerrainType.MAX:
 		return false
 	
@@ -337,7 +350,7 @@ func set_terrain(ts: TileSet, index: int, name: String, color: Color, type: int)
 	
 	_clear_invalid_peering_types(ts)
 	
-	ts_meta.terrains[index] = [name, color, type]
+	ts_meta.terrains[index] = [name, color, type, group]
 	_set_terrain_meta(ts, ts_meta)
 	
 	_purge_cache(ts)
