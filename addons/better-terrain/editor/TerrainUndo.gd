@@ -99,7 +99,7 @@ func create_peering_restore_point_specific(undo_manager: EditorUndoRedoManager, 
 				if tile_type == -1:
 					continue
 				
-				var to_restore := tile_type == protect
+				var to_restore : bool = tile_type == protect
 				
 				var terrain = BetterTerrain.get_terrain(ts, tile_type)
 				var cells = BetterTerrain.data.get_terrain_peering_cells(ts, terrain.type)
