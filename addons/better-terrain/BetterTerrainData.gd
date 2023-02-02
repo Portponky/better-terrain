@@ -451,7 +451,7 @@ static func cell_polygon(ts: TileSet) -> PackedVector2Array:
 
 
 static func neighboring_coords(tm: TileMap, coord: Vector2i, peerings: Array) -> Array:
-	var result = []
+	var result := []
 	for p in peerings:
 		result.append(tm.get_neighbor_cell(coord, p))
 	return result

@@ -23,7 +23,7 @@ var terrain_type : int:
 func _on_confirmed() -> void:
 	# confirm valid name
 	if terrain_name.is_empty():
-		var dialog = AcceptDialog.new()
+		var dialog := AcceptDialog.new()
 		dialog.dialog_text = "Name cannot be empty"
 		add_child(dialog)
 		dialog.popup_centered()

@@ -28,7 +28,7 @@ const TERRAIN_PROPERTIES_SCENE := preload("res://addons/better-terrain/editor/Te
 @onready var terrain_tree := $VBoxContainer/HSplitContainer/VBoxContainer/Panel/Tree
 @onready var tile_view := $VBoxContainer/HSplitContainer/Panel/ScrollArea/TileView
 
-@onready var terrain_icons = [
+@onready var terrain_icons := [
 	load("res://addons/better-terrain/icons/MatchTiles.svg"),
 	load("res://addons/better-terrain/icons/MatchVertices.svg"),
 	load("res://addons/better-terrain/icons/NonModifying.svg"),
@@ -40,7 +40,7 @@ var tileset : TileSet
 var undo_manager : EditorUndoRedoManager
 var terrain_undo
 
-var layer = 0
+var layer := 0
 var draw_overlay := false
 var initial_click : Vector2i
 var current_position : Vector2i
@@ -52,7 +52,7 @@ enum PaintMode {
 	ERASE
 }
 
-var paint_mode = PaintMode.NO_PAINT
+var paint_mode := PaintMode.NO_PAINT
 
 
 # Called when the node enters the scene tree for the first time.
@@ -75,15 +75,15 @@ func _ready() -> void:
 	tile_view.terrain_undo = terrain_undo
 
 
-func _get_fill_cells(target: Vector2i):
-	var pick = BetterTerrain.get_cell(tilemap, layer, target)
-	var bounds = tilemap.get_used_rect()
+func _get_fill_cells(target: Vector2i) -> Array:
+	var pick := BetterTerrain.get_cell(tilemap, layer, target)
+	var bounds := tilemap.get_used_rect()
 	var neighbors = BetterTerrain.data.cells_adjacent_for_fill(tileset)
 	
 	# No sets yet, so use a dictionary
-	var checked = {}
-	var pending = [target]
-	var goal = []
+	var checked := {}
+	var pending := [target]
+	var goal := []
 	
 	while !pending.is_empty():
 		var p = pending.pop_front()
@@ -109,9 +109,9 @@ func tiles_changed() -> void:
 	var root = terrain_tree.get_root()
 	
 	# load terrains from tileset
-	var terrain_count = BetterTerrain.terrain_count(tileset)
+	var terrain_count := BetterTerrain.terrain_count(tileset)
 	for i in terrain_count:
-		var terrain = BetterTerrain.get_terrain(tileset, i)
+		var terrain := BetterTerrain.get_terrain(tileset, i)
 		if i >= root.get_child_count():
 			terrain_tree.create_item(root)
 		var item = root.get_child(i)
@@ -131,7 +131,7 @@ func tiles_changed() -> void:
 		layer = 0
 	else:
 		for n in tilemap.get_layers_count():
-			var name = tilemap.get_layer_name(n)
+			var name := tilemap.get_layer_name(n)
 			if name.is_empty():
 				name = tr("Layer {0}").format([n])
 			layer_options.add_item(name, n)
@@ -151,7 +151,7 @@ func tiles_changed() -> void:
 	tileset_dirty = false
 
 
-func queue_tiles_changed():
+func queue_tiles_changed() -> void:
 	# Bring terrain data up to date with complex tileset changes
 	if !tileset or tileset_dirty:
 		return
@@ -160,9 +160,9 @@ func queue_tiles_changed():
 	call_deferred(&"tiles_changed")
 
 
-func _on_clean_pressed():
-	var confirmed = [false]
-	var popup = ConfirmationDialog.new()
+func _on_clean_pressed() -> void:
+	var confirmed := [false]
+	var popup := ConfirmationDialog.new()
 	popup.dialog_text = tr("Tile set changes have caused terrain to become invalid. Remove invalid terrain data?")
 	popup.dialog_hide_on_ok = false
 	popup.confirmed.connect(func():
@@ -190,7 +190,7 @@ func update_tile_view_paint() -> void:
 
 
 func generate_popup() -> ConfirmationDialog:
-	var popup = TERRAIN_PROPERTIES_SCENE.instantiate()
+	var popup := TERRAIN_PROPERTIES_SCENE.instantiate()
 	add_child(popup)
 	return popup
 
@@ -199,7 +199,7 @@ func _on_add_terrain_pressed() -> void:
 	if !tileset:
 		return
 	
-	var popup = generate_popup()
+	var popup := generate_popup()
 	popup.terrain_name = "New terrain"
 	popup.terrain_color = Color.from_hsv(randf(), 0.3 + 0.7 * randf(), 0.6 + 0.4 * randf())
 	popup.terrain_type = 0
@@ -221,9 +221,9 @@ func _on_edit_terrain_pressed() -> void:
 	if !item:
 		return
 		
-	var t = BetterTerrain.get_terrain(tileset, item.get_index())
+	var t := BetterTerrain.get_terrain(tileset, item.get_index())
 	
-	var popup = generate_popup()
+	var popup := generate_popup()
 	popup.terrain_name = t.name
 	popup.terrain_type = t.type
 	popup.terrain_color = t.color
@@ -267,9 +267,9 @@ func _on_remove_terrain_pressed() -> void:
 		return
 	
 	# store confirmation in array to pass by ref
-	var t = BetterTerrain.get_terrain(tileset, item.get_index())
-	var confirmed = [false]
-	var popup = ConfirmationDialog.new()
+	var t := BetterTerrain.get_terrain(tileset, item.get_index())
+	var confirmed := [false]
+	var popup := ConfirmationDialog.new()
 	popup.dialog_text = tr("Are you sure you want to remove {0}?").format([t.name])
 	popup.dialog_hide_on_ok = false
 	popup.confirmed.connect(func():
@@ -310,8 +310,8 @@ func perform_remove_terrain(index: int) -> void:
 
 
 func perform_swap_terrain(index1: int, index2: int) -> void:
-	var lower = min(index1, index2)
-	var higher = max(index1, index2)
+	var lower := min(index1, index2)
+	var higher := max(index1, index2)
 	var root = terrain_tree.get_root()
 	if lower >= root.get_child_count() or higher >= root.get_child_count():
 		return
@@ -335,35 +335,35 @@ func perform_edit_terrain(index: int, name: String, color: Color, type: int) -> 
 		tile_view.queue_redraw()
 
 
-func _on_draw_pressed():
+func _on_draw_pressed() -> void:
 	draw_button.button_pressed = true
 	rectangle_button.button_pressed = false
 	fill_button.button_pressed = false
 
 
-func _on_rectangle_pressed():
+func _on_rectangle_pressed() -> void:
 	draw_button.button_pressed = false
 	rectangle_button.button_pressed = true
 	fill_button.button_pressed = false
 
 
-func _on_fill_pressed():
+func _on_fill_pressed() -> void:
 	draw_button.button_pressed = false
 	rectangle_button.button_pressed = false
 	fill_button.button_pressed = true
 
 
-func _on_paint_type_pressed():
+func _on_paint_type_pressed() -> void:
 	paint_terrain.button_pressed = false
 	tile_view.paint_mode = tile_view.PaintMode.PAINT_TYPE if paint_type.button_pressed else tile_view.PaintMode.NO_PAINT
 
 
-func _on_paint_terrain_pressed():
+func _on_paint_terrain_pressed() -> void:
 	paint_type.button_pressed = false
 	tile_view.paint_mode = tile_view.PaintMode.PAINT_PEERING if paint_terrain.button_pressed else tile_view.PaintMode.NO_PAINT
 
 
-func _on_layer_options_item_selected(index):
+func _on_layer_options_item_selected(index) -> void:
 	layer = index
 
 
@@ -376,19 +376,19 @@ func canvas_draw(overlay: Control) -> void:
 		return
 	
 	var type = selected.get_index()
-	var terrain = BetterTerrain.get_terrain(tileset, type)
+	var terrain := BetterTerrain.get_terrain(tileset, type)
 	if !terrain.valid:
 		return
 	
-	var tiles = []
-	var transform = tilemap.get_viewport_transform() * tilemap.global_transform
+	var tiles := []
+	var transform := tilemap.get_viewport_transform() * tilemap.global_transform
 	
 	if rectangle_button.button_pressed and paint_mode != PaintMode.NO_PAINT:
-		var area = Rect2i(initial_click, current_position - initial_click).abs()
+		var area := Rect2i(initial_click, current_position - initial_click).abs()
 
 		# Shortcut fill for large areas
 		if area.size.x > 1 and area.size.y > 1 and area.size.x * area.size.y > MAX_CANVAS_RENDER_TILES:
-			var shortcut = PackedVector2Array([
+			var shortcut := PackedVector2Array([
 				tilemap.map_to_local(area.position),
 				tilemap.map_to_local(Vector2i(area.end.x, area.position.y)),
 				tilemap.map_to_local(area.end),
@@ -409,7 +409,7 @@ func canvas_draw(overlay: Control) -> void:
 	
 	var shape = BetterTerrain.data.cell_polygon(tileset)
 	for t in tiles:
-		var tile_transform = Transform2D(0.0, tilemap.tile_set.tile_size, 0.0, tilemap.map_to_local(t))
+		var tile_transform := Transform2D(0.0, tilemap.tile_set.tile_size, 0.0, tilemap.map_to_local(t))
 		overlay.draw_colored_polygon(transform * tile_transform * shape, Color(terrain.color, 0.5))
 
 
@@ -420,9 +420,9 @@ func canvas_input(event: InputEvent) -> bool:
 	
 	draw_overlay = true
 	if event is InputEventMouseMotion:
-		var tr = tilemap.get_viewport_transform() * tilemap.global_transform
-		var pos = tr.affine_inverse() * Vector2(event.position)
-		var event_position = tilemap.local_to_map(pos)
+		var tr := tilemap.get_viewport_transform() * tilemap.global_transform
+		var pos := tr.affine_inverse() * Vector2(event.position)
+		var event_position := tilemap.local_to_map(pos)
 		if event_position == current_position:
 			return false
 		current_position = event_position
@@ -431,13 +431,13 @@ func canvas_input(event: InputEvent) -> bool:
 	if event is InputEventMouseButton and !event.pressed:
 		if rectangle_button.button_pressed and paint_mode != PaintMode.NO_PAINT:
 			var type = selected.get_index()
-			var area = Rect2i(initial_click, current_position - initial_click).abs()
+			var area := Rect2i(initial_click, current_position - initial_click).abs()
 			
 			# Fill from initial_target to target
 			undo_manager.create_action(tr("Draw terrain rectangle"), UndoRedo.MERGE_DISABLE, tilemap)
 			for y in range(area.position.y, area.end.y + 1):
 				for x in range(area.position.x, area.end.x + 1):
-					var coord = Vector2i(x, y)
+					var coord := Vector2i(x, y)
 					if paint_mode == PaintMode.PAINT:
 						undo_manager.add_do_method(BetterTerrain, &"set_cell", tilemap, layer, coord, type)
 					else:
@@ -451,7 +451,7 @@ func canvas_input(event: InputEvent) -> bool:
 		paint_mode = PaintMode.NO_PAINT
 		return true
 	
-	var clicked = event is InputEventMouseButton and event.pressed
+	var clicked : bool = event is InputEventMouseButton and event.pressed
 	if clicked:
 		paint_mode = PaintMode.NO_PAINT
 		
@@ -477,7 +477,7 @@ func canvas_input(event: InputEvent) -> bool:
 			terrain_undo.create_tile_restore_point(undo_manager, tilemap, layer, [current_position])
 			undo_manager.commit_action()
 		elif fill_button.button_pressed:
-			var cells = _get_fill_cells(current_position)
+			var cells := _get_fill_cells(current_position)
 			undo_manager.create_action(tr("Fill terrain"), UndoRedo.MERGE_DISABLE, tilemap)
 			if paint_mode == PaintMode.PAINT:
 				undo_manager.add_do_method(BetterTerrain, &"set_cells", tilemap, layer, cells, type)
