@@ -1,9 +1,16 @@
 @tool
 extends ConfirmationDialog
 
-@onready var name_edit := $GridContainer/NameEdit
-@onready var color_picker := $GridContainer/ColorPicker
-@onready var type_option := $GridContainer/TypeOption
+@onready var name_edit: LineEdit = $GridContainer/NameEdit
+@onready var color_picker: ColorPickerButton = $GridContainer/ColorPicker
+@onready var type_option: OptionButton = $GridContainer/TypeOption
+@onready var category_label: Label = $GridContainer/CategoryLabel
+@onready var category_container: ScrollContainer = $GridContainer/CategoryContainer
+@onready var category_layout: VBoxContainer = $GridContainer/CategoryContainer/CategoryLayout
+
+@onready var category_icon := load("res://addons/better-terrain/icons/NonModifying.svg")
+
+const CATEGORY_CHECK_ID = &"category_check_id"
 
 var accepted := false
 
@@ -18,6 +25,36 @@ var terrain_color : Color:
 var terrain_type : int:
 	set(value): type_option.selected = value
 	get: return type_option.selected
+
+var terrain_categories : Array: set = set_categories, get = get_categories
+
+
+# category is name, color, id
+func set_category_data(options: Array) -> void:
+	if !options.is_empty():
+		category_label.show()
+		category_container.show()
+	
+	for o in options:
+		var c = CheckBox.new()
+		c.text = o.name
+		c.icon = category_icon
+		c.add_theme_color_override(&"icon_color", o.color)
+		c.set_meta(CATEGORY_CHECK_ID, o.id)
+		category_layout.add_child(c)
+
+
+func set_categories(ids : Array):
+	for c in category_layout.get_children():
+		c.button_pressed = c.get_meta(CATEGORY_CHECK_ID) in ids
+
+
+func get_categories() -> Array:
+	var result := []
+	for c in category_layout.get_children():
+		if c.button_pressed:
+			result.push_back(c.get_meta(CATEGORY_CHECK_ID))
+	return result
 
 
 func _on_confirmed() -> void:

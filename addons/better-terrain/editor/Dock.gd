@@ -125,11 +125,11 @@ func tiles_changed() -> void:
 		child.free()
 	
 	layer_options.clear()
-	if tilemap.get_layers_count() == 0:
+	if tilemap and tilemap.get_layers_count() == 0:
 		layer_options.text = tr("No layers")
 		layer_options.disabled = true
 		layer = 0
-	else:
+	elif tilemap:
 		for n in tilemap.get_layers_count():
 			var name := tilemap.get_layer_name(n)
 			if name.is_empty():
@@ -200,6 +200,7 @@ func _on_add_terrain_pressed() -> void:
 		return
 	
 	var popup := generate_popup()
+	popup.set_category_data(BetterTerrain.get_terrain_categories(tileset))
 	popup.terrain_name = "New terrain"
 	popup.terrain_color = Color.from_hsv(randf(), 0.3 + 0.7 * randf(), 0.6 + 0.4 * randf())
 	popup.terrain_type = 0
@@ -207,7 +208,7 @@ func _on_add_terrain_pressed() -> void:
 	await popup.visibility_changed
 	if popup.accepted:
 		undo_manager.create_action("Add terrain type", UndoRedo.MERGE_DISABLE, tileset)
-		undo_manager.add_do_method(self, &"perform_add_terrain", popup.terrain_name, popup.terrain_color, popup.terrain_type)
+		undo_manager.add_do_method(self, &"perform_add_terrain", popup.terrain_name, popup.terrain_color, popup.terrain_type, popup.terrain_categories)
 		undo_manager.add_undo_method(self, &"perform_remove_terrain", terrain_tree.get_root().get_child_count())
 		undo_manager.commit_action()
 	popup.queue_free()
@@ -227,12 +228,13 @@ func _on_edit_terrain_pressed() -> void:
 	popup.terrain_name = t.name
 	popup.terrain_type = t.type
 	popup.terrain_color = t.color
+	popup.terrain_categories = t.categories
 	popup.popup_centered()
 	await popup.visibility_changed
 	if popup.accepted:
 		undo_manager.create_action("Edit terrain details", UndoRedo.MERGE_DISABLE, tileset)
-		undo_manager.add_do_method(self, &"perform_edit_terrain", item.get_index(), popup.terrain_name, popup.terrain_color, popup.terrain_type)
-		undo_manager.add_undo_method(self, &"perform_edit_terrain", item.get_index(), t.name, t.color, t.type)
+		undo_manager.add_do_method(self, &"perform_edit_terrain", item.get_index(), popup.terrain_name, popup.terrain_color, popup.terrain_type, popup.terrain_categories)
+		undo_manager.add_undo_method(self, &"perform_edit_terrain", item.get_index(), t.name, t.color, t.type, t.categories)
 		if t.type != popup.terrain_type:
 			terrain_undo.create_peering_restore_point_specific(undo_manager, tileset, item.get_index())
 		undo_manager.commit_action()
@@ -291,8 +293,8 @@ func _on_remove_terrain_pressed() -> void:
 		undo_manager.commit_action()
 
 
-func perform_add_terrain(name: String, color: Color, type: int) -> void:
-	if BetterTerrain.add_terrain(tileset, name, color, type):
+func perform_add_terrain(name: String, color: Color, type: int, categories: Array) -> void:
+	if BetterTerrain.add_terrain(tileset, name, color, type, categories):
 		var new_terrain = terrain_tree.create_item(terrain_tree.get_root())
 		new_terrain.set_text(0, name)
 		new_terrain.set_icon(0, terrain_icons[type])
@@ -323,12 +325,12 @@ func perform_swap_terrain(index1: int, index2: int) -> void:
 		update_tile_view_paint()
 
 
-func perform_edit_terrain(index: int, name: String, color: Color, type: int) -> void:
+func perform_edit_terrain(index: int, name: String, color: Color, type: int, categories: Array) -> void:
 	var root = terrain_tree.get_root()
 	if index >= root.get_child_count():
 		return
 	var item = root.get_child(index)
-	if BetterTerrain.set_terrain(tileset, index, name, color, type):
+	if BetterTerrain.set_terrain(tileset, index, name, color, type, categories):
 		item.set_text(0, name)
 		item.set_icon(0, terrain_icons[type])
 		item.set_icon_modulate(0, color)

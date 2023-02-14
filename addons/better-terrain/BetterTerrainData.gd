@@ -16,7 +16,7 @@ static func get_terrain_peering_cells(ts: TileSet, type: int) -> Array:
 	if !ts or type < 0 or type >= BetterTerrain.TerrainType.MAX:
 		return []
 	
-	if type == BetterTerrain.TerrainType.NON_MODIFYING:
+	if type == BetterTerrain.TerrainType.CATEGORY:
 		return terrain_peering_non_modifying
 	
 	match [ts.tile_shape, type]:
@@ -399,7 +399,7 @@ static func peering_non_modifying():
 
 
 static func peering_polygon(ts: TileSet, type: int, peering: int) -> PackedVector2Array:
-	if type == BetterTerrain.TerrainType.NON_MODIFYING:
+	if type == BetterTerrain.TerrainType.CATEGORY:
 		return peering_non_modifying()
 	
 	if ts.tile_shape == TileSet.TILE_SHAPE_SQUARE:
