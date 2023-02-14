@@ -288,7 +288,6 @@ func add_terrain(ts: TileSet, name: String, color: Color, type: int, categories:
 	return true
 
 
-# FIX
 func remove_terrain(ts: TileSet, index: int) -> bool:
 	if !ts or index < 0:
 		return false
@@ -296,6 +295,10 @@ func remove_terrain(ts: TileSet, index: int) -> bool:
 	var ts_meta := _get_terrain_meta(ts)
 	if index >= ts_meta.terrains.size():
 		return false
+	
+	if ts_meta.terrains[index][2] == TerrainType.CATEGORY:
+		for t in ts_meta.terrains:
+			t[3].erase(index)
 	
 	for s in ts.get_source_count():
 		var source := ts.get_source(ts.get_source_id(s)) as TileSetAtlasSource
@@ -323,7 +326,7 @@ func remove_terrain(ts: TileSet, index: int) -> bool:
 						continue
 					
 					var fixed_peering = []
-					for p in td_meta[peering]:
+					for p in Bitfield.to_int_array(td_meta[peering]):
 						if p < index:
 							fixed_peering.append(p)
 						elif p > index:
@@ -332,7 +335,7 @@ func remove_terrain(ts: TileSet, index: int) -> bool:
 					if fixed_peering.is_empty():
 						td_meta.erase(peering)
 					else:
-						td_meta[peering] = fixed_peering
+						td_meta[peering] = Bitfield.from_int_array(fixed_peering)
 				
 				_set_tile_meta(td, td_meta)
 	
@@ -391,7 +394,6 @@ func set_terrain(ts: TileSet, index: int, name: String, color: Color, type: int,
 	return true
 
 
-# FIX
 # Update all peering and categories correctly
 func swap_terrains(ts: TileSet, index1: int, index2: int) -> bool:
 	if !ts or index1 < 0 or index2 < 0 or index1 == index2:
@@ -400,6 +402,17 @@ func swap_terrains(ts: TileSet, index1: int, index2: int) -> bool:
 	var ts_meta := _get_terrain_meta(ts)
 	if index1 >= ts_meta.terrains.size() or index2 >= ts_meta.terrains.size():
 		return false
+	
+	for t in ts_meta.terrains:
+		var has1 = t[3].has(index1)
+		var has2 = t[3].has(index2)
+		
+		if has1 and !has2:
+			t[3].erase(index1)
+			t[3].push_back(index2)
+		elif has2 and !has1:
+			t[3].erase(index2)
+			t[3].push_back(index1)
 	
 	for s in ts.get_source_count():
 		var source := ts.get_source(ts.get_source_id(s)) as TileSetAtlasSource
@@ -425,14 +438,14 @@ func swap_terrains(ts: TileSet, index1: int, index2: int) -> bool:
 						continue
 					
 					var fixed_peering = []
-					for p in td_meta[peering]:
+					for p in Bitfield.to_int_array(td_meta[peering]):
 						if p == index1:
 							fixed_peering.append(index2)
 						elif p == index2:
 							fixed_peering.append(index1)
 						else:
 							fixed_peering.append(p)
-					td_meta[peering] = fixed_peering
+					td_meta[peering] = Bitfield.from_int_array(fixed_peering)
 				
 				_set_tile_meta(td, td_meta)
 	
