@@ -221,10 +221,15 @@ func _on_edit_terrain_pressed() -> void:
 	var item = terrain_tree.get_selected()
 	if !item:
 		return
-		
+	var index = item.get_index()
+	
 	var t := BetterTerrain.get_terrain(tileset, item.get_index())
+	var categories = BetterTerrain.get_terrain_categories(tileset)
+	categories = categories.filter(func(x): return x.id != index)
 	
 	var popup := generate_popup()
+	popup.set_category_data(categories)
+	
 	popup.terrain_name = t.name
 	popup.terrain_type = t.type
 	popup.terrain_color = t.color
@@ -233,10 +238,10 @@ func _on_edit_terrain_pressed() -> void:
 	await popup.visibility_changed
 	if popup.accepted:
 		undo_manager.create_action("Edit terrain details", UndoRedo.MERGE_DISABLE, tileset)
-		undo_manager.add_do_method(self, &"perform_edit_terrain", item.get_index(), popup.terrain_name, popup.terrain_color, popup.terrain_type, popup.terrain_categories)
-		undo_manager.add_undo_method(self, &"perform_edit_terrain", item.get_index(), t.name, t.color, t.type, t.categories)
+		undo_manager.add_do_method(self, &"perform_edit_terrain", index, popup.terrain_name, popup.terrain_color, popup.terrain_type, popup.terrain_categories)
+		undo_manager.add_undo_method(self, &"perform_edit_terrain", index, t.name, t.color, t.type, t.categories)
 		if t.type != popup.terrain_type:
-			terrain_undo.create_peering_restore_point_specific(undo_manager, tileset, item.get_index())
+			terrain_undo.create_peering_restore_point_specific(undo_manager, tileset, index)
 		undo_manager.commit_action()
 	popup.queue_free()
 

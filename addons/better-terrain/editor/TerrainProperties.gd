@@ -23,7 +23,9 @@ var terrain_color : Color:
 	get: return color_picker.color
 	
 var terrain_type : int:
-	set(value): type_option.selected = value
+	set(value):
+		type_option.selected = value
+		_on_type_option_item_selected(value)
 	get: return type_option.selected
 
 var terrain_categories : Array: set = set_categories, get = get_categories
@@ -39,7 +41,14 @@ func set_category_data(options: Array) -> void:
 		var c = CheckBox.new()
 		c.text = o.name
 		c.icon = category_icon
-		c.add_theme_color_override(&"icon_color", o.color)
+		c.add_theme_color_override(&"icon_normal_color", o.color)
+		c.add_theme_color_override(&"icon_disabled_color", Color(o.color, 0.4))
+		c.add_theme_color_override(&"icon_focus_color", o.color)
+		c.add_theme_color_override(&"icon_hover_color", o.color)
+		c.add_theme_color_override(&"icon_hover_pressed_color", o.color)
+		c.add_theme_color_override(&"icon_normal_color", o.color)
+		c.add_theme_color_override(&"icon_pressed_color", o.color)
+		
 		c.set_meta(CATEGORY_CHECK_ID, o.id)
 		category_layout.add_child(c)
 
@@ -51,6 +60,8 @@ func set_categories(ids : Array):
 
 func get_categories() -> Array:
 	var result := []
+	if terrain_type == BetterTerrain.TerrainType.CATEGORY:
+		return result
 	for c in category_layout.get_children():
 		if c.button_pressed:
 			result.push_back(c.get_meta(CATEGORY_CHECK_ID))
@@ -70,3 +81,9 @@ func _on_confirmed() -> void:
 	
 	accepted = true
 	hide()
+
+
+func _on_type_option_item_selected(index: int) -> void:
+	var categories_available = (index != BetterTerrain.TerrainType.CATEGORY)
+	for c in category_layout.get_children():
+		c.disabled = !categories_available

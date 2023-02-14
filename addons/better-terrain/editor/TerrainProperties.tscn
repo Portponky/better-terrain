@@ -74,3 +74,4 @@ layout_mode = 2
 size_flags_vertical = 3
 
 [connection signal="confirmed" from="." to="." method="_on_confirmed"]
+[connection signal="item_selected" from="GridContainer/TypeOption" to="." method="_on_type_option_item_selected"]
