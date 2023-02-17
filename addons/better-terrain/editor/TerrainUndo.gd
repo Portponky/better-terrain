@@ -145,3 +145,18 @@ func restore_peering(ts: TileSet, restore: Array) -> void:
 				BetterTerrain.remove_tile_peering_type(ts, td, peering, t)
 			for t in peering_types[peering]:
 				BetterTerrain.add_tile_peering_type(ts, td, peering, t)
+
+
+func create_terran_type_restore_point(undo_manager: EditorUndoRedoManager, ts: TileSet) -> void:
+	var count = BetterTerrain.terrain_count(ts)
+	var restore = []
+	for i in count:
+		restore.push_back(BetterTerrain.get_terrain(ts, i))
+	
+	undo_manager.add_undo_method(self, &"restore_terrain", ts, restore)
+
+
+func restore_terrain(ts: TileSet, restore: Array) -> void:
+	for i in restore.size():
+		var r = restore[i]
+		BetterTerrain.set_terrain(ts, i, r.name, r.color, r.type, r.categories)

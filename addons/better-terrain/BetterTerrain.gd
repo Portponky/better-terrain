@@ -386,6 +386,10 @@ func set_terrain(ts: TileSet, index: int, name: String, color: Color, type: int,
 		if c < 0 or c == index or c >= ts_meta.terrains.size() or ts_meta.terrains[c][2] != TerrainType.CATEGORY:
 			return false
 	
+	if type != TerrainType.CATEGORY:
+		for t in ts_meta.terrains:
+			t[3].erase(index)
+	
 	ts_meta.terrains[index] = [name, color, type, Bitfield.from_int_array(categories)]
 	_set_terrain_meta(ts, ts_meta)
 	

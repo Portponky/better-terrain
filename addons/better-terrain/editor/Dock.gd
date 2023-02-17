@@ -241,6 +241,7 @@ func _on_edit_terrain_pressed() -> void:
 		undo_manager.add_do_method(self, &"perform_edit_terrain", index, popup.terrain_name, popup.terrain_color, popup.terrain_type, popup.terrain_categories)
 		undo_manager.add_undo_method(self, &"perform_edit_terrain", index, t.name, t.color, t.type, t.categories)
 		if t.type != popup.terrain_type:
+			terrain_undo.create_terran_type_restore_point(undo_manager, tileset)
 			terrain_undo.create_peering_restore_point_specific(undo_manager, tileset, index)
 		undo_manager.commit_action()
 	popup.queue_free()
@@ -294,6 +295,8 @@ func _on_remove_terrain_pressed() -> void:
 		undo_manager.add_undo_method(self, &"perform_add_terrain", t.name, t.color, t.type)
 		for n in range(terrain_tree.get_root().get_child_count() - 1, item.get_index(), -1):
 			undo_manager.add_undo_method(self, &"perform_swap_terrain", n, n - 1)
+		if t.type == BetterTerrain.TerrainType.CATEGORY:
+			terrain_undo.create_terran_type_restore_point(undo_manager, tileset)
 		terrain_undo.create_peering_restore_point_specific(undo_manager, tileset, item.get_index())
 		undo_manager.commit_action()
 
