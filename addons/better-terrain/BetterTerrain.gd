@@ -38,29 +38,24 @@ func _set_tile_meta(td: TileData, meta) -> void:
 	td.set_meta(TERRAIN_META, meta)
 
 
-func _get_cache(ts: TileSet) -> Dictionary:
+func _get_cache(ts: TileSet) -> Array:
 	if _tile_cache.has(ts):
 		return _tile_cache[ts]
 	
-	var cache = {tiles = [], types = []}
+	var cache = []
 	if !ts:
 		return cache
 	
 	_tile_cache[ts] = cache
+	var types = []
 	
 	var ts_meta := _get_terrain_meta(ts)
 	for t in ts_meta.terrains.size():
 		var terrain = ts_meta.terrains[t]
 		var bits = Bitfield.from_int_array(terrain[3])
 		Bitfield.set_bit(bits, t)
-		cache.types.push_back(bits)
-		cache.tiles.append([])
-	
-	cache.type_count = cache.types.size()
-	
-	# Add a -1 entry of an empty terrain
-	var p : Array[int]
-	cache.types.push_back(p)
+		types.push_back(bits)
+		cache.push_back([])
 	
 	for s in ts.get_source_count():
 		var source_id := ts.get_source_id(s)
@@ -72,11 +67,23 @@ func _get_cache(ts: TileSet) -> Dictionary:
 			for a in source.get_alternative_tiles_count(coord):
 				var alternate := source.get_alternative_tile_id(coord, a)
 				var td := source.get_tile_data(coord, alternate)
-				var tile_meta := _get_tile_meta(td)
-				if tile_meta.type >= 0 and tile_meta.type < cache.type_count:
-					var peering_keys := tile_meta.keys()
-					peering_keys.erase("type")
-					cache.tiles[tile_meta.type].append([source_id, coord, alternate, tile_meta, peering_keys])
+				var td_meta := _get_tile_meta(td)
+				if td_meta.type < 0 or td_meta.type >= cache.size():
+					continue
+				
+				var peering = {}
+				for key in td_meta.keys():
+					if !(key is int):
+						continue
+					
+					var targets = []
+					for t in types.size():
+						if Bitfield.intersect(types[t], Bitfield.from_int_array(td_meta[key])):
+							targets.push_back(t)
+					
+					peering[key] = targets
+				
+				cache[td_meta.type].push_back([source_id, coord, alternate, peering])
 	
 	return cache
 
@@ -89,16 +96,16 @@ func _clear_invalid_peering_types(ts: TileSet) -> void:
 	var ts_meta := _get_terrain_meta(ts)
 	
 	var cache := _get_cache(ts)
-	for t in cache.tiles.size():
+	for t in cache.size():
 		var type = ts_meta.terrains[t][2]
 		var valid_peering_types = data.get_terrain_peering_cells(ts, type)
 		
-		for c in cache.tiles[t]:
+		for c in cache[t]:
 			var source := ts.get_source(c[0]) as TileSetAtlasSource
 			var td := source.get_tile_data(c[1], c[2])
-			var td_meta = c[3]
+			var td_meta = _get_tile_meta(td)
 			
-			for peering in c[4]:
+			for peering in c[3].keys():
 				if valid_peering_types.has(peering):
 					continue
 				td_meta.erase(peering)
@@ -113,12 +120,12 @@ func _has_invalid_peering_types(ts: TileSet) -> bool:
 	var ts_meta := _get_terrain_meta(ts)
 	
 	var cache := _get_cache(ts)
-	for t in cache.tiles.size():
+	for t in cache.size():
 		var type = ts_meta.terrains[t][2]
 		var valid_peering_types = data.get_terrain_peering_cells(ts, type)
 		
-		for c in cache.tiles[t]:
-			for peering in c[4]:
+		for c in cache[t]:
+			for peering in c[3].keys():
 				if !valid_peering_types.has(peering):
 					return true
 	
@@ -131,13 +138,10 @@ func _update_tile_tiles(tm: TileMap, layer: int, coord: Vector2i, types: Diction
 	
 	var best_score := -1000 # Impossibly bad score
 	var best := []
-	for t in c.tiles[type]:
-		var td_meta = t[3]
-		
-		var score := 0
-		for peering in t[4]:
-			var test = types[tm.get_neighbor_cell(coord, peering)]
-			score += 3 if Bitfield.intersect(td_meta[peering], c.types[test]) else -10
+	for t in c[type]:
+		var score = 0
+		for peering in t[3]:
+			score += 3 if t[3][peering].has(types[tm.get_neighbor_cell(coord, peering)]) else -10
 		
 		if score > best_score:
 			best_score = score
@@ -151,19 +155,19 @@ func _update_tile_tiles(tm: TileMap, layer: int, coord: Vector2i, types: Diction
 	return best[randi() % best.size()]
 
 
-func _probe(tm: TileMap, coord: Vector2i, peering: int, types: Dictionary, cache_types: Array, goal: Array[int]) -> int:
+func _probe(tm: TileMap, coord: Vector2i, peering: int, types: Dictionary, goal: Array) -> int:
 	var targets = data.associated_vertex_cells(tm, coord, peering)
 	
 	var partial_match := false
 	var best = types[targets[0]]
 	for t in targets:
 		var test = types[t]
-		if Bitfield.intersect(goal, cache_types[test]):
-			partial_match = true
 		best = min(best, test)
+		if test in goal:
+			partial_match = true
 	
 	# Best - exact match on lowest type
-	if Bitfield.intersect(goal, cache_types[best]):
+	if best in goal:
 		return 3
 	
 	# Bad - any match of any type
@@ -171,7 +175,7 @@ func _probe(tm: TileMap, coord: Vector2i, peering: int, types: Dictionary, cache
 		return -1
 	
 	# Worse - only match current terrain
-	if Bitfield.test_bit(goal, types[coord]):
+	if types[coord] in goal:
 		return -3
 	
 	# Worst - no kind of match at all
@@ -184,12 +188,10 @@ func _update_tile_vertices(tm: TileMap, layer: int, coord: Vector2i, types: Dict
 	
 	var best_score := -1000 # Impossibly bad score
 	var best = []
-	for t in c.tiles[type]:
-		var t_meta = t[3]
-		
+	for t in c[type]:
 		var score := 0
-		for peering in t[4]:
-			score += _probe(tm, coord, peering, types, c.types, t_meta[peering])
+		for peering in t[3]:
+			score += _probe(tm, coord, peering, types, t[3][peering])
 		
 		if score > best_score:
 			best_score = score
@@ -326,7 +328,7 @@ func remove_terrain(ts: TileSet, index: int) -> bool:
 						continue
 					
 					var fixed_peering = []
-					for p in Bitfield.to_int_array(td_meta[peering]):
+					for p in td_meta[peering]:
 						if p < index:
 							fixed_peering.append(p)
 						elif p > index:
@@ -335,7 +337,7 @@ func remove_terrain(ts: TileSet, index: int) -> bool:
 					if fixed_peering.is_empty():
 						td_meta.erase(peering)
 					else:
-						td_meta[peering] = Bitfield.from_int_array(fixed_peering)
+						td_meta[peering] = fixed_peering
 				
 				_set_tile_meta(td, td_meta)
 	
@@ -390,7 +392,7 @@ func set_terrain(ts: TileSet, index: int, name: String, color: Color, type: int,
 		for t in ts_meta.terrains:
 			t[3].erase(index)
 	
-	ts_meta.terrains[index] = [name, color, type, Bitfield.from_int_array(categories)]
+	ts_meta.terrains[index] = [name, color, type, categories]
 	_set_terrain_meta(ts, ts_meta)
 	
 	_clear_invalid_peering_types(ts)
@@ -442,14 +444,14 @@ func swap_terrains(ts: TileSet, index1: int, index2: int) -> bool:
 						continue
 					
 					var fixed_peering = []
-					for p in Bitfield.to_int_array(td_meta[peering]):
+					for p in td_meta[peering]:
 						if p == index1:
 							fixed_peering.append(index2)
 						elif p == index2:
 							fixed_peering.append(index1)
 						else:
 							fixed_peering.append(p)
-					td_meta[peering] = Bitfield.from_int_array(fixed_peering)
+					td_meta[peering] = fixed_peering
 				
 				_set_tile_meta(td, td_meta)
 	
@@ -495,13 +497,11 @@ func add_tile_peering_type(ts: TileSet, td: TileData, peering: int, type: int) -
 		return false
 	
 	if !td_meta.has(peering):
-		var p : Array[int]
-		td_meta[peering] = p
-	elif Bitfield.test_bit(td_meta[peering], type):
+		td_meta[peering] = [type]
+	elif !td_meta[peering].has(type):
+		td_meta[peering].append(type)
+	else:
 		return false
-	
-	Bitfield.set_bit(td_meta[peering], type)
-	
 	_set_tile_meta(td, td_meta)
 	_purge_cache(ts)
 	return true
@@ -514,14 +514,11 @@ func remove_tile_peering_type(ts: TileSet, td: TileData, peering: int, type: int
 	var td_meta := _get_tile_meta(td)
 	if !td_meta.has(peering):
 		return false
-	
-	var p = td_meta[peering]
-	if !Bitfield.test_bit(p, type):
+	if !td_meta[peering].has(type):
 		return false
-	Bitfield.clear_bit(p, type)
-	if p.is_empty():
+	td_meta[peering].erase(type)
+	if td_meta[peering].is_empty():
 		td_meta.erase(peering)
-	
 	_set_tile_meta(td, td_meta)
 	_purge_cache(ts)
 	return true
@@ -544,7 +541,7 @@ func tile_peering_types(td: TileData, peering: int) -> Array:
 		return []
 	
 	var td_meta := _get_tile_meta(td)
-	return Bitfield.to_int_array(td_meta[peering]) if td_meta.has(peering) else []
+	return td_meta[peering].duplicate() if td_meta.has(peering) else []
 
 
 # Painting
@@ -553,13 +550,13 @@ func set_cell(tm: TileMap, layer: int, coord: Vector2i, type: int) -> bool:
 		return false
 	
 	var cache := _get_cache(tm.tile_set)
-	if type >= cache.type_count:
+	if type >= cache.size():
 		return false
 	
-	if cache.tiles[type].is_empty():
+	if cache[type].is_empty():
 		return false
 	
-	var tile = cache.tiles[type].front()
+	var tile = cache[type].front()
 	tm.set_cell(layer, coord, tile[0], tile[1], tile[2])
 	return true
 
@@ -569,10 +566,10 @@ func set_cells(tm: TileMap, layer: int, coords: Array, type: int) -> bool:
 		return false
 	
 	var cache := _get_cache(tm.tile_set)
-	if type >= cache.type_count:
+	if type >= cache.size():
 		return false
 	
-	var tile = cache.tiles[type].front()
+	var tile = cache[type].front()
 	for c in coords:
 		tm.set_cell(layer, c, tile[0], tile[1], tile[2])
 	return true
