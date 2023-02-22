@@ -16,6 +16,16 @@ enum TerrainType {
 	MAX
 }
 
+# Array intersection
+func _intersect(first: Array, second: Array) -> bool:
+	if first.size() > second.size():
+		return _intersect(second, first) # Array 'has' is fast compared to gdscript loop
+	for f in first:
+		if second.has(f):
+			return true
+	return false
+
+
 # Meta-data functions
 func _get_terrain_meta(ts: TileSet) -> Dictionary:
 	return ts.get_meta(TERRAIN_META) if ts and ts.has_meta(TERRAIN_META) else {
@@ -52,8 +62,8 @@ func _get_cache(ts: TileSet) -> Array:
 	var ts_meta := _get_terrain_meta(ts)
 	for t in ts_meta.terrains.size():
 		var terrain = ts_meta.terrains[t]
-		var bits = Bitfield.from_int_array(terrain[3])
-		Bitfield.set_bit(bits, t)
+		var bits = terrain[3].duplicate()
+		bits.push_back(t)
 		types.push_back(bits)
 		cache.push_back([])
 	
@@ -78,7 +88,7 @@ func _get_cache(ts: TileSet) -> Array:
 					
 					var targets = []
 					for t in types.size():
-						if Bitfield.intersect(types[t], Bitfield.from_int_array(td_meta[key])):
+						if _intersect(types[t], td_meta[key]):
 							targets.push_back(t)
 					
 					peering[key] = targets
