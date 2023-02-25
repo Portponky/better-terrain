@@ -142,6 +142,15 @@ func _has_invalid_peering_types(ts: TileSet) -> bool:
 	return false
 
 
+func _update_terrain_data(ts: TileSet) -> void:
+	var ts_meta = _get_terrain_meta(ts)
+	if !ts_meta.has("version"):
+		for t in ts_meta.terrains:
+			if t.size() == 3:
+				t.push_back([])
+		_set_terrain_meta(ts, ts_meta)
+
+
 func _update_tile_tiles(tm: TileMap, layer: int, coord: Vector2i, types: Dictionary):
 	var type = types[coord]
 	var c := _get_cache(tm.tile_set)

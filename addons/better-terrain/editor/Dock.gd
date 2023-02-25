@@ -105,6 +105,9 @@ func tiles_about_to_change() -> void:
 
 
 func tiles_changed() -> void:
+	# ensure up to date
+	BetterTerrain._update_terrain_data(tileset)
+	
 	# clear terrains
 	var root = terrain_tree.get_root()
 	
