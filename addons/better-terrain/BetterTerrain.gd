@@ -1,7 +1,8 @@
 @tool
 extends Node
 
-const TERRAIN_META = "_better_terrain"
+const TERRAIN_META = &"_better_terrain"
+const TERRAIN_SYSTEM_VERSION = "0.1"
 
 var _tile_cache = {}
 var data := load("res://addons/better-terrain/BetterTerrainData.gd"):
@@ -11,14 +12,25 @@ var data := load("res://addons/better-terrain/BetterTerrainData.gd"):
 enum TerrainType {
 	MATCH_TILES,
 	MATCH_VERTICES,
-	NON_MODIFYING,
+	CATEGORY,
 	MAX
 }
+
+# Array intersection
+func _intersect(first: Array, second: Array) -> bool:
+	if first.size() > second.size():
+		return _intersect(second, first) # Array 'has' is fast compared to gdscript loop
+	for f in first:
+		if second.has(f):
+			return true
+	return false
+
 
 # Meta-data functions
 func _get_terrain_meta(ts: TileSet) -> Dictionary:
 	return ts.get_meta(TERRAIN_META) if ts and ts.has_meta(TERRAIN_META) else {
-		terrains = []
+		terrains = [],
+		version = TERRAIN_SYSTEM_VERSION
 	}
 
 
@@ -40,15 +52,20 @@ func _get_cache(ts: TileSet) -> Array:
 	if _tile_cache.has(ts):
 		return _tile_cache[ts]
 	
+	var cache = []
 	if !ts:
-		return []
+		return cache
 	
-	_tile_cache[ts] = []
-	var cache = _tile_cache[ts]
-
+	_tile_cache[ts] = cache
+	var types = []
+	
 	var ts_meta := _get_terrain_meta(ts)
-	for terrains in ts_meta.terrains.size():
-		cache.append([])
+	for t in ts_meta.terrains.size():
+		var terrain = ts_meta.terrains[t]
+		var bits = terrain[3].duplicate()
+		bits.push_back(t)
+		types.push_back(bits)
+		cache.push_back([])
 	
 	for s in ts.get_source_count():
 		var source_id := ts.get_source_id(s)
@@ -60,11 +77,23 @@ func _get_cache(ts: TileSet) -> Array:
 			for a in source.get_alternative_tiles_count(coord):
 				var alternate := source.get_alternative_tile_id(coord, a)
 				var td := source.get_tile_data(coord, alternate)
-				var tile_meta := _get_tile_meta(td)
-				if tile_meta.type >= 0 and tile_meta.type < cache.size():
-					var peering_keys := tile_meta.keys()
-					peering_keys.erase("type")
-					cache[tile_meta.type].append([source_id, coord, alternate, tile_meta, peering_keys])
+				var td_meta := _get_tile_meta(td)
+				if td_meta.type < 0 or td_meta.type >= cache.size():
+					continue
+				
+				var peering = {}
+				for key in td_meta.keys():
+					if !(key is int):
+						continue
+					
+					var targets = []
+					for t in types.size():
+						if _intersect(types[t], td_meta[key]):
+							targets.push_back(t)
+					
+					peering[key] = targets
+				
+				cache[td_meta.type].push_back([source_id, coord, alternate, peering])
 	
 	return cache
 
@@ -84,9 +113,9 @@ func _clear_invalid_peering_types(ts: TileSet) -> void:
 		for c in cache[t]:
 			var source := ts.get_source(c[0]) as TileSetAtlasSource
 			var td := source.get_tile_data(c[1], c[2])
-			var td_meta = c[3]
+			var td_meta = _get_tile_meta(td)
 			
-			for peering in c[4]:
+			for peering in c[3].keys():
 				if valid_peering_types.has(peering):
 					continue
 				td_meta.erase(peering)
@@ -106,11 +135,20 @@ func _has_invalid_peering_types(ts: TileSet) -> bool:
 		var valid_peering_types = data.get_terrain_peering_cells(ts, type)
 		
 		for c in cache[t]:
-			for peering in c[4]:
+			for peering in c[3].keys():
 				if !valid_peering_types.has(peering):
 					return true
 	
 	return false
+
+
+func _update_terrain_data(ts: TileSet) -> void:
+	var ts_meta = _get_terrain_meta(ts)
+	if !ts_meta.has("version"):
+		for t in ts_meta.terrains:
+			if t.size() == 3:
+				t.push_back([])
+		_set_terrain_meta(ts, ts_meta)
 
 
 func _update_tile_tiles(tm: TileMap, layer: int, coord: Vector2i, types: Dictionary):
@@ -120,11 +158,9 @@ func _update_tile_tiles(tm: TileMap, layer: int, coord: Vector2i, types: Diction
 	var best_score := -1000 # Impossibly bad score
 	var best := []
 	for t in c[type]:
-		var td_meta = t[3]
-		
-		var score := 0
-		for peering in t[4]:
-			score += 3 if td_meta[peering].has(types[tm.get_neighbor_cell(coord, peering)]) else -10
+		var score = 0
+		for peering in t[3]:
+			score += 3 if t[3][peering].has(types[tm.get_neighbor_cell(coord, peering)]) else -10
 		
 		if score > best_score:
 			best_score = score
@@ -172,11 +208,9 @@ func _update_tile_vertices(tm: TileMap, layer: int, coord: Vector2i, types: Dict
 	var best_score := -1000 # Impossibly bad score
 	var best = []
 	for t in c[type]:
-		var t_meta = t[3]
-		
 		var score := 0
-		for peering in t[4]:
-			score += _probe(tm, coord, peering, types, t_meta[peering])
+		for peering in t[3]:
+			score += _probe(tm, coord, peering, types, t[3][peering])
 		
 		if score > best_score:
 			best_score = score
@@ -242,12 +276,34 @@ func _widen_with_exclusion(tm: TileMap, coords: Array, exclusion: Rect2i) -> Arr
 
 
 # Terrain types
-func add_terrain(ts: TileSet, name: String, color: Color, type: int) -> bool:
+func get_terrain_categories(ts: TileSet) -> Array:
+	var result = []
+	if !ts:
+		return result
+	
+	var ts_meta := _get_terrain_meta(ts)
+	for id in ts_meta.terrains.size():
+		var t = ts_meta.terrains[id]
+		if t[2] == TerrainType.CATEGORY:
+			result.push_back({name = t[0], color = t[1], id = id})
+	
+	return result
+
+
+func add_terrain(ts: TileSet, name: String, color: Color, type: int, categories: Array = []) -> bool:
 	if !ts or name.is_empty() or type < 0 or type >= TerrainType.MAX:
 		return false
 	
 	var ts_meta := _get_terrain_meta(ts)
-	ts_meta.terrains.push_back([name, color, type])
+	
+	# check categories
+	if type == TerrainType.CATEGORY and !categories.is_empty():
+		return false
+	for c in categories:
+		if c < 0 or c >= ts_meta.terrains.size() or ts_meta.terrains[c][2] != TerrainType.CATEGORY:
+			return false
+	
+	ts_meta.terrains.push_back([name, color, type, categories])
 	_set_terrain_meta(ts, ts_meta)
 	_purge_cache(ts)
 	return true
@@ -260,6 +316,10 @@ func remove_terrain(ts: TileSet, index: int) -> bool:
 	var ts_meta := _get_terrain_meta(ts)
 	if index >= ts_meta.terrains.size():
 		return false
+	
+	if ts_meta.terrains[index][2] == TerrainType.CATEGORY:
+		for t in ts_meta.terrains:
+			t[3].erase(index)
 	
 	for s in ts.get_source_count():
 		var source := ts.get_source(ts.get_source_id(s)) as TileSetAtlasSource
@@ -324,10 +384,16 @@ func get_terrain(ts: TileSet, index: int) -> Dictionary:
 		return {valid = false}
 	
 	var terrain = ts_meta.terrains[index]
-	return {name = terrain[0], color = terrain[1], type = terrain[2], valid = true}
+	return {
+		name = terrain[0],
+		color = terrain[1],
+		type = terrain[2],
+		categories = terrain[3],
+		valid = true
+	}
 
 
-func set_terrain(ts: TileSet, index: int, name: String, color: Color, type: int) -> bool:
+func set_terrain(ts: TileSet, index: int, name: String, color: Color, type: int, categories: Array = []) -> bool:
 	if !ts or name.is_empty() or index < 0 or type < 0 or type >= TerrainType.MAX:
 		return false
 	
@@ -335,15 +401,25 @@ func set_terrain(ts: TileSet, index: int, name: String, color: Color, type: int)
 	if index >= ts_meta.terrains.size():
 		return false
 	
-	_clear_invalid_peering_types(ts)
+	if type == TerrainType.CATEGORY and !categories.is_empty():
+		return false
+	for c in categories:
+		if c < 0 or c == index or c >= ts_meta.terrains.size() or ts_meta.terrains[c][2] != TerrainType.CATEGORY:
+			return false
 	
-	ts_meta.terrains[index] = [name, color, type]
+	if type != TerrainType.CATEGORY:
+		for t in ts_meta.terrains:
+			t[3].erase(index)
+	
+	ts_meta.terrains[index] = [name, color, type, categories]
 	_set_terrain_meta(ts, ts_meta)
 	
+	_clear_invalid_peering_types(ts)
 	_purge_cache(ts)
 	return true
 
 
+# Update all peering and categories correctly
 func swap_terrains(ts: TileSet, index1: int, index2: int) -> bool:
 	if !ts or index1 < 0 or index2 < 0 or index1 == index2:
 		return false
@@ -351,6 +427,17 @@ func swap_terrains(ts: TileSet, index1: int, index2: int) -> bool:
 	var ts_meta := _get_terrain_meta(ts)
 	if index1 >= ts_meta.terrains.size() or index2 >= ts_meta.terrains.size():
 		return false
+	
+	for t in ts_meta.terrains:
+		var has1 = t[3].has(index1)
+		var has2 = t[3].has(index2)
+		
+		if has1 and !has2:
+			t[3].erase(index1)
+			t[3].push_back(index2)
+		elif has2 and !has1:
+			t[3].erase(index2)
+			t[3].push_back(index1)
 	
 	for s in ts.get_source_count():
 		var source := ts.get_source(ts.get_source_id(s)) as TileSetAtlasSource
@@ -406,6 +493,8 @@ func set_tile_terrain_type(ts: TileSet, td: TileData, type: int) -> bool:
 	if type == -1:
 		td_meta = null
 	_set_tile_meta(td, td_meta)
+	
+	_clear_invalid_peering_types(ts)
 	_purge_cache(ts)
 	return true
 
