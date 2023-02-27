@@ -1,18 +1,41 @@
 @tool
 extends Node
 
+## A [TileMap] terrain / auto-tiling system.
+##
+## This is a drop-in replacement for Godot 4's tilemap terrain system, offering
+## more versatile and straightforward autotiling. It can be used with any
+## existing [TileMap] or [TileSet], either through the editor plugin, or
+## directly via code.
+## [br][br]
+## The [b]BetterTerrain[/b] class contains only static functions, each of which
+## either takes a [TileMap], a [TileSet], and sometimes a [TileData]. Meta-data
+## is embedded inside the [TileSet] and the [TileData] types to store the
+## terrain information. See [method Object.get_meta] for information.
+## [br][br]
+## Once terrain is set up, it can be written to the tilemap using [method set_cells].
+## Similar to Godot 3.x, setting the cells does not run the terrain solved, so once
+## the cells have been set, you need to call an update function such as [method update_terrain_cells].
+
+
+## The meta-data key used to store terrain information.
 const TERRAIN_META = &"_better_terrain"
+
+## The current version. Used to handle future upgrades.
 const TERRAIN_SYSTEM_VERSION = "0.1"
 
 var _tile_cache = {}
+
+## A helper class that provides functions detailing valid peering bits and
+## polygons for different tile types.
 var data := load("res://addons/better-terrain/BetterTerrainData.gd"):
 	get:
 		return data
 
 enum TerrainType {
-	MATCH_TILES,
-	MATCH_VERTICES,
-	CATEGORY,
+	MATCH_TILES, ## Selects tiles by matching against adjacent tiles.
+	MATCH_VERTICES, ## Select tiles by analysing vertices, similar to wang-style tiles.
+	CATEGORY, ## Declares a matching type for more sophisticated rules.
 	MAX
 }
 
@@ -274,8 +297,11 @@ func _widen_with_exclusion(tm: TileMap, coords: Array, exclusion: Rect2i) -> Arr
 				result[t] = true
 	return result.keys()
 
+# Terrains
 
-# Terrain types
+## Returns an [Array] of categories. These are the terrains in the [TileSet] which
+## are marked with [enum TerrainType] of [code]CATEGORY[/code]. Each entry in the
+## array is a [Dictionary] with [code]name[/code], [code]color[/code], and [code]id[/code].
 func get_terrain_categories(ts: TileSet) -> Array:
 	var result = []
 	if !ts:
@@ -290,6 +316,11 @@ func get_terrain_categories(ts: TileSet) -> Array:
 	return result
 
 
+## Adds a new terrain to the [TileSet]. Returns [code]true[/code] if this is successful.
+## [br][br]
+## [code]type[/code] must be one of [enum TerrainType].[br]
+## [code]categories[/code] is an indexed list of terrain categories that this terrain
+## can match as. The indexes must be valid terrains of the CATEGORY type.
 func add_terrain(ts: TileSet, name: String, color: Color, type: int, categories: Array = []) -> bool:
 	if !ts or name.is_empty() or type < 0 or type >= TerrainType.MAX:
 		return false
@@ -309,6 +340,8 @@ func add_terrain(ts: TileSet, name: String, color: Color, type: int, categories:
 	return true
 
 
+## Removes the terrain at [code]index[/code] from the [TileSet]. Returns [code]true[/code]
+## if the deletion is successful.
 func remove_terrain(ts: TileSet, index: int) -> bool:
 	if !ts or index < 0:
 		return false
@@ -367,6 +400,7 @@ func remove_terrain(ts: TileSet, index: int) -> bool:
 	return true
 
 
+## Returns the number of terrains in the [TileSet].
 func terrain_count(ts: TileSet) -> int:
 	if !ts:
 		return 0
@@ -375,6 +409,12 @@ func terrain_count(ts: TileSet) -> int:
 	return ts_meta.terrains.size()
 
 
+## Retrieves information about the terrain at [code]index[/code] in the [TileSet].
+## [br][br]
+## Returns a [Dictionary] describing the terrain. If it succeeds, the key [code]valid[/code]
+## will be set to [code]true[/code]. Other keys are [code]name[/code], [code]color[/code],
+## [code]type[/code] (a [enum TerrainType]), and [code]categories[/code] which is
+## an [Array] of category type terrains that this terrain matches as.
 func get_terrain(ts: TileSet, index: int) -> Dictionary:
 	if !ts or index < 0:
 		return {valid = false}
@@ -393,6 +433,11 @@ func get_terrain(ts: TileSet, index: int) -> Dictionary:
 	}
 
 
+## Updates the details of the terrain at [code]index[/code] in [TileSet]. Returns
+## [code]true[/code] if this succeeds.
+## [br][br]
+## If supplied, the [code]categories[/code] must be a list of indexes to other [code]CATEGORY[/code]
+## type terrains.
 func set_terrain(ts: TileSet, index: int, name: String, color: Color, type: int, categories: Array = []) -> bool:
 	if !ts or name.is_empty() or index < 0 or type < 0 or type >= TerrainType.MAX:
 		return false
@@ -419,7 +464,7 @@ func set_terrain(ts: TileSet, index: int, name: String, color: Color, type: int,
 	return true
 
 
-# Update all peering and categories correctly
+## Swaps the terrains at [code]index1[/code] and [code]index2[/code] in [TileSet].
 func swap_terrains(ts: TileSet, index1: int, index2: int) -> bool:
 	if !ts or index1 < 0 or index2 < 0 or index1 == index2:
 		return false
@@ -484,6 +529,10 @@ func swap_terrains(ts: TileSet, index1: int, index2: int) -> bool:
 
 
 # Terrain tile data
+
+## For a tile in a [TileSet] as specified by [TileData], set the terrain associated
+## with that tile to [code]type[/code], which is an index of an existing terrain.
+## Returns [code]true[/code] on success.
 func set_tile_terrain_type(ts: TileSet, td: TileData, type: int) -> bool:
 	if !ts or !td or type < -1:
 		return false
@@ -499,6 +548,8 @@ func set_tile_terrain_type(ts: TileSet, td: TileData, type: int) -> bool:
 	return true
 
 
+## Returns the terrain type associated with tile specified by [TileData]. Returns
+## -1 if the tile has no associated terrain.
 func get_tile_terrain_type(td: TileData) -> int:
 	if !td:
 		return -1
@@ -506,6 +557,9 @@ func get_tile_terrain_type(td: TileData) -> int:
 	return td_meta.type
 
 
+## For a [TileSet]'s tile, specified by [TileData], add terrain [code]type[/code]
+## (an index of a terrain) to match this tile in direction [code]peering[/code],
+## which is of type [enum TileSet.CellNeighbor]. Returns [code]true[/code] on success.
 func add_tile_peering_type(ts: TileSet, td: TileData, peering: int, type: int) -> bool:
 	if !ts or !td or peering < 0 or peering > 15 or type < 0:
 		return false
@@ -526,6 +580,9 @@ func add_tile_peering_type(ts: TileSet, td: TileData, peering: int, type: int) -
 	return true
 
 
+## For a [TileSet]'s tile, specified by [TileData], remove terrain [code]type[/code]
+## from matching in direction [code]peering[/code], which is of type [enum TileSet.CellNeighbor].
+## Returns [code]true[/code] on success.
 func remove_tile_peering_type(ts: TileSet, td: TileData, peering: int, type: int) -> bool:
 	if !ts or !td or peering < 0 or peering > 15 or type < 0:
 		return false
@@ -543,6 +600,8 @@ func remove_tile_peering_type(ts: TileSet, td: TileData, peering: int, type: int
 	return true
 
 
+## For the tile specified by [TileData], return an [Array] of peering directions
+## for which terrain matching is set up. These will be of type [enum TileSet.CellNeighbor].
 func tile_peering_keys(td: TileData) -> Array:
 	if !td:
 		return []
@@ -555,6 +614,8 @@ func tile_peering_keys(td: TileData) -> Array:
 	return result
 
 
+## For the tile specified by [TileData], return the [Array] of terrains that match
+## for the direction [code]peering[/code] which should be of type [enum TileSet.CellNeighbor].
 func tile_peering_types(td: TileData, peering: int) -> Array:
 	if !td or peering < 0 or peering > 15:
 		return []
@@ -564,6 +625,10 @@ func tile_peering_types(td: TileData, peering: int) -> Array:
 
 
 # Painting
+
+## Applies the terrain [code]type[/code] to the [TileMap] for the [code]layer[/code]
+## and [code]coord[/code]. Returns [code]true[/code] if it succeeds. Use [method set_cells]
+## to change multiple tiles at once.
 func set_cell(tm: TileMap, layer: int, coord: Vector2i, type: int) -> bool:
 	if !tm or !tm.tile_set or layer < 0 or layer >= tm.get_layers_count() or type < 0:
 		return false
@@ -580,6 +645,16 @@ func set_cell(tm: TileMap, layer: int, coord: Vector2i, type: int) -> bool:
 	return true
 
 
+## Applies the terrain [code]type[/code] to the [TileMap] for the [code]layer[/code]
+## and [Vector2i] [code]coords[/code]. Returns [code]true[/code] if it succeeds.
+## [br][br]
+## Note that this does not cause the terrain solver to run, so this will just place
+## an arbitrary terrain-associated tile in the given position. To run the solver,
+## you must set the require cells, and then call either [method update_terrain_cell],
+## [method update_terrain_cels], or [method update_terrain_area].
+## [br][br]
+## If you want to prepare changes to the tiles in advance, you can use [method create_terrain_changeset]
+## and the associated functions.
 func set_cells(tm: TileMap, layer: int, coords: Array, type: int) -> bool:
 	if !tm or !tm.tile_set or layer < 0 or layer >= tm.get_layers_count() or type < 0:
 		return false
@@ -594,6 +669,9 @@ func set_cells(tm: TileMap, layer: int, coords: Array, type: int) -> bool:
 	return true
 
 
+## Returns the terrain type detected in the [TileMap] at specified [code]layer[/code]
+## and [code]coord[/code]. Returns -1 if tile is not valid or does not contain a
+## tile associated with a terrain.
 func get_cell(tm: TileMap, layer: int, coord: Vector2i) -> int:
 	if !tm or !tm.tile_set or layer < 0 or layer >= tm.get_layers_count():
 		return -1
@@ -608,6 +686,12 @@ func get_cell(tm: TileMap, layer: int, coord: Vector2i) -> int:
 	return _get_tile_meta(t).type
 
 
+## Runs the tile solving algorithm on the [TileMap] for the given [code]layer[/code]
+## for the [Vector2i] coordinates in the [code]cells[/code] parameter. By default,
+## the surrounding cells are also solved, but this can be adjusted by passing [code]false[/code]
+## to the [code]and_surrounding_cells[/code] parameter.
+## [br][br]
+## See also [method update_terrain_area] and [method update_terrain_cell].
 func update_terrain_cells(tm: TileMap, layer: int, cells: Array, and_surrounding_cells := true) -> void:
 	if !tm or !tm.tile_set or layer < 0 or layer >= tm.get_layers_count():
 		return
@@ -625,11 +709,20 @@ func update_terrain_cells(tm: TileMap, layer: int, cells: Array, and_surrounding
 		_update_tile_immediate(tm, layer, c, ts_meta, types)
 
 
-#helper
+## Runs the tile solving algorithm on the [TileMap] for the given [code]layer[/code]
+## and [code]cell[/code]. By default, the surrounding cells are also solved, but
+## this can be adjusted by passing [code]false[/code] to the [code]and_surrounding_cells[/code]
+## parameter. This calls through to [method update_terrain_cells].
 func update_terrain_cell(tm: TileMap, layer: int, cell: Vector2i, and_surrounding_cells := true) -> void:
 	update_terrain_cells(tm, layer, [cell], and_surrounding_cells)
 
 
+## Runs the tile solving algorithm on the [TileMap] for the given [code]layer[/code]
+## and [code]area[/code]. By default, the surrounding cells are also solved, but
+## this can be adjusted by passing [code]false[/code] to the [code]and_surrounding_cells[/code]
+## parameter.
+## [br][br]
+## See also [method update_terrain_cells].
 func update_terrain_area(tm: TileMap, layer: int, area: Rect2i, and_surrounding_cells := true) -> void:
 	if !tm or !tm.tile_set or layer < 0 or layer >= tm.get_layers_count():
 		return
@@ -670,8 +763,16 @@ func update_terrain_area(tm: TileMap, layer: int, area: Rect2i, and_surrounding_
 		_update_tile_immediate(tm, layer, c, ts_meta, types)
 
 
-# Threaded actions
-func create_terrain_changeset(tm: TileMap, layer: int, paint: Dictionary):
+## For a [TileMap], on a specific [code]layer[/code], create a changeset that will
+## be calculated via a [WorkerThreadPool], so it will not delay processing the current
+## frame or affect the framerate.
+## [br][br]
+## The [code]paint[/code] parameter must be a [Dictionary] with keys of type [Vector2i]
+## representing map coordinates, and integer values representing terrain types.
+## [br][br]
+## Returns a [Dictionary] with internal details. See also [method is_terrain_changeset_ready],
+## [method apply_terrain_changeset], and [method wait_for_terrain_changeset].
+func create_terrain_changeset(tm: TileMap, layer: int, paint: Dictionary) -> Dictionary:
 	# Force cache rebuild if required
 	var _cache := _get_cache(tm.tile_set)
 	
@@ -699,6 +800,9 @@ func create_terrain_changeset(tm: TileMap, layer: int, paint: Dictionary):
 	}
 
 
+## Returns [code]true[/code] if a changeset created by [method create_terrain_changeset]
+## has finished the threaded calculation and is ready to be applied by [method apply_terrain_changeset].
+## See also [method wait_for_terrain_changeset].
 func is_terrain_changeset_ready(change: Dictionary) -> bool:
 	if !change.has("group_id"):
 		return false
@@ -706,12 +810,28 @@ func is_terrain_changeset_ready(change: Dictionary) -> bool:
 	return WorkerThreadPool.is_group_task_completed(change.group_id)
 
 
+## Blocks until a changeset created by [method create_terrain_changeset] finishes.
+## This is useful to tidy up threaded work in the event that a node is to be removed
+## whilst still waiting on threads.
+## [br][br]
+## Usage example:
+## [codeblock]
+## func _exit_tree():
+##     if changeset.valid:
+##         BetterTerrain.wait_for_terrain_changeset(changeset)
+## [/codeblock]
 func wait_for_terrain_changeset(change: Dictionary) -> void:
 	if change.has("group_id"):
 		WorkerThreadPool.wait_for_group_task_completion(change.group_id)
 
 
-func apply_terrain_changeset(change: Dictionary):
+## Apply the changes in a changeset created by [method create_terrain_changeset]
+## once it is confirmed by [method is_terrain_changeset_ready]. The changes will
+## be applied to the [TileMap] that the changeset was initialized with.
+## [br][br]
+## Completed changesets can be applied multiple times, and stored for as long as
+## needed once calculated.
+func apply_terrain_changeset(change: Dictionary) -> void:
 	for n in change.cells.size():
 		var placement = change.placements[n]
 		if placement:

@@ -20,13 +20,11 @@ Now when you select a tilemap node, a new dock tab called 'Terrains' will show u
 
 ### Usage in the editor
 
-I'll write specific documentation in the coming weeks. Here are some rough notes.
-
 The dock has terrain types on the left, and tiles on the right. At the bottom of the terrain types, there are buttons to add, modify, sort, or remove terrain types. A terrain type has a name, a color, and a type. The three types are:
 
 * **Match tiles**: This terrain places tiles based on how well they match their neighboring tiles. It's a good replacement for '3x3' and '3x3 minimal' from Godot 3, and 'Match sides' and 'Match corners and sides' from Godot 4's built-in terrain system.
 * **Match vertices**: This terrain analyses the vertices of each tile and chooses the highest neighboring terrain type (as in, highest in the terrain list, with empty/non-terrain being the highest overall). It's a replacement for '2x2' in Godot 3, or 'Match corners' in Godot 4.
-* **Non-modifying**. This terrain type does not look at neighboring tiles and never modifies tiles. It's useful for getting terrain to connect with non-terrain tiles in a smart way, without modifying those tiles.
+* **Category**. Categories are used to create advanced matching rules. Tiles assigned to a category never modify the tilemap, but terrains can match against categories, and also belong to them.
 
 Along the top, you will find the following buttons:
 
@@ -55,6 +53,8 @@ Once cell(s) are set, they must be updated. Use one of these functions to run th
 * `func update_terrain_cell(tm: TileMap, layer: int, cell: Vector2i, and_surrounding_cells := true) -> void`
 * `func update_terrain_area(tm: TileMap, layer: int, area: Rect2i, and_surrounding_cells := true) -> void`
 
+Documentation is available in Godot's editor help system, accessed by pressing F1.
+
 ### Contact
 
-Feel free to report bugs here, or find me (Portponky) on the Godot official discord server. Have fun!
+Feel free to report bugs here, or find me (Portponky#6300) on the Godot official discord server. Have fun!
