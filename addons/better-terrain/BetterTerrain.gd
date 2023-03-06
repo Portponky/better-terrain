@@ -116,7 +116,7 @@ func _get_cache(ts: TileSet) -> Array:
 					
 					peering[key] = targets
 				
-				cache[td_meta.type].push_back([source_id, coord, alternate, peering])
+				cache[td_meta.type].push_back([source_id, coord, alternate, peering, td.probability])
 	
 	return cache
 
@@ -174,6 +174,24 @@ func _update_terrain_data(ts: TileSet) -> void:
 		_set_terrain_meta(ts, ts_meta)
 
 
+func _weighted_selection(choices: Array):
+	if choices.is_empty():
+		return null
+	if choices.size() == 1:
+		return choices[0]
+	
+	var weight = choices.reduce(func(a, c): return a + c[4], 0.0)
+	if weight == 0.0:
+		return choices[randi() % choices.size()]
+	
+	var pick = randf() * weight
+	for c in choices:
+		if pick < c[4]:
+			return c
+		pick -= c[4]
+	return choices.back()
+
+
 func _update_tile_tiles(tm: TileMap, layer: int, coord: Vector2i, types: Dictionary):
 	var type = types[coord]
 	var c := _get_cache(tm.tile_set)
@@ -191,10 +209,7 @@ func _update_tile_tiles(tm: TileMap, layer: int, coord: Vector2i, types: Diction
 		elif score == best_score:
 			best.append(t)
 	
-	if best.is_empty():
-		return null
-	
-	return best[randi() % best.size()]
+	return _weighted_selection(best)
 
 
 func _probe(tm: TileMap, coord: Vector2i, peering: int, types: Dictionary, goal: Array) -> int:
@@ -241,10 +256,7 @@ func _update_tile_vertices(tm: TileMap, layer: int, coord: Vector2i, types: Dict
 		elif score == best_score:
 			best.append(t)
 	
-	if best.is_empty():
-		return null
-	
-	return best[randi() % best.size()]
+	return _weighted_selection(best)
 
 
 func _update_tile_immediate(tm: TileMap, layer: int, coord: Vector2i, ts_meta: Dictionary, types: Dictionary) -> void:
