@@ -78,8 +78,15 @@ func _get_cache(ts: TileSet) -> Array:
 	var cache = []
 	if !ts:
 		return cache
-	
 	_tile_cache[ts] = cache
+
+	var watcher = Node.new()
+	watcher.set_script(load("res://addons/better-terrain/Watcher.gd"))
+	watcher.tileset = ts
+	watcher.trigger.connect(_purge_cache.bind(ts))
+	add_child(watcher)
+	ts.changed.connect(watcher.activate)
+	
 	var types = []
 	
 	var ts_meta := _get_terrain_meta(ts)
@@ -95,6 +102,7 @@ func _get_cache(ts: TileSet) -> Array:
 		var source := ts.get_source(source_id) as TileSetAtlasSource
 		if !source:
 			continue
+		source.changed.connect(watcher.activate)
 		for c in source.get_tiles_count():
 			var coord := source.get_tile_id(c)
 			for a in source.get_alternative_tiles_count(coord):
@@ -104,6 +112,7 @@ func _get_cache(ts: TileSet) -> Array:
 				if td_meta.type < 0 or td_meta.type >= cache.size():
 					continue
 				
+				td.changed.connect(watcher.activate)
 				var peering = {}
 				for key in td_meta.keys():
 					if !(key is int):
@@ -116,13 +125,17 @@ func _get_cache(ts: TileSet) -> Array:
 					
 					peering[key] = targets
 				
-				cache[td_meta.type].push_back([source_id, coord, alternate, peering])
+				cache[td_meta.type].push_back([source_id, coord, alternate, peering, td.probability])
 	
 	return cache
 
 
 func _purge_cache(ts: TileSet) -> void:
 	_tile_cache.erase(ts)
+	for c in get_children():
+		if c.tileset == ts:
+			c.tidy()
+			break
 
 
 func _clear_invalid_peering_types(ts: TileSet) -> void:
@@ -174,6 +187,24 @@ func _update_terrain_data(ts: TileSet) -> void:
 		_set_terrain_meta(ts, ts_meta)
 
 
+func _weighted_selection(choices: Array):
+	if choices.is_empty():
+		return null
+	if choices.size() == 1:
+		return choices[0]
+	
+	var weight = choices.reduce(func(a, c): return a + c[4], 0.0)
+	if weight == 0.0:
+		return choices[randi() % choices.size()]
+	
+	var pick = randf() * weight
+	for c in choices:
+		if pick < c[4]:
+			return c
+		pick -= c[4]
+	return choices.back()
+
+
 func _update_tile_tiles(tm: TileMap, layer: int, coord: Vector2i, types: Dictionary):
 	var type = types[coord]
 	var c := _get_cache(tm.tile_set)
@@ -191,10 +222,7 @@ func _update_tile_tiles(tm: TileMap, layer: int, coord: Vector2i, types: Diction
 		elif score == best_score:
 			best.append(t)
 	
-	if best.is_empty():
-		return null
-	
-	return best[randi() % best.size()]
+	return _weighted_selection(best)
 
 
 func _probe(tm: TileMap, coord: Vector2i, peering: int, types: Dictionary, goal: Array) -> int:
@@ -241,10 +269,7 @@ func _update_tile_vertices(tm: TileMap, layer: int, coord: Vector2i, types: Dict
 		elif score == best_score:
 			best.append(t)
 	
-	if best.is_empty():
-		return null
-	
-	return best[randi() % best.size()]
+	return _weighted_selection(best)
 
 
 func _update_tile_immediate(tm: TileMap, layer: int, coord: Vector2i, ts_meta: Dictionary, types: Dictionary) -> void:
