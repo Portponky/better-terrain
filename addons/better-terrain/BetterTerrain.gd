@@ -78,8 +78,15 @@ func _get_cache(ts: TileSet) -> Array:
 	var cache = []
 	if !ts:
 		return cache
-	
 	_tile_cache[ts] = cache
+
+	var watcher = Node.new()
+	watcher.set_script(load("res://addons/better-terrain/Watcher.gd"))
+	watcher.tileset = ts
+	watcher.trigger.connect(_purge_cache.bind(ts))
+	add_child(watcher)
+	ts.changed.connect(watcher.activate)
+	
 	var types = []
 	
 	var ts_meta := _get_terrain_meta(ts)
@@ -95,6 +102,7 @@ func _get_cache(ts: TileSet) -> Array:
 		var source := ts.get_source(source_id) as TileSetAtlasSource
 		if !source:
 			continue
+		source.changed.connect(watcher.activate)
 		for c in source.get_tiles_count():
 			var coord := source.get_tile_id(c)
 			for a in source.get_alternative_tiles_count(coord):
@@ -104,6 +112,7 @@ func _get_cache(ts: TileSet) -> Array:
 				if td_meta.type < 0 or td_meta.type >= cache.size():
 					continue
 				
+				td.changed.connect(watcher.activate)
 				var peering = {}
 				for key in td_meta.keys():
 					if !(key is int):
@@ -123,6 +132,10 @@ func _get_cache(ts: TileSet) -> Array:
 
 func _purge_cache(ts: TileSet) -> void:
 	_tile_cache.erase(ts)
+	for c in get_children():
+		if c.tileset == ts:
+			c.tidy()
+			break
 
 
 func _clear_invalid_peering_types(ts: TileSet) -> void:
