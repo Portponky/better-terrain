@@ -59,7 +59,7 @@ Documentation is available in Godot's editor help system, accessed by pressing F
 
 I made some impromptu videos on how to use this plugin.
 
-https://www.youtube.com/watch?v=o0wHgqYQf48&list=PL2lDzGzxtEmeKDUQcpYx4YA1HpH3tzYqZ&pp=gAQBiAQB
+[![Tutorial videos](http://img.youtube.com/vi/o0wHgqYQf48/0.jpg)](https://www.youtube.com/watch?v=o0wHgqYQf48&list=PL2lDzGzxtEmeKDUQcpYx4YA1HpH3tzYqZ "Tutorial videos")
 
 ### Contact
 
