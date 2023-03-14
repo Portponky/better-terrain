@@ -55,6 +55,12 @@ Once cell(s) are set, they must be updated. Use one of these functions to run th
 
 Documentation is available in Godot's editor help system, accessed by pressing F1.
 
+### Videos
+
+I made some impromptu videos on how to use this plugin.
+
+https://www.youtube.com/watch?v=o0wHgqYQf48&list=PL2lDzGzxtEmeKDUQcpYx4YA1HpH3tzYqZ&pp=gAQBiAQB
+
 ### Contact
 
 Feel free to report bugs here, or find me (Portponky#6300) on the Godot official discord server. Have fun!
