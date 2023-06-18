@@ -655,9 +655,15 @@ func tile_peering_types(td: TileData, peering: int) -> Array:
 ## Applies the terrain [code]type[/code] to the [TileMap] for the [code]layer[/code]
 ## and [code]coord[/code]. Returns [code]true[/code] if it succeeds. Use [method set_cells]
 ## to change multiple tiles at once.
+## [br][br]
+## Use terrain type -1 to erase cells.
 func set_cell(tm: TileMap, layer: int, coord: Vector2i, type: int) -> bool:
-	if !tm or !tm.tile_set or layer < 0 or layer >= tm.get_layers_count() or type < 0:
+	if !tm or !tm.tile_set or layer < 0 or layer >= tm.get_layers_count() or type < -1:
 		return false
+	
+	if type == -1:
+		tm.erase_cell(layer, coord)
+		return true
 	
 	var cache := _get_cache(tm.tile_set)
 	if type >= cache.size():
@@ -681,9 +687,16 @@ func set_cell(tm: TileMap, layer: int, coord: Vector2i, type: int) -> bool:
 ## [br][br]
 ## If you want to prepare changes to the tiles in advance, you can use [method create_terrain_changeset]
 ## and the associated functions.
+## [br][br]
+## Use terrain type -1 to erase cells.
 func set_cells(tm: TileMap, layer: int, coords: Array, type: int) -> bool:
-	if !tm or !tm.tile_set or layer < 0 or layer >= tm.get_layers_count() or type < 0:
+	if !tm or !tm.tile_set or layer < 0 or layer >= tm.get_layers_count() or type < -1:
 		return false
+	
+	if type == -1:
+		for c in coords:
+			tm.erase_cell(layer, c)
+		return true
 	
 	var cache := _get_cache(tm.tile_set)
 	if type >= cache.size():
