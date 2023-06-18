@@ -39,7 +39,7 @@ enum TerrainType {
 	MAX
 }
 
-# Array intersection
+
 func _intersect(first: Array, second: Array) -> bool:
 	if first.size() > second.size():
 		return _intersect(second, first) # Array 'has' is fast compared to gdscript loop
@@ -50,6 +50,7 @@ func _intersect(first: Array, second: Array) -> bool:
 
 
 # Meta-data functions
+
 func _get_terrain_meta(ts: TileSet) -> Dictionary:
 	return ts.get_meta(TERRAIN_META) if ts and ts.has_meta(TERRAIN_META) else {
 		terrains = [],
