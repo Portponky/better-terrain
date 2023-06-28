@@ -1,8 +1,10 @@
 @tool
 extends Control
 
+signal paste_occurred
+signal change_zoom_level(value)
+
 @onready var checkerboard := get_theme_icon("Checkerboard", "EditorIcons")
-@onready var dock = $"../../../../.."
 
 var tileset: TileSet
 
@@ -231,7 +233,6 @@ func tile_rect_from_position(position: Vector2i) -> Rect2:
 	return Rect2(-1,-1,0,0)
 
 
-#func get_tiles_in_rect(rect:Rect2i) -> Array[Vector2i]:
 func tile_parts_from_rect(rect:Rect2) -> Array[Dictionary]:
 	if !tileset:
 		return []
@@ -265,9 +266,9 @@ func tile_parts_from_rect(rect:Rect2) -> Array[Dictionary]:
 				var alt_id := 0
 				if a == 0:
 					continue
-				else:
-					target_rect = Rect2(alt_offset + zoom_level * (a - 1) * tile_rect.size.x * Vector2.RIGHT, zoom_level * tile_rect.size)
-					alt_id = source.get_alternative_tile_id(coord, a)
+				
+				target_rect = Rect2(alt_offset + zoom_level * (a - 1) * tile_rect.size.x * Vector2.RIGHT, zoom_level * tile_rect.size)
+				alt_id = source.get_alternative_tile_id(coord, a)
 				if target_rect.intersects(rect):
 					var td := source.get_tile_data(coord, alt_id)
 					var result := {
@@ -312,12 +313,14 @@ func _draw_tile_data(texture: Texture2D, rect: Rect2, src_rect: Rect2, td: TileD
 	if paint < 0 or paint >= BetterTerrain.terrain_count(tileset):
 		return
 	
-	if draw_sides:
-		var paint_terrain := BetterTerrain.get_terrain(tileset, paint)
-		for p in BetterTerrain.data.get_terrain_peering_cells(tileset, terrain.type):
-			if paint in BetterTerrain.tile_peering_types(td, p):
-				var side_polygon = BetterTerrain.data.peering_polygon(tileset, terrain.type, p)
-				draw_colored_polygon(transform * side_polygon, Color(paint_terrain.color, 0.6))
+	if not draw_sides:
+		return
+	
+	var paint_terrain := BetterTerrain.get_terrain(tileset, paint)
+	for p in BetterTerrain.data.get_terrain_peering_cells(tileset, terrain.type):
+		if paint in BetterTerrain.tile_peering_types(td, p):
+			var side_polygon = BetterTerrain.data.peering_polygon(tileset, terrain.type, p)
+			draw_colored_polygon(transform * side_polygon, Color(paint_terrain.color, 0.6))
 
 
 func _draw() -> void:
@@ -449,9 +452,7 @@ func paste_selection():
 	selected_tile_states = []
 	paint_mode = PaintMode.PASTE
 	paint_action = PaintAction.PASTE
-	dock.paint_type.button_pressed = false
-	dock.paint_terrain.button_pressed = false
-	dock.select_tiles.button_pressed = true
+	paste_occurred.emit()
 	queue_redraw()
 
 
@@ -480,10 +481,10 @@ func _gui_input(event) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP and event.ctrl_pressed:
 			accept_event()
-			dock.zoom_slider.value *= 1.1
+			change_zoom_level.emit(zoom_level * 1.1)
 		if event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.ctrl_pressed:
 			accept_event()
-			dock.zoom_slider.value /= 1.1
+			change_zoom_level.emit(zoom_level / 1.1)
 	
 	var released : bool = event is InputEventMouseButton and (not event.pressed and (event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_RIGHT))
 	if released:
@@ -513,36 +514,37 @@ func _gui_input(event) -> void:
 			queue_redraw()
 		
 		if clicked:
-			if event.button_index == MOUSE_BUTTON_LEFT:
-				if staged_paste_tile_states.size() > 0:
-					undo_manager.create_action("Paste tile terrain peering types", UndoRedo.MERGE_DISABLE, tileset)
-					var base_rect = staged_paste_tile_states[0].base_rect
-					for p in staged_paste_tile_states:
-						var staged_rect:Rect2 = p.base_rect
-						staged_rect.position -= base_rect.position + base_rect.size / 2
-						
-						staged_rect.position *= zoom_level
-						staged_rect.size *= zoom_level
-						
-						staged_rect.position += Vector2(current_position)
-						
-						var old_tile_part = tile_part_from_position(staged_rect.get_center())
-						var new_tile_state = p
-						if old_tile_part.valid and new_tile_state.part.valid:
-							for side in range(16): #not sure how to loop over or get max value of an enum like TileSet.CellNeighbor
-								var old_peering = BetterTerrain.tile_peering_types(old_tile_part.data, side)
-								var new_sides = new_tile_state.sides
-								if old_peering.has(paint) != new_sides.has(side):
-									if new_sides.has(side):
-										undo_manager.add_do_method(BetterTerrain, &"add_tile_peering_type", tileset, old_tile_part.data, side, paint)
-										undo_manager.add_undo_method(BetterTerrain, &"remove_tile_peering_type", tileset, old_tile_part.data, side, paint)
-									else:
-										undo_manager.add_do_method(BetterTerrain, &"remove_tile_peering_type", tileset, old_tile_part.data, side, paint)
-										undo_manager.add_undo_method(BetterTerrain, &"add_tile_peering_type", tileset, old_tile_part.data, side, paint)
-									
-					undo_manager.add_do_method(self, &"queue_redraw")
-					undo_manager.add_undo_method(self, &"queue_redraw")
-					undo_manager.commit_action()
+			if event.button_index == MOUSE_BUTTON_LEFT and staged_paste_tile_states.size() > 0:
+				undo_manager.create_action("Paste tile terrain peering types", UndoRedo.MERGE_DISABLE, tileset)
+				var base_rect = staged_paste_tile_states[0].base_rect
+				for p in staged_paste_tile_states:
+					var staged_rect:Rect2 = p.base_rect
+					staged_rect.position -= base_rect.position + base_rect.size / 2
+					
+					staged_rect.position *= zoom_level
+					staged_rect.size *= zoom_level
+					
+					staged_rect.position += Vector2(current_position)
+					
+					var old_tile_part = tile_part_from_position(staged_rect.get_center())
+					var new_tile_state = p
+					if (not old_tile_part.valid) or (not new_tile_state.part.valid):
+						continue
+					
+					for side in range(16):
+						var old_peering = BetterTerrain.tile_peering_types(old_tile_part.data, side)
+						var new_sides = new_tile_state.sides
+						if old_peering.has(paint) != new_sides.has(side):
+							if new_sides.has(side):
+								undo_manager.add_do_method(BetterTerrain, &"add_tile_peering_type", tileset, old_tile_part.data, side, paint)
+								undo_manager.add_undo_method(BetterTerrain, &"remove_tile_peering_type", tileset, old_tile_part.data, side, paint)
+							else:
+								undo_manager.add_do_method(BetterTerrain, &"remove_tile_peering_type", tileset, old_tile_part.data, side, paint)
+								undo_manager.add_undo_method(BetterTerrain, &"add_tile_peering_type", tileset, old_tile_part.data, side, paint)
+								
+				undo_manager.add_do_method(self, &"queue_redraw")
+				undo_manager.add_undo_method(self, &"queue_redraw")
+				undo_manager.commit_action()
 			
 			staged_paste_tile_states = []
 			paint_mode = PaintMode.SELECT

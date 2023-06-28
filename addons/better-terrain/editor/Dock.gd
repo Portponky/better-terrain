@@ -88,6 +88,9 @@ func _ready() -> void:
 	add_child(terrain_undo)
 	tile_view.undo_manager = undo_manager
 	tile_view.terrain_undo = terrain_undo
+	
+	tile_view.connect("paste_occurred", _on_paste_occurred)
+	tile_view.connect("change_zoom_level", _on_change_zoom_level)
 
 
 func _get_fill_cells(target: Vector2i) -> Array:
@@ -391,11 +394,6 @@ func _on_fill_pressed() -> void:
 	fill_button.button_pressed = true
 
 
-func _on_replace_pressed() -> void:
-#	replace_button.button_pressed = not replace_button.button_pressed
-	pass
-
-
 func _on_paint_type_pressed() -> void:
 	paint_terrain.button_pressed = false
 	select_tiles.button_pressed = false
@@ -419,6 +417,16 @@ func _on_select_tiles_pressed() -> void:
 
 func _on_layer_options_item_selected(index) -> void:
 	layer = index
+
+
+func _on_paste_occurred():
+	paint_type.button_pressed = false
+	paint_terrain.button_pressed = false
+	select_tiles.button_pressed = true
+
+
+func _on_change_zoom_level(value):
+	zoom_slider.value = value
 
 
 func canvas_draw(overlay: Control) -> void:
@@ -554,6 +562,8 @@ func canvas_input(event: InputEvent) -> bool:
 		var type = selected.get_index()
 		
 		if paint_action == PaintAction.LINE:
+			# if painting as line, execution happens on release. 
+			# prevent other painting actions from running.
 			pass
 		elif draw_button.button_pressed:
 			undo_manager.create_action(tr("Draw terrain"), UndoRedo.MERGE_DISABLE, tilemap)
@@ -596,7 +606,6 @@ func canvas_mouse_exit() -> void:
 
 
 func _shortcut_input(event) -> void:
-#	print_debug(event)
 	if event is InputEventKey:
 		if event.keycode == KEY_C and event.ctrl_pressed and not event.echo:
 			get_viewport().set_input_as_handled()
@@ -606,7 +615,7 @@ func _shortcut_input(event) -> void:
 			tile_view.paste_selection()
 
 
-##bersenham alg ported from Geometry2D::bresenham_line()
+## bresenham alg ported from Geometry2D::bresenham_line()
 func _get_line(from:Vector2i, to:Vector2i) -> Array[Vector2i]:
 	if from == to:
 		return [to]
