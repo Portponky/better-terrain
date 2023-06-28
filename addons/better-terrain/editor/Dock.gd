@@ -514,7 +514,7 @@ func canvas_input(event: InputEvent) -> bool:
 			terrain_undo.create_tile_restore_point_area(undo_manager, tilemap, layer, area)
 			undo_manager.commit_action()
 			update_overlay.emit()
-		elif PaintAction.LINE and paint_mode != PaintMode.NO_PAINT:
+		elif paint_action == PaintAction.LINE and paint_mode != PaintMode.NO_PAINT:
 			undo_manager.create_action(tr("Draw terrain line"), UndoRedo.MERGE_DISABLE, tilemap)
 			var cells := _get_line(initial_click, current_position)
 			if paint_mode == PaintMode.PAINT:
@@ -526,6 +526,7 @@ func canvas_input(event: InputEvent) -> bool:
 			terrain_undo.create_tile_restore_point(undo_manager, tilemap, layer, cells)
 			undo_manager.commit_action()
 			update_overlay.emit()
+		
 		paint_mode = PaintMode.NO_PAINT
 		return true
 	
