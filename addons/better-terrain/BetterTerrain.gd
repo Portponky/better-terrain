@@ -583,6 +583,22 @@ func get_tile_terrain_type(td: TileData) -> int:
 	return td_meta.type
 
 
+## Returns an Array of all [TileData] tiles included in the specified
+## terrain [code]type[/code] for the [TileSet] [code]ts[/code]
+func get_tiles_in_terrain(ts: TileSet, type: int) -> Array[TileData]:
+	var result:Array[TileData] = []
+	
+	var cache := _get_cache(ts)
+	var tiles = cache[type]
+	if tiles and tiles.size() > 0:
+		for c in tiles:
+			var source := ts.get_source(c[0]) as TileSetAtlasSource
+			var td := source.get_tile_data(c[1], c[2])
+			result.push_back(td)
+	
+	return result
+
+
 ## For a [TileSet]'s tile, specified by [TileData], add terrain [code]type[/code]
 ## (an index of a terrain) to match this tile in direction [code]peering[/code],
 ## which is of type [enum TileSet.CellNeighbor]. Returns [code]true[/code] on success.
@@ -648,6 +664,21 @@ func tile_peering_types(td: TileData, peering: int) -> Array:
 	
 	var td_meta := _get_tile_meta(td)
 	return td_meta[peering].duplicate() if td_meta.has(peering) else []
+
+
+## For the tile specified by [TileData], return the [Array] of peering directions
+## for the specified terrain type [code]type[/code].
+func tile_peering_for_type(td: TileData, type: int) -> Array:
+	if !td:
+		return []
+	
+	var td_meta := _get_tile_meta(td)
+	var result = []
+	var sides = tile_peering_keys(td)
+	for side in sides:
+		if td_meta[side].has(type):
+			result.push_back(side)
+	return result
 
 
 # Painting
