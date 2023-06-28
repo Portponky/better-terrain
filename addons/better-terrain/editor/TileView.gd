@@ -534,14 +534,14 @@ func _gui_input(event) -> void:
 					for side in range(16):
 						var old_peering = BetterTerrain.tile_peering_types(old_tile_part.data, side)
 						var new_sides = new_tile_state.sides
-						if old_peering.has(paint) != new_sides.has(side):
-							if new_sides.has(side):
-								undo_manager.add_do_method(BetterTerrain, &"add_tile_peering_type", tileset, old_tile_part.data, side, paint)
-								undo_manager.add_undo_method(BetterTerrain, &"remove_tile_peering_type", tileset, old_tile_part.data, side, paint)
-							else:
-								undo_manager.add_do_method(BetterTerrain, &"remove_tile_peering_type", tileset, old_tile_part.data, side, paint)
-								undo_manager.add_undo_method(BetterTerrain, &"add_tile_peering_type", tileset, old_tile_part.data, side, paint)
-								
+						
+						if new_sides.has(side) and not old_peering.has(paint):
+							undo_manager.add_do_method(BetterTerrain, &"add_tile_peering_type", tileset, old_tile_part.data, side, paint)
+							undo_manager.add_undo_method(BetterTerrain, &"remove_tile_peering_type", tileset, old_tile_part.data, side, paint)
+						elif old_peering.has(paint) and not new_sides.has(side):
+							undo_manager.add_do_method(BetterTerrain, &"remove_tile_peering_type", tileset, old_tile_part.data, side, paint)
+							undo_manager.add_undo_method(BetterTerrain, &"add_tile_peering_type", tileset, old_tile_part.data, side, paint)
+						
 				undo_manager.add_do_method(self, &"queue_redraw")
 				undo_manager.add_undo_method(self, &"queue_redraw")
 				undo_manager.commit_action()
