@@ -7,7 +7,7 @@
 [ext_resource type="Texture2D" uid="uid://c0ii3ju7iesf4" path="res://addons/better-terrain/icons/Warning.svg" id="4_6ahwe"]
 [ext_resource type="Script" path="res://addons/better-terrain/editor/TileView.gd" id="4_nqppq"]
 
-[sub_resource type="Image" id="Image_fnfno"]
+[sub_resource type="Image" id="Image_ihkrt"]
 data = {
 "data": PackedByteArray(255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 94, 94, 127, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 93, 93, 255, 255, 94, 94, 127, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 94, 94, 127, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 94, 94, 127, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 231, 255, 94, 94, 54, 255, 94, 94, 57, 255, 93, 93, 233, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 231, 255, 94, 94, 54, 255, 94, 94, 57, 255, 93, 93, 233, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 97, 97, 42, 255, 255, 255, 0, 255, 255, 255, 0, 255, 97, 97, 42, 255, 93, 93, 233, 255, 93, 93, 232, 255, 93, 93, 41, 255, 255, 255, 0, 255, 255, 255, 0, 255, 97, 97, 42, 255, 93, 93, 233, 255, 93, 93, 232, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 96, 96, 45, 255, 93, 93, 44, 255, 255, 255, 0, 255, 97, 97, 42, 255, 97, 97, 42, 255, 255, 255, 0, 255, 96, 96, 45, 255, 93, 93, 44, 255, 255, 255, 0, 255, 97, 97, 42, 255, 97, 97, 42, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 96, 96, 45, 255, 93, 93, 235, 255, 94, 94, 234, 255, 95, 95, 43, 255, 255, 255, 0, 255, 255, 255, 0, 255, 96, 96, 45, 255, 93, 93, 235, 255, 94, 94, 234, 255, 95, 95, 43, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 235, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 233, 255, 95, 95, 59, 255, 96, 96, 61, 255, 93, 93, 235, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 233, 255, 95, 95, 59, 255, 96, 96, 61, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0),
 "format": "RGBA8",
@@ -16,8 +16,8 @@ data = {
 "width": 16
 }
 
-[sub_resource type="ImageTexture" id="ImageTexture_h5b0e"]
-image = SubResource("Image_fnfno")
+[sub_resource type="ImageTexture" id="ImageTexture_37lex"]
+image = SubResource("Image_ihkrt")
 
 [node name="Dock" type="Control" node_paths=PackedStringArray("shortcut_context")]
 custom_minimum_size = Vector2(0, 100)
@@ -47,45 +47,44 @@ layout_mode = 2
 tooltip_text = "Draw terrain"
 toggle_mode = true
 button_pressed = true
-icon = SubResource("ImageTexture_h5b0e")
+icon = SubResource("ImageTexture_37lex")
 flat = true
 
 [node name="Line" type="Button" parent="VBoxContainer/Toolbar"]
 layout_mode = 2
-tooltip_text = "Draw terrain"
+tooltip_text = "Draw line"
 toggle_mode = true
-icon = SubResource("ImageTexture_h5b0e")
+icon = SubResource("ImageTexture_37lex")
 flat = true
 
 [node name="Rectangle" type="Button" parent="VBoxContainer/Toolbar"]
 layout_mode = 2
 tooltip_text = "Fill a rectangle of terrain"
 toggle_mode = true
-icon = SubResource("ImageTexture_h5b0e")
+icon = SubResource("ImageTexture_37lex")
 flat = true
 
 [node name="Fill" type="Button" parent="VBoxContainer/Toolbar"]
 layout_mode = 2
 tooltip_text = "Bucket fill terrain"
 toggle_mode = true
-icon = SubResource("ImageTexture_h5b0e")
+icon = SubResource("ImageTexture_37lex")
 flat = true
 
 [node name="Replace" type="Button" parent="VBoxContainer/Toolbar"]
 layout_mode = 2
-tooltip_text = "Bucket fill terrain"
+tooltip_text = "Toggle replace mode"
 toggle_mode = true
 icon = ExtResource("2_fvmt6")
-flat = true
 
 [node name="VSeparator" type="VSeparator" parent="VBoxContainer/Toolbar"]
 layout_mode = 2
 
 [node name="SelectTiles" type="Button" parent="VBoxContainer/Toolbar"]
 layout_mode = 2
-tooltip_text = "Bucket fill terrain"
+tooltip_text = "Select"
 toggle_mode = true
-icon = SubResource("ImageTexture_h5b0e")
+icon = SubResource("ImageTexture_37lex")
 flat = true
 
 [node name="PaintType" type="Button" parent="VBoxContainer/Toolbar"]
@@ -155,31 +154,31 @@ size_flags_horizontal = 3
 [node name="AddTerrain" type="Button" parent="VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar"]
 layout_mode = 2
 tooltip_text = "Add terrain type"
-icon = SubResource("ImageTexture_h5b0e")
+icon = SubResource("ImageTexture_37lex")
 flat = true
 
 [node name="EditTerrain" type="Button" parent="VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar"]
 layout_mode = 2
 tooltip_text = "Edit terrain type"
-icon = SubResource("ImageTexture_h5b0e")
+icon = SubResource("ImageTexture_37lex")
 flat = true
 
 [node name="MoveUp" type="Button" parent="VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar"]
 layout_mode = 2
 tooltip_text = "Move selected terrain up"
-icon = SubResource("ImageTexture_h5b0e")
+icon = SubResource("ImageTexture_37lex")
 flat = true
 
 [node name="MoveDown" type="Button" parent="VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar"]
 layout_mode = 2
 tooltip_text = "Move selected terrain down"
-icon = SubResource("ImageTexture_h5b0e")
+icon = SubResource("ImageTexture_37lex")
 flat = true
 
 [node name="RemoveTerrain" type="Button" parent="VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar"]
 layout_mode = 2
 tooltip_text = "Remove selected terrain type(s)"
-icon = SubResource("ImageTexture_h5b0e")
+icon = SubResource("ImageTexture_37lex")
 flat = true
 
 [node name="Panel" type="Panel" parent="VBoxContainer/HSplitContainer"]

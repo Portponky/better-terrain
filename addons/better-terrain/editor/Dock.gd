@@ -368,7 +368,6 @@ func _on_draw_pressed() -> void:
 	line_button.button_pressed = false
 	rectangle_button.button_pressed = false
 	fill_button.button_pressed = false
-	replace_button.button_pressed = false
 
 
 func _on_line_pressed() -> void:
@@ -376,7 +375,6 @@ func _on_line_pressed() -> void:
 	line_button.button_pressed = true
 	rectangle_button.button_pressed = false
 	fill_button.button_pressed = false
-	replace_button.button_pressed = false
 
 
 func _on_rectangle_pressed() -> void:
@@ -384,7 +382,6 @@ func _on_rectangle_pressed() -> void:
 	line_button.button_pressed = false
 	rectangle_button.button_pressed = true
 	fill_button.button_pressed = false
-	replace_button.button_pressed = false
 
 
 func _on_fill_pressed() -> void:
@@ -392,15 +389,11 @@ func _on_fill_pressed() -> void:
 	line_button.button_pressed = false
 	rectangle_button.button_pressed = false
 	fill_button.button_pressed = true
-	replace_button.button_pressed = false
 
 
 func _on_replace_pressed() -> void:
-	draw_button.button_pressed = false
-	line_button.button_pressed = false
-	rectangle_button.button_pressed = false
-	fill_button.button_pressed = false
-	replace_button.button_pressed = true
+#	replace_button.button_pressed = not replace_button.button_pressed
+	pass
 
 
 func _on_paint_type_pressed() -> void:
@@ -496,6 +489,8 @@ func canvas_input(event: InputEvent) -> bool:
 		current_position = event_position
 		update_overlay.emit()
 	
+	var replace_mode = replace_button.button_pressed
+	
 	if event is InputEventMouseButton and !event.pressed:
 		var type = selected.get_index()
 		if rectangle_button.button_pressed and paint_mode != PaintMode.NO_PAINT:
@@ -506,7 +501,10 @@ func canvas_input(event: InputEvent) -> bool:
 				for x in range(area.position.x, area.end.x + 1):
 					var coord := Vector2i(x, y)
 					if paint_mode == PaintMode.PAINT:
-						undo_manager.add_do_method(BetterTerrain, &"set_cell", tilemap, layer, coord, type)
+						if replace_mode:
+							undo_manager.add_do_method(BetterTerrain, &"replace_cell", tilemap, layer, coord, tileset, type)
+						else:
+							undo_manager.add_do_method(BetterTerrain, &"set_cell", tilemap, layer, coord, type)
 					else:
 						undo_manager.add_do_method(tilemap, &"erase_cell", layer, coord)
 			
@@ -518,7 +516,10 @@ func canvas_input(event: InputEvent) -> bool:
 			undo_manager.create_action(tr("Draw terrain line"), UndoRedo.MERGE_DISABLE, tilemap)
 			var cells := _get_line(initial_click, current_position)
 			if paint_mode == PaintMode.PAINT:
-				undo_manager.add_do_method(BetterTerrain, &"set_cells", tilemap, layer, cells, type)
+				if replace_mode:
+					undo_manager.add_do_method(BetterTerrain, &"replace_cells", tilemap, layer, cells, tileset, type)
+				else:
+					undo_manager.add_do_method(BetterTerrain, &"set_cells", tilemap, layer, cells, type)
 			elif paint_mode == PaintMode.ERASE:
 				for c in cells:
 					undo_manager.add_do_method(tilemap, &"erase_cell", layer, c)
@@ -558,7 +559,10 @@ func canvas_input(event: InputEvent) -> bool:
 			undo_manager.create_action(tr("Draw terrain"), UndoRedo.MERGE_DISABLE, tilemap)
 			var cells := _get_line(prev_position, current_position)
 			if paint_mode == PaintMode.PAINT:
-				undo_manager.add_do_method(BetterTerrain, &"set_cells", tilemap, layer, cells, type)
+				if replace_mode:
+					undo_manager.add_do_method(BetterTerrain, &"replace_cells", tilemap, layer, cells, tileset, type)
+				else:
+					undo_manager.add_do_method(BetterTerrain, &"set_cells", tilemap, layer, cells, type)
 			elif paint_mode == PaintMode.ERASE:
 				for c in cells:
 					undo_manager.add_do_method(tilemap, &"erase_cell", layer, c)
@@ -569,35 +573,15 @@ func canvas_input(event: InputEvent) -> bool:
 			var cells := _get_fill_cells(current_position)
 			undo_manager.create_action(tr("Fill terrain"), UndoRedo.MERGE_DISABLE, tilemap)
 			if paint_mode == PaintMode.PAINT:
-				undo_manager.add_do_method(BetterTerrain, &"set_cells", tilemap, layer, cells, type)
+				if replace_mode:
+					undo_manager.add_do_method(BetterTerrain, &"replace_cells", tilemap, layer, cells, tileset, type)
+				else:
+					undo_manager.add_do_method(BetterTerrain, &"set_cells", tilemap, layer, cells, type)
 			elif paint_mode == PaintMode.ERASE:
 				for c in cells:
 					undo_manager.add_do_method(tilemap, &"erase_cell", layer, c)
 			undo_manager.add_do_method(BetterTerrain, &"update_terrain_cells", tilemap, layer, cells)
 			terrain_undo.create_tile_restore_point(undo_manager, tilemap, layer, cells)
-			undo_manager.commit_action()
-		elif replace_button.button_pressed:
-			undo_manager.create_action(tr("Replace terrain"), UndoRedo.MERGE_DISABLE, tilemap)
-			var cells := _get_line(prev_position, current_position)
-			var changed = false
-			if paint_mode == PaintMode.PAINT:
-				var potential_tiles = BetterTerrain.get_tiles_in_terrain(tileset, type)
-				for c in cells:
-					var td = tilemap.get_cell_tile_data(layer, c)
-					if td:
-						var placed_peering = BetterTerrain.tile_peering_for_type(td, type)
-						if not placed_peering.is_empty():
-							for pt in potential_tiles:
-								var check_peering = BetterTerrain.tile_peering_for_type(pt, type)
-								if placed_peering == check_peering:
-									undo_manager.add_do_method(BetterTerrain, &"set_cell", tilemap, layer, c, type)
-									changed = true
-			
-			elif paint_mode == PaintMode.ERASE:
-				pass
-			if changed:
-				undo_manager.add_do_method(BetterTerrain, &"update_terrain_cells", tilemap, layer, cells)
-				terrain_undo.create_tile_restore_point(undo_manager, tilemap, layer, cells)
 			undo_manager.commit_action()
 		
 		update_overlay.emit()

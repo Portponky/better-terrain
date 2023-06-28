@@ -739,6 +739,72 @@ func set_cells(tm: TileMap, layer: int, coords: Array, type: int) -> bool:
 	return true
 
 
+## Replaces an existing tile on the [TileMap] for the [code]layer[/code]
+## and [code]coord[/code] with a new tile in the provided terrain [code]type[/code] 
+## in [TileSet] [code]type[/code] *only if* there is a tile with a matching set of 
+## peering sides in this terrain.
+## Returns [code]true[/code] if any tiles were changed. Use [method replace_cells]
+## to replace multiple tiles at once.
+func replace_cell(tm: TileMap, layer: int, coord: Vector2i, ts: TileSet, type: int) -> bool:
+	if !tm or !tm.tile_set or layer < 0 or layer >= tm.get_layers_count() or type < 0:
+		return false
+	
+	var cache := _get_cache(tm.tile_set)
+	if type >= cache.size():
+		return false
+	
+	if cache[type].is_empty():
+		return false
+	
+	var changed = false
+	var potential_tiles = get_tiles_in_terrain(ts, type)
+	var td = tm.get_cell_tile_data(layer, coord)
+	if td:
+		var placed_peering = tile_peering_for_type(td, type)
+		if not placed_peering.is_empty():
+			for pt in potential_tiles:
+				var check_peering = tile_peering_for_type(pt, type)
+				if placed_peering == check_peering:
+					var tile = cache[type].front()
+					tm.set_cell(layer, coord, tile[0], tile[1], tile[2])
+					changed = true
+	
+	return changed
+
+
+## Replaces existing tiles on the [TileMap] for the [code]layer[/code]
+## and [code]coords[/code] with new tiles in the provided terrain [code]type[/code] 
+## in [TileSet] [code]type[/code] *only if* there is a tile with a matching set of 
+## peering sides in this terrain for each tile.
+## Returns [code]true[/code] if any tiles were changed.
+func replace_cells(tm: TileMap, layer: int, coords: Array, ts: TileSet, type: int) -> bool:
+	if !tm or !tm.tile_set or layer < 0 or layer >= tm.get_layers_count() or type < 0:
+		return false
+	
+	var cache := _get_cache(tm.tile_set)
+	if type >= cache.size():
+		return false
+	
+	if cache[type].is_empty():
+		return false
+	
+	var changed = false
+	var potential_tiles = get_tiles_in_terrain(ts, type)
+	for c in coords:
+		var td = tm.get_cell_tile_data(layer, c)
+		if td:
+			var placed_peering = tile_peering_for_type(td, type)
+			if not placed_peering.is_empty():
+				for pt in potential_tiles:
+					var check_peering = tile_peering_for_type(pt, type)
+					if placed_peering == check_peering:
+						var tile = cache[type].front()
+						tm.set_cell(layer, c, tile[0], tile[1], tile[2])
+						changed = true
+	
+	return changed
+
+
 ## Returns the terrain type detected in the [TileMap] at specified [code]layer[/code]
 ## and [code]coord[/code]. Returns -1 if tile is not valid or does not contain a
 ## tile associated with a terrain.
