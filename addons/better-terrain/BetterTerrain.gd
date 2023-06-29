@@ -742,7 +742,7 @@ func set_cells(tm: TileMap, layer: int, coords: Array, type: int) -> bool:
 
 ## Replaces an existing tile on the [TileMap] for the [code]layer[/code]
 ## and [code]coord[/code] with a new tile in the provided terrain [code]type[/code] 
-## in [TileSet] [code]type[/code] *only if* there is a tile with a matching set of 
+## in [TileSet] [code]ts[/code] *only if* there is a tile with a matching set of 
 ## peering sides in this terrain.
 ## Returns [code]true[/code] if any tiles were changed. Use [method replace_cells]
 ## to replace multiple tiles at once.
@@ -779,7 +779,7 @@ func replace_cell(tm: TileMap, layer: int, coord: Vector2i, ts: TileSet, type: i
 
 ## Replaces existing tiles on the [TileMap] for the [code]layer[/code]
 ## and [code]coords[/code] with new tiles in the provided terrain [code]type[/code] 
-## in [TileSet] [code]type[/code] *only if* there is a tile with a matching set of 
+## in [TileSet] [code]ts[/code] *only if* there is a tile with a matching set of 
 ## peering sides in this terrain for each tile.
 ## Returns [code]true[/code] if any tiles were changed.
 func replace_cells(tm: TileMap, layer: int, coords: Array, ts: TileSet, type: int) -> bool:
