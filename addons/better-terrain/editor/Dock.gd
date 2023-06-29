@@ -463,7 +463,7 @@ func canvas_draw(overlay: Control) -> void:
 			for x in range(area.position.x, area.end.x + 1):
 				tiles.append(Vector2i(x, y))
 	elif paint_action == PaintAction.LINE and paint_mode != PaintMode.NO_PAINT:
-		var cells := _get_line(initial_click, current_position)
+		var cells := _get_tileset_line(initial_click, current_position, tileset)
 		var shape = BetterTerrain.data.cell_polygon(tileset)
 		for c in cells:
 			var tile_transform := Transform2D(0.0, tilemap.tile_set.tile_size, 0.0, tilemap.map_to_local(c))
@@ -522,7 +522,7 @@ func canvas_input(event: InputEvent) -> bool:
 			update_overlay.emit()
 		elif paint_action == PaintAction.LINE and paint_mode != PaintMode.NO_PAINT:
 			undo_manager.create_action(tr("Draw terrain line"), UndoRedo.MERGE_DISABLE, tilemap)
-			var cells := _get_line(initial_click, current_position)
+			var cells := _get_tileset_line(initial_click, current_position, tileset)
 			if paint_mode == PaintMode.PAINT:
 				if replace_mode:
 					undo_manager.add_do_method(BetterTerrain, &"replace_cells", tilemap, layer, cells, tileset, type)
@@ -567,7 +567,7 @@ func canvas_input(event: InputEvent) -> bool:
 			pass
 		elif draw_button.button_pressed:
 			undo_manager.create_action(tr("Draw terrain"), UndoRedo.MERGE_DISABLE, tilemap)
-			var cells := _get_line(prev_position, current_position)
+			var cells := _get_tileset_line(prev_position, current_position, tileset)
 			if paint_mode == PaintMode.PAINT:
 				if replace_mode:
 					undo_manager.add_do_method(BetterTerrain, &"replace_cells", tilemap, layer, cells, tileset, type)
@@ -646,3 +646,58 @@ func _get_line(from:Vector2i, to:Vector2i) -> Array[Vector2i]:
 	
 	points.push_back(current);
 	return points;
+
+
+## half-offset bresenham alg ported from TileMapEditor::get_line
+func _get_tileset_line(from:Vector2i, to:Vector2i, tileset:TileSet) -> Array[Vector2i]:
+	if tileset.tile_shape == TileSet.TILE_SHAPE_SQUARE:
+		return _get_line(from, to)
+	
+	var points:Array[Vector2i] = []
+	
+	var transposed := tileset.get_tile_offset_axis() == TileSet.TILE_OFFSET_AXIS_VERTICAL
+	if transposed:
+		from = Vector2i(from.y, from.x)
+		to = Vector2i(to.y, to.x)
+
+	var delta:Vector2i = to - from
+	delta = Vector2i(2 * delta.x + abs(posmod(to.y, 2)) - abs(posmod(from.y, 2)), delta.y)
+	var sign:Vector2i = delta.sign()
+
+	var current := from;
+	points.push_back(Vector2i(current.y, current.x) if transposed else current)
+
+	var err := 0
+	if abs(delta.y) < abs(delta.x):
+		var err_step:Vector2i = 3 * delta.abs()
+		while current != to:
+			err += err_step.y
+			if err > abs(delta.x):
+				if sign.x == 0:
+					current += Vector2i(sign.y, 0)
+				else:
+					current += Vector2i(sign.x if bool(current.y % 2) != (sign.x < 0) else 0, sign.y)
+				err -= err_step.x
+			else:
+				current += Vector2i(sign.x, 0)
+				err += err_step.y
+			points.push_back(Vector2i(current.y, current.x) if transposed else current)
+	else:
+		var err_step:Vector2i = delta.abs()
+		while current != to:
+			err += err_step.x
+			if err > 0:
+				if sign.x == 0:
+					current += Vector2i(0, sign.y)
+				else:
+					current += Vector2i(sign.x if bool(current.y % 2) != (sign.x < 0) else 0, sign.y)
+				err -= err_step.y;
+			else:
+				if sign.x == 0:
+					current += Vector2i(0, sign.y)
+				else:
+					current += Vector2i(-sign.x if bool(current.y % 2) != (sign.x > 0) else 0, sign.y)
+				err += err_step.y
+			points.push_back(Vector2i(current.y, current.x) if transposed else current)
+	
+	return points
