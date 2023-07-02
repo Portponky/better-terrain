@@ -808,9 +808,6 @@ func replace_cells(tm: TileMap, layer: int, coords: Array, ts: TileSet, type: in
 			continue
 		for check_type in check_types:
 			var placed_peering = tile_peering_for_type(td, check_type)
-			if placed_peering.is_empty():
-				continue
-			
 			for pt in potential_tiles:
 				var check_peering = tile_peering_for_type(pt, check_type)
 				if placed_peering == check_peering:
