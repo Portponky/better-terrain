@@ -679,6 +679,8 @@ func tile_peering_for_type(td: TileData, type: int) -> Array:
 	for side in sides:
 		if td_meta[side].has(type):
 			result.push_back(side)
+	
+	result.sort()
 	return result
 
 
@@ -757,24 +759,24 @@ func replace_cell(tm: TileMap, layer: int, coord: Vector2i, ts: TileSet, type: i
 	if cache[type].is_empty():
 		return false
 	
-	var changed = false
-	var potential_tiles = get_tiles_in_terrain(ts, type)
 	var td = tm.get_cell_tile_data(layer, coord)
 	if !td:
 		return false
 	
-	var placed_peering = tile_peering_for_type(td, type)
-	if placed_peering.is_empty():
-		return false
+	var ts_meta := _get_terrain_meta(ts)
+	var categories = ts_meta.terrains[type][3]
+	var check_types = [type] + categories
 	
-	for pt in potential_tiles:
-		var check_peering = tile_peering_for_type(pt, type)
-		if placed_peering == check_peering:
-			var tile = cache[type].front()
-			tm.set_cell(layer, coord, tile[0], tile[1], tile[2])
-			changed = true
+	for check_type in check_types:
+		var placed_peering = tile_peering_for_type(td, check_type)
+		for pt in get_tiles_in_terrain(ts, type):
+			var check_peering = tile_peering_for_type(pt, check_type)
+			if placed_peering == check_peering:
+				var tile = cache[type].front()
+				tm.set_cell(layer, coord, tile[0], tile[1], tile[2])
+				return true
 	
-	return changed
+	return false
 
 
 ## Replaces existing tiles on the [TileMap] for the [code]layer[/code]
@@ -793,23 +795,33 @@ func replace_cells(tm: TileMap, layer: int, coords: Array, ts: TileSet, type: in
 	if cache[type].is_empty():
 		return false
 	
+	var ts_meta := _get_terrain_meta(ts)
+	var categories = ts_meta.terrains[type][3]
+	var check_types = [type] + categories
+	
 	var changed = false
 	var potential_tiles = get_tiles_in_terrain(ts, type)
 	for c in coords:
+		var found = false
 		var td = tm.get_cell_tile_data(layer, c)
 		if !td:
 			continue
-		
-		var placed_peering = tile_peering_for_type(td, type)
-		if placed_peering.is_empty():
-			continue
-		
-		for pt in potential_tiles:
-			var check_peering = tile_peering_for_type(pt, type)
-			if placed_peering == check_peering:
-				var tile = cache[type].front()
-				tm.set_cell(layer, c, tile[0], tile[1], tile[2])
-				changed = true
+		for check_type in check_types:
+			var placed_peering = tile_peering_for_type(td, check_type)
+			if placed_peering.is_empty():
+				continue
+			
+			for pt in potential_tiles:
+				var check_peering = tile_peering_for_type(pt, check_type)
+				if placed_peering == check_peering:
+					var tile = cache[type].front()
+					tm.set_cell(layer, c, tile[0], tile[1], tile[2])
+					changed = true
+					found = true
+					break
+			
+			if found:
+				break
 	
 	return changed
 
