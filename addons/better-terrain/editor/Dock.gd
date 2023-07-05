@@ -10,11 +10,16 @@ const TERRAIN_PROPERTIES_SCENE := preload("res://addons/better-terrain/editor/Te
 
 # Buttons
 @onready var draw_button := $VBoxContainer/Toolbar/Draw
+@onready var line_button := $VBoxContainer/Toolbar/Line
 @onready var rectangle_button := $VBoxContainer/Toolbar/Rectangle
 @onready var fill_button := $VBoxContainer/Toolbar/Fill
+@onready var replace_button := $VBoxContainer/Toolbar/Replace
 
 @onready var paint_type := $VBoxContainer/Toolbar/PaintType
 @onready var paint_terrain := $VBoxContainer/Toolbar/PaintTerrain
+@onready var select_tiles := $VBoxContainer/Toolbar/SelectTiles
+
+@onready var zoom_slider := $VBoxContainer/Toolbar/Zoom
 
 @onready var clean_button := $VBoxContainer/Toolbar/Clean
 @onready var layer_options := $VBoxContainer/Toolbar/LayerOptions
@@ -43,6 +48,7 @@ var terrain_undo
 var layer := 0
 var draw_overlay := false
 var initial_click : Vector2i
+var prev_position : Vector2i
 var current_position : Vector2i
 var tileset_dirty := false
 
@@ -52,14 +58,23 @@ enum PaintMode {
 	ERASE
 }
 
+enum PaintAction {
+	NO_ACTION,
+	LINE
+}
+
 var paint_mode := PaintMode.NO_PAINT
+
+var paint_action := PaintAction.NO_ACTION
 
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	draw_button.icon = get_theme_icon("Edit", "EditorIcons")
+	line_button.icon = get_theme_icon("Line", "EditorIcons")
 	rectangle_button.icon = get_theme_icon("Rectangle", "EditorIcons")
 	fill_button.icon = get_theme_icon("Bucket", "EditorIcons")
+	select_tiles.icon = get_theme_icon("ToolSelect", "EditorIcons")
 	add_terrain_button.icon = get_theme_icon("Add", "EditorIcons")
 	edit_terrain_button.icon = get_theme_icon("Tools", "EditorIcons")
 	move_up_button.icon = get_theme_icon("ArrowUp", "EditorIcons")
@@ -73,6 +88,9 @@ func _ready() -> void:
 	add_child(terrain_undo)
 	tile_view.undo_manager = undo_manager
 	tile_view.terrain_undo = terrain_undo
+	
+	tile_view.connect("paste_occurred", _on_paste_occurred)
+	tile_view.connect("change_zoom_level", _on_change_zoom_level)
 
 
 func _get_fill_cells(target: Vector2i) -> Array:
@@ -350,34 +368,65 @@ func perform_edit_terrain(index: int, name: String, color: Color, type: int, cat
 
 func _on_draw_pressed() -> void:
 	draw_button.button_pressed = true
+	line_button.button_pressed = false
+	rectangle_button.button_pressed = false
+	fill_button.button_pressed = false
+
+
+func _on_line_pressed() -> void:
+	draw_button.button_pressed = false
+	line_button.button_pressed = true
 	rectangle_button.button_pressed = false
 	fill_button.button_pressed = false
 
 
 func _on_rectangle_pressed() -> void:
 	draw_button.button_pressed = false
+	line_button.button_pressed = false
 	rectangle_button.button_pressed = true
 	fill_button.button_pressed = false
 
 
 func _on_fill_pressed() -> void:
 	draw_button.button_pressed = false
+	line_button.button_pressed = false
 	rectangle_button.button_pressed = false
 	fill_button.button_pressed = true
 
 
 func _on_paint_type_pressed() -> void:
 	paint_terrain.button_pressed = false
+	select_tiles.button_pressed = false
 	tile_view.paint_mode = tile_view.PaintMode.PAINT_TYPE if paint_type.button_pressed else tile_view.PaintMode.NO_PAINT
+	tile_view.queue_redraw()
 
 
 func _on_paint_terrain_pressed() -> void:
 	paint_type.button_pressed = false
+	select_tiles.button_pressed = false
 	tile_view.paint_mode = tile_view.PaintMode.PAINT_PEERING if paint_terrain.button_pressed else tile_view.PaintMode.NO_PAINT
+	tile_view.queue_redraw()
+
+
+func _on_select_tiles_pressed() -> void:
+	paint_terrain.button_pressed = false
+	paint_type.button_pressed = false
+	tile_view.paint_mode = tile_view.PaintMode.SELECT if select_tiles.button_pressed else tile_view.PaintMode.NO_PAINT
+	tile_view.queue_redraw()
 
 
 func _on_layer_options_item_selected(index) -> void:
 	layer = index
+
+
+func _on_paste_occurred():
+	paint_type.button_pressed = false
+	paint_terrain.button_pressed = false
+	select_tiles.button_pressed = true
+
+
+func _on_change_zoom_level(value):
+	zoom_slider.value = value
 
 
 func canvas_draw(overlay: Control) -> void:
@@ -413,6 +462,12 @@ func canvas_draw(overlay: Control) -> void:
 		for y in range(area.position.y, area.end.y + 1):
 			for x in range(area.position.x, area.end.x + 1):
 				tiles.append(Vector2i(x, y))
+	elif paint_action == PaintAction.LINE and paint_mode != PaintMode.NO_PAINT:
+		var cells := _get_tileset_line(initial_click, current_position, tileset)
+		var shape = BetterTerrain.data.cell_polygon(tileset)
+		for c in cells:
+			var tile_transform := Transform2D(0.0, tilemap.tile_set.tile_size, 0.0, tilemap.map_to_local(c))
+			overlay.draw_colored_polygon(transform * tile_transform * shape, Color(terrain.color, 0.5))
 	elif fill_button.button_pressed:
 		tiles = _get_fill_cells(current_position)
 		if tiles.size() > MAX_CANVAS_RENDER_TILES:
@@ -436,23 +491,28 @@ func canvas_input(event: InputEvent) -> bool:
 		var tr := tilemap.get_viewport_transform() * tilemap.global_transform
 		var pos := tr.affine_inverse() * Vector2(event.position)
 		var event_position := tilemap.local_to_map(pos)
+		prev_position = current_position
 		if event_position == current_position:
 			return false
 		current_position = event_position
 		update_overlay.emit()
 	
+	var replace_mode = replace_button.button_pressed
+	
 	if event is InputEventMouseButton and !event.pressed:
+		var type = selected.get_index()
 		if rectangle_button.button_pressed and paint_mode != PaintMode.NO_PAINT:
-			var type = selected.get_index()
 			var area := Rect2i(initial_click, current_position - initial_click).abs()
-			
 			# Fill from initial_target to target
 			undo_manager.create_action(tr("Draw terrain rectangle"), UndoRedo.MERGE_DISABLE, tilemap)
 			for y in range(area.position.y, area.end.y + 1):
 				for x in range(area.position.x, area.end.x + 1):
 					var coord := Vector2i(x, y)
 					if paint_mode == PaintMode.PAINT:
-						undo_manager.add_do_method(BetterTerrain, &"set_cell", tilemap, layer, coord, type)
+						if replace_mode:
+							undo_manager.add_do_method(BetterTerrain, &"replace_cell", tilemap, layer, coord, tileset, type)
+						else:
+							undo_manager.add_do_method(BetterTerrain, &"set_cell", tilemap, layer, coord, type)
 					else:
 						undo_manager.add_do_method(tilemap, &"erase_cell", layer, coord)
 			
@@ -460,13 +520,34 @@ func canvas_input(event: InputEvent) -> bool:
 			terrain_undo.create_tile_restore_point_area(undo_manager, tilemap, layer, area)
 			undo_manager.commit_action()
 			update_overlay.emit()
-			
+		elif paint_action == PaintAction.LINE and paint_mode != PaintMode.NO_PAINT:
+			undo_manager.create_action(tr("Draw terrain line"), UndoRedo.MERGE_DISABLE, tilemap)
+			var cells := _get_tileset_line(initial_click, current_position, tileset)
+			if paint_mode == PaintMode.PAINT:
+				if replace_mode:
+					undo_manager.add_do_method(BetterTerrain, &"replace_cells", tilemap, layer, cells, tileset, type)
+				else:
+					undo_manager.add_do_method(BetterTerrain, &"set_cells", tilemap, layer, cells, type)
+			elif paint_mode == PaintMode.ERASE:
+				for c in cells:
+					undo_manager.add_do_method(tilemap, &"erase_cell", layer, c)
+			undo_manager.add_do_method(BetterTerrain, &"update_terrain_cells", tilemap, layer, cells)
+			terrain_undo.create_tile_restore_point(undo_manager, tilemap, layer, cells)
+			undo_manager.commit_action()
+			update_overlay.emit()
+		
 		paint_mode = PaintMode.NO_PAINT
 		return true
 	
 	var clicked : bool = event is InputEventMouseButton and event.pressed
+	var shift : bool = event.shift_pressed
 	if clicked:
 		paint_mode = PaintMode.NO_PAINT
+		
+		if (draw_button.button_pressed and shift) or line_button.button_pressed:
+			paint_action = PaintAction.LINE
+		else:
+			paint_action = PaintAction.NO_ACTION
 		
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			paint_mode = PaintMode.PAINT
@@ -480,20 +561,32 @@ func canvas_input(event: InputEvent) -> bool:
 			initial_click = current_position
 		var type = selected.get_index()
 		
-		if draw_button.button_pressed:
+		if paint_action == PaintAction.LINE:
+			# if painting as line, execution happens on release. 
+			# prevent other painting actions from running.
+			pass
+		elif draw_button.button_pressed:
 			undo_manager.create_action(tr("Draw terrain"), UndoRedo.MERGE_DISABLE, tilemap)
+			var cells := _get_tileset_line(prev_position, current_position, tileset)
 			if paint_mode == PaintMode.PAINT:
-				undo_manager.add_do_method(BetterTerrain, &"set_cell", tilemap, layer, current_position, type)
+				if replace_mode:
+					undo_manager.add_do_method(BetterTerrain, &"replace_cells", tilemap, layer, cells, tileset, type)
+				else:
+					undo_manager.add_do_method(BetterTerrain, &"set_cells", tilemap, layer, cells, type)
 			elif paint_mode == PaintMode.ERASE:
-				undo_manager.add_do_method(tilemap, &"erase_cell", layer, current_position)
-			undo_manager.add_do_method(BetterTerrain, &"update_terrain_cell", tilemap, layer, current_position)
-			terrain_undo.create_tile_restore_point(undo_manager, tilemap, layer, [current_position])
+				for c in cells:
+					undo_manager.add_do_method(tilemap, &"erase_cell", layer, c)
+			undo_manager.add_do_method(BetterTerrain, &"update_terrain_cells", tilemap, layer, cells)
+			terrain_undo.create_tile_restore_point(undo_manager, tilemap, layer, cells)
 			undo_manager.commit_action()
 		elif fill_button.button_pressed:
 			var cells := _get_fill_cells(current_position)
 			undo_manager.create_action(tr("Fill terrain"), UndoRedo.MERGE_DISABLE, tilemap)
 			if paint_mode == PaintMode.PAINT:
-				undo_manager.add_do_method(BetterTerrain, &"set_cells", tilemap, layer, cells, type)
+				if replace_mode:
+					undo_manager.add_do_method(BetterTerrain, &"replace_cells", tilemap, layer, cells, tileset, type)
+				else:
+					undo_manager.add_do_method(BetterTerrain, &"set_cells", tilemap, layer, cells, type)
 			elif paint_mode == PaintMode.ERASE:
 				for c in cells:
 					undo_manager.add_do_method(tilemap, &"erase_cell", layer, c)
@@ -510,3 +603,101 @@ func canvas_input(event: InputEvent) -> bool:
 func canvas_mouse_exit() -> void:
 	draw_overlay = false
 	update_overlay.emit()
+
+
+func _shortcut_input(event) -> void:
+	if event is InputEventKey:
+		if event.keycode == KEY_C and event.ctrl_pressed and not event.echo:
+			get_viewport().set_input_as_handled()
+			tile_view.copy_selection()
+		if event.keycode == KEY_V and event.ctrl_pressed and not event.echo:
+			get_viewport().set_input_as_handled()
+			tile_view.paste_selection()
+
+
+## bresenham alg ported from Geometry2D::bresenham_line()
+func _get_line(from:Vector2i, to:Vector2i) -> Array[Vector2i]:
+	if from == to:
+		return [to]
+	
+	var points:Array[Vector2i] = []
+	var delta := (to - from).abs() * 2
+	var step := (to - from).sign()
+	var current := from
+	
+	if delta.x > delta.y:
+		var err:int = delta.x / 2
+		while current.x != to.x:
+			points.push_back(current);
+			err -= delta.y
+			if err < 0:
+				current.y += step.y
+				err += delta.x
+			current.x += step.x
+	else:
+		var err:int = delta.y / 2
+		while current.y != to.y:
+			points.push_back(current)
+			err -= delta.x
+			if err < 0:
+				current.x += step.x
+				err += delta.y
+			current.y += step.y
+	
+	points.push_back(current);
+	return points;
+
+
+## half-offset bresenham alg ported from TileMapEditor::get_line
+func _get_tileset_line(from:Vector2i, to:Vector2i, tileset:TileSet) -> Array[Vector2i]:
+	if tileset.tile_shape == TileSet.TILE_SHAPE_SQUARE:
+		return _get_line(from, to)
+	
+	var points:Array[Vector2i] = []
+	
+	var transposed := tileset.get_tile_offset_axis() == TileSet.TILE_OFFSET_AXIS_VERTICAL
+	if transposed:
+		from = Vector2i(from.y, from.x)
+		to = Vector2i(to.y, to.x)
+
+	var delta:Vector2i = to - from
+	delta = Vector2i(2 * delta.x + abs(posmod(to.y, 2)) - abs(posmod(from.y, 2)), delta.y)
+	var sign:Vector2i = delta.sign()
+
+	var current := from;
+	points.push_back(Vector2i(current.y, current.x) if transposed else current)
+
+	var err := 0
+	if abs(delta.y) < abs(delta.x):
+		var err_step:Vector2i = 3 * delta.abs()
+		while current != to:
+			err += err_step.y
+			if err > abs(delta.x):
+				if sign.x == 0:
+					current += Vector2i(sign.y, 0)
+				else:
+					current += Vector2i(sign.x if bool(current.y % 2) != (sign.x < 0) else 0, sign.y)
+				err -= err_step.x
+			else:
+				current += Vector2i(sign.x, 0)
+				err += err_step.y
+			points.push_back(Vector2i(current.y, current.x) if transposed else current)
+	else:
+		var err_step:Vector2i = delta.abs()
+		while current != to:
+			err += err_step.x
+			if err > 0:
+				if sign.x == 0:
+					current += Vector2i(0, sign.y)
+				else:
+					current += Vector2i(sign.x if bool(current.y % 2) != (sign.x < 0) else 0, sign.y)
+				err -= err_step.y;
+			else:
+				if sign.x == 0:
+					current += Vector2i(0, sign.y)
+				else:
+					current += Vector2i(-sign.x if bool(current.y % 2) != (sign.x > 0) else 0, sign.y)
+				err += err_step.y
+			points.push_back(Vector2i(current.y, current.x) if transposed else current)
+	
+	return points
