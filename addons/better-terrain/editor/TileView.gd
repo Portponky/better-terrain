@@ -76,7 +76,7 @@ func refresh_tileset(ts: TileSet) -> void:
 		tiles_size.x = max(tiles_size.x, source.texture.get_width())
 		tiles_size.y += source.texture.get_height()
 		
-		tile_size = source.get_tile_texture_region(Vector2i.ZERO, 0).size
+		tile_size = source.texture_region_size
 		tile_part_size = Vector2(tile_size) / 3.0
 		
 		for t in source.get_tiles_count():
