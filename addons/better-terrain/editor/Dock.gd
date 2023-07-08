@@ -44,6 +44,7 @@ var tileset : TileSet
 
 var undo_manager : EditorUndoRedoManager
 var terrain_undo
+var click_index := 0
 
 var layer := 0
 var draw_overlay := false
@@ -559,6 +560,7 @@ func canvas_input(event: InputEvent) -> bool:
 	if (clicked or event is InputEventMouseMotion) and paint_mode != PaintMode.NO_PAINT:
 		if clicked:
 			initial_click = current_position
+			click_index += 1
 		var type = selected.get_index()
 		
 		if paint_action == PaintAction.LINE:
@@ -566,7 +568,7 @@ func canvas_input(event: InputEvent) -> bool:
 			# prevent other painting actions from running.
 			pass
 		elif draw_button.button_pressed:
-			undo_manager.create_action(tr("Draw terrain"), UndoRedo.MERGE_DISABLE, tilemap)
+			undo_manager.create_action(tr("Draw terrain") + str(click_index), UndoRedo.MERGE_ALL, tilemap, true)
 			var cells := _get_tileset_line(prev_position, current_position, tileset)
 			if paint_mode == PaintMode.PAINT:
 				if replace_mode:
