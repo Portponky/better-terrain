@@ -43,10 +43,11 @@ func _edit(object) -> void:
 		stored_layer_modulates = []
 		for l in range(object.get_layers_count()):
 			stored_layer_modulates.push_back(object.get_layer_modulate(l))
+		_on_layer_changed()
 	if object is TileSet:
 		dock.tileset = object
 	if not object:
-		for l in range(object.get_layers_count()):
+		for l in range(stored_layer_modulates.size()):
 			dock.tilemap.set_layer_modulate(l, stored_layer_modulates[l])
 		stored_layer_modulates.clear()
 	dock.tiles_changed()
@@ -65,6 +66,9 @@ func _forward_canvas_gui_input(event: InputEvent) -> bool:
 
 func _on_layer_changed():
 	var pressed = dock.highlight_layer.button_pressed
+	if stored_layer_modulates.size() == 0:
+		for l in range(dock.tilemap.get_layers_count()):
+			stored_layer_modulates.push_back(dock.tilemap.get_layer_modulate(l))
 	for l in range(dock.tilemap.get_layers_count()):
 		var m = stored_layer_modulates[l]
 		if pressed:
@@ -74,3 +78,6 @@ func _on_layer_changed():
 				m = m.darkened(0.5)
 				m.a *= 0.3
 		dock.tilemap.set_layer_modulate(l, m)
+	
+	if not pressed:
+		stored_layer_modulates.clear()
