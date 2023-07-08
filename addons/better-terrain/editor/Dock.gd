@@ -81,6 +81,8 @@ func _ready() -> void:
 	move_down_button.icon = get_theme_icon("ArrowDown", "EditorIcons")
 	remove_terrain_button.icon = get_theme_icon("Remove", "EditorIcons")
 	
+	select_tiles.button_group.pressed.connect(_on_bit_button_pressed)
+	
 	# Make a root node for the terrain tree
 	terrain_tree.create_item()
 	
@@ -365,53 +367,12 @@ func perform_edit_terrain(index: int, name: String, color: Color, type: int, cat
 		item.set_icon_modulate(0, color)
 		tile_view.queue_redraw()
 
-
-func _on_draw_pressed() -> void:
-	draw_button.button_pressed = true
-	line_button.button_pressed = false
-	rectangle_button.button_pressed = false
-	fill_button.button_pressed = false
-
-
-func _on_line_pressed() -> void:
-	draw_button.button_pressed = false
-	line_button.button_pressed = true
-	rectangle_button.button_pressed = false
-	fill_button.button_pressed = false
-
-
-func _on_rectangle_pressed() -> void:
-	draw_button.button_pressed = false
-	line_button.button_pressed = false
-	rectangle_button.button_pressed = true
-	fill_button.button_pressed = false
-
-
-func _on_fill_pressed() -> void:
-	draw_button.button_pressed = false
-	line_button.button_pressed = false
-	rectangle_button.button_pressed = false
-	fill_button.button_pressed = true
-
-
-func _on_paint_type_pressed() -> void:
-	paint_terrain.button_pressed = false
-	select_tiles.button_pressed = false
-	tile_view.paint_mode = tile_view.PaintMode.PAINT_TYPE if paint_type.button_pressed else tile_view.PaintMode.NO_PAINT
-	tile_view.queue_redraw()
-
-
-func _on_paint_terrain_pressed() -> void:
-	paint_type.button_pressed = false
-	select_tiles.button_pressed = false
-	tile_view.paint_mode = tile_view.PaintMode.PAINT_PEERING if paint_terrain.button_pressed else tile_view.PaintMode.NO_PAINT
-	tile_view.queue_redraw()
-
-
-func _on_select_tiles_pressed() -> void:
-	paint_terrain.button_pressed = false
-	paint_type.button_pressed = false
-	tile_view.paint_mode = tile_view.PaintMode.SELECT if select_tiles.button_pressed else tile_view.PaintMode.NO_PAINT
+func _on_bit_button_pressed(button: BaseButton) -> void:
+	match select_tiles.button_group.get_pressed_button():
+		select_tiles: tile_view.paint_mode = tile_view.PaintMode.SELECT
+		paint_type: tile_view.paint_mode = tile_view.PaintMode.PAINT_TYPE
+		paint_terrain: tile_view.paint_mode = tile_view.PaintMode.PAINT_PEERING
+		null: tile_view.paint_mode = tile_view.PaintMode.NO_PAINT
 	tile_view.queue_redraw()
 
 
@@ -420,8 +381,6 @@ func _on_layer_options_item_selected(index) -> void:
 
 
 func _on_paste_occurred():
-	paint_type.button_pressed = false
-	paint_terrain.button_pressed = false
 	select_tiles.button_pressed = true
 
 
