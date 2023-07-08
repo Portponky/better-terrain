@@ -5,11 +5,14 @@ const AUTOLOAD_NAME = "BetterTerrain"
 var dock : Control
 var button : Button
 
+var stored_layer_modulates:Array = []
+
 func _enter_tree() -> void:
 	add_autoload_singleton(AUTOLOAD_NAME, "res://addons/better-terrain/BetterTerrain.gd")
 	
 	dock = load("res://addons/better-terrain/editor/Dock.tscn").instantiate()
 	dock.update_overlay.connect(self.update_overlays)
+	dock.layer_changed.connect(_on_layer_changed)
 	get_editor_interface().get_editor_main_screen().mouse_exited.connect(dock.canvas_mouse_exit)
 	dock.undo_manager = get_undo_redo()
 	button = add_control_to_bottom_panel(dock, "Terrain")
@@ -36,8 +39,16 @@ func _edit(object) -> void:
 	if object is TileMap:
 		dock.tilemap = object
 		dock.tileset = object.tile_set
+		
+		stored_layer_modulates = []
+		for l in range(object.get_layers_count()):
+			stored_layer_modulates.push_back(object.get_layer_modulate(l))
 	if object is TileSet:
 		dock.tileset = object
+	if not object:
+		for l in range(object.get_layers_count()):
+			dock.tilemap.set_layer_modulate(l, stored_layer_modulates[l])
+		stored_layer_modulates.clear()
 	dock.tiles_changed()
 
 
@@ -51,3 +62,15 @@ func _forward_canvas_gui_input(event: InputEvent) -> bool:
 		return false
 	
 	return dock.canvas_input(event)
+
+func _on_layer_changed():
+	var pressed = dock.highlight_layer.button_pressed
+	for l in range(dock.tilemap.get_layers_count()):
+		var m = stored_layer_modulates[l]
+		if pressed:
+			if l < dock.layer:
+				m = m.darkened(0.5)
+			elif l > dock.layer:
+				m = m.darkened(0.5)
+				m.a *= 0.3
+		dock.tilemap.set_layer_modulate(l, m)
