@@ -44,6 +44,8 @@ var tileset : TileSet
 
 var undo_manager : EditorUndoRedoManager
 var terrain_undo
+var action_index := 0
+var action_count := 0
 
 var layer := 0
 var draw_overlay := false
@@ -518,6 +520,8 @@ func canvas_input(event: InputEvent) -> bool:
 	if (clicked or event is InputEventMouseMotion) and paint_mode != PaintMode.NO_PAINT:
 		if clicked:
 			initial_click = current_position
+			action_index += 1
+			action_count = 0
 		var type = selected.get_index()
 		
 		if paint_action == PaintAction.LINE:
@@ -525,19 +529,20 @@ func canvas_input(event: InputEvent) -> bool:
 			# prevent other painting actions from running.
 			pass
 		elif draw_button.button_pressed:
-			undo_manager.create_action(tr("Draw terrain"), UndoRedo.MERGE_DISABLE, tilemap)
+			undo_manager.create_action(tr("Draw terrain") + str(action_index), UndoRedo.MERGE_ALL, tilemap, true)
 			var cells := _get_tileset_line(prev_position, current_position, tileset)
 			if paint_mode == PaintMode.PAINT:
 				if replace_mode:
-					undo_manager.add_do_method(BetterTerrain, &"replace_cells", tilemap, layer, cells, tileset, type)
+					terrain_undo.add_do_method([BetterTerrain, &"replace_cells", tilemap, layer, cells, tileset, type])
 				else:
-					undo_manager.add_do_method(BetterTerrain, &"set_cells", tilemap, layer, cells, type)
+					terrain_undo.add_do_method(undo_manager, BetterTerrain, &"set_cells", [tilemap, layer, cells, type], action_index, action_count)
 			elif paint_mode == PaintMode.ERASE:
 				for c in cells:
 					undo_manager.add_do_method(tilemap, &"erase_cell", layer, c)
-			undo_manager.add_do_method(BetterTerrain, &"update_terrain_cells", tilemap, layer, cells)
+			terrain_undo.add_do_method(undo_manager, BetterTerrain, &"update_terrain_cells", [tilemap, layer, cells], action_index, action_count)
 			terrain_undo.create_tile_restore_point(undo_manager, tilemap, layer, cells)
 			undo_manager.commit_action()
+			action_count += 1
 		elif fill_button.button_pressed:
 			var cells := _get_fill_cells(current_position)
 			undo_manager.create_action(tr("Fill terrain"), UndoRedo.MERGE_DISABLE, tilemap)

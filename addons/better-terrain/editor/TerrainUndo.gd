@@ -1,6 +1,9 @@
 @tool
 extends Node
 
+var _current_action_index := 0
+var _current_action_count := 0
+
 func create_tile_restore_point(undo_manager: EditorUndoRedoManager, tm: TileMap, layer: int, cells: Array, and_surrounding_cells: bool = true) -> void:
 	if and_surrounding_cells:
 		cells = BetterTerrain._widen(tm, cells)
@@ -160,3 +163,20 @@ func restore_terrain(ts: TileSet, restore: Array) -> void:
 	for i in restore.size():
 		var r = restore[i]
 		BetterTerrain.set_terrain(ts, i, r.name, r.color, r.type, r.categories)
+
+
+func add_do_method(undo_manager: EditorUndoRedoManager, object:Object, method:StringName, args:Array, action_index:int, action_count:int):
+	var cb = func():
+		object.callv(method, args)
+	if action_index > _current_action_index:
+		_current_action_index = action_index
+		_current_action_count = action_count
+	if action_count > _current_action_count:
+		_current_action_count = action_count
+	
+	undo_manager.add_do_method(self, "_do_method", object, method, args, action_count)
+
+
+func _do_method(object:Object, method:StringName, args:Array, action_count:int):
+	if action_count >= _current_action_count:
+		object.callv(method, args)

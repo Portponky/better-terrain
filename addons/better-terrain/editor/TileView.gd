@@ -30,6 +30,8 @@ var staged_paste_tile_states : Array[Dictionary] = []
 
 var undo_manager : EditorUndoRedoManager
 var terrain_undo
+var action_index := 0
+var action_count := 0
 
 # Modes for painting
 enum PaintMode {
@@ -505,6 +507,8 @@ func _gui_input(event) -> void:
 	if clicked:
 		initial_click = current_position
 		selection_start = Vector2i(-1,-1)
+		action_index += 1
+		action_count = 0
 	if released:
 		selection_rect = Rect2i(0,0,0,0)
 		queue_redraw()
@@ -605,9 +609,9 @@ func _gui_input(event) -> void:
 					var type := BetterTerrain.get_tile_terrain_type(highlighted_tile_part.data)
 					var goal := paint if paint_action == PaintAction.DRAW_TYPE else -1
 					if type != goal:
-						undo_manager.create_action("Set tile terrain type", UndoRedo.MERGE_DISABLE, tileset)
-						undo_manager.add_do_method(BetterTerrain, &"set_tile_terrain_type", tileset, highlighted_tile_part.data, goal)
-						undo_manager.add_do_method(self, &"queue_redraw")
+						undo_manager.create_action("Set tile terrain type " + str(action_index), UndoRedo.MERGE_ALL, tileset, true)
+						terrain_undo.add_do_method(undo_manager, BetterTerrain, &"set_tile_terrain_type", [tileset, highlighted_tile_part.data, goal], action_index, action_count)
+						terrain_undo.add_do_method(undo_manager, self, &"queue_redraw", [], action_index, action_count)
 						if goal == -1:
 							terrain_undo.create_peering_restore_point_tile(
 								undo_manager,
@@ -620,24 +624,27 @@ func _gui_input(event) -> void:
 							undo_manager.add_undo_method(BetterTerrain, &"set_tile_terrain_type", tileset, highlighted_tile_part.data, type)
 						undo_manager.add_undo_method(self, &"queue_redraw")
 						undo_manager.commit_action()
+						action_count += 1
 				elif paint_action == PaintAction.DRAW_PEERING:
 					if highlighted_tile_part.has("peering"):
 						if !(paint in BetterTerrain.tile_peering_types(highlighted_tile_part.data, highlighted_tile_part.peering)):
-							undo_manager.create_action("Set tile terrain peering type", UndoRedo.MERGE_DISABLE, tileset)
-							undo_manager.add_do_method(BetterTerrain, &"add_tile_peering_type", tileset, highlighted_tile_part.data, highlighted_tile_part.peering, paint)
-							undo_manager.add_do_method(self, &"queue_redraw")
+							undo_manager.create_action("Set tile terrain peering type " + str(action_index), UndoRedo.MERGE_ALL, tileset, true)
+							terrain_undo.add_do_method(undo_manager, BetterTerrain, &"add_tile_peering_type", [tileset, highlighted_tile_part.data, highlighted_tile_part.peering, paint], action_index, action_count)
+							terrain_undo.add_do_method(undo_manager, self, &"queue_redraw", [], action_index, action_count)
 							undo_manager.add_undo_method(BetterTerrain, &"remove_tile_peering_type", tileset, highlighted_tile_part.data, highlighted_tile_part.peering, paint)
 							undo_manager.add_undo_method(self, &"queue_redraw")
 							undo_manager.commit_action()
+							action_count += 1
 				elif paint_action == PaintAction.ERASE_PEERING:
 					if highlighted_tile_part.has("peering"):
 						if paint in BetterTerrain.tile_peering_types(highlighted_tile_part.data, highlighted_tile_part.peering):
-							undo_manager.create_action("Set tile terrain peering type", UndoRedo.MERGE_DISABLE, tileset)
-							undo_manager.add_do_method(BetterTerrain, &"remove_tile_peering_type", tileset, highlighted_tile_part.data, highlighted_tile_part.peering, paint)
-							undo_manager.add_do_method(self, &"queue_redraw")
+							undo_manager.create_action("Remove tile terrain peering type " + str(action_index), UndoRedo.MERGE_ALL, tileset, true)
+							terrain_undo.add_do_method(undo_manager, BetterTerrain, &"remove_tile_peering_type", [tileset, highlighted_tile_part.data, highlighted_tile_part.peering, paint], action_index, action_count)
+							terrain_undo.add_do_method(undo_manager, self, &"queue_redraw", [], action_index, action_count)
 							undo_manager.add_undo_method(BetterTerrain, &"add_tile_peering_type", tileset, highlighted_tile_part.data, highlighted_tile_part.peering, paint)
 							undo_manager.add_undo_method(self, &"queue_redraw")
 							undo_manager.commit_action()
+							action_count += 1
 
 
 func _on_zoom_value_changed(value) -> void:
