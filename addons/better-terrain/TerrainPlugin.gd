@@ -14,6 +14,17 @@ func _enter_tree() -> void:
 	dock.undo_manager = get_undo_redo()
 	button = add_control_to_bottom_panel(dock, "Terrain")
 	button.visible = false
+	
+	var editors = get_editor_interface().get_base_control().find_children("*", "TileMapEditor", true, false)
+	if editors.size() == 1:
+		dock.hook_into_editor(editors[0])
+		for b in button.get_parent().get_children():
+			if b is Button and b.get_text() == "TileMap":
+				b.pressed.connect(func():
+					dock.about_to_close()
+					button.button_pressed = false
+				)
+				break
 
 
 func _exit_tree() -> void:
@@ -38,6 +49,8 @@ func _edit(object) -> void:
 		dock.tileset = object.tile_set
 	if object is TileSet:
 		dock.tileset = object
+	if not object:
+		dock.about_to_close()
 	dock.tiles_changed()
 
 

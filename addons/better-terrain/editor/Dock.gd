@@ -9,6 +9,8 @@ const MAX_CANVAS_RENDER_TILES = 1500
 const TERRAIN_PROPERTIES_SCENE := preload("res://addons/better-terrain/editor/TerrainProperties.tscn")
 
 # Buttons
+@onready var toolbar := $VBoxContainer/Toolbar
+
 @onready var draw_button := $VBoxContainer/Toolbar/Draw
 @onready var line_button := $VBoxContainer/Toolbar/Line
 @onready var rectangle_button := $VBoxContainer/Toolbar/Rectangle
@@ -54,6 +56,11 @@ var prev_position : Vector2i
 var current_position : Vector2i
 var tileset_dirty := false
 
+# For hijacking the built-in features of tile map editor
+var tile_map_editor = null
+var tile_map_editor_parent = null
+var tile_map_editor_index : int
+
 enum PaintMode {
 	NO_PAINT,
 	PAINT,
@@ -95,6 +102,72 @@ func _ready() -> void:
 	
 	tile_view.connect("paste_occurred", _on_paste_occurred)
 	tile_view.connect("change_zoom_level", _on_change_zoom_level)
+
+
+func _notification(what: int) -> void:
+	if !tile_map_editor:
+		return
+	if what == NOTIFICATION_VISIBILITY_CHANGED:
+		if is_visible_in_tree():
+			tile_map_editor.reparent($VBoxContainer/Proxy)
+			tile_map_editor.visible = true
+		else:
+			about_to_close()
+	if what == NOTIFICATION_EXIT_TREE:
+		about_to_close()
+
+
+func about_to_close() -> void:
+	if tile_map_editor:
+		tile_map_editor.reparent(tile_map_editor_parent)
+		tile_map_editor_parent.move_child(tile_map_editor, tile_map_editor_index)
+		visible = false
+
+
+func hook_into_editor(tile_map_editor_: VBoxContainer) -> void:
+	# Attempt to hijack built-in UI
+	var tile_map_toolbar = tile_map_editor_.get_child(0) as HFlowContainer
+	if !tile_map_toolbar:
+		return
+	
+	var option_button_index := -1
+	for i in tile_map_toolbar.get_child_count():
+		if tile_map_toolbar.get_child(i) is OptionButton:
+			option_button_index = i
+			break
+	
+	if option_button_index == -1:
+		return
+	
+	var layers_selection_button := tile_map_toolbar.get_child(option_button_index) as OptionButton
+	var toggle_highlight_selected_layer_button := tile_map_toolbar.get_child(option_button_index + 1) as Button
+	if !layers_selection_button or !toggle_highlight_selected_layer_button:
+		return
+	
+	# Success
+	tile_map_editor = tile_map_editor_
+	tile_map_editor_parent = tile_map_editor.get_parent()
+	tile_map_editor_index = tile_map_editor.get_index()
+	
+	# Connect layer options together
+	layers_selection_button.item_selected.connect(layer_options.select)
+	layer_options.item_selected.connect(func(i):
+		layers_selection_button.select(i)
+		layers_selection_button.item_selected.emit(i)
+	)
+	layer_options.select(layers_selection_button.get_item_index(layers_selection_button.get_selected_id()))
+	
+	# Proxy layer highlight button
+	var proxy_highlight_button = toggle_highlight_selected_layer_button.duplicate()
+	proxy_highlight_button.button_pressed = toggle_highlight_selected_layer_button.button_pressed
+	proxy_highlight_button.pressed.connect(func():
+		toggle_highlight_selected_layer_button.button_pressed = proxy_highlight_button.button_pressed
+		toggle_highlight_selected_layer_button.pressed.emit()
+	)
+	toggle_highlight_selected_layer_button.toggled.connect(func(t):
+		proxy_highlight_button.button_pressed = t
+	)
+	toolbar.add_child(proxy_highlight_button)
 
 
 func _get_fill_cells(target: Vector2i) -> Array:
