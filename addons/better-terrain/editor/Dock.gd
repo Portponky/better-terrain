@@ -533,12 +533,12 @@ func canvas_input(event: InputEvent) -> bool:
 			var cells := _get_tileset_line(prev_position, current_position, tileset)
 			if paint_mode == PaintMode.PAINT:
 				if replace_mode:
-					terrain_undo.add_do_method([BetterTerrain, &"replace_cells", tilemap, layer, cells, tileset, type])
+					terrain_undo.add_do_method(undo_manager, BetterTerrain, &"replace_cells", [tilemap, layer, cells, tileset, type], action_index, action_count)
 				else:
 					terrain_undo.add_do_method(undo_manager, BetterTerrain, &"set_cells", [tilemap, layer, cells, type], action_index, action_count)
 			elif paint_mode == PaintMode.ERASE:
 				for c in cells:
-					undo_manager.add_do_method(tilemap, &"erase_cell", layer, c)
+					terrain_undo.add_do_method(undo_manager, tilemap, &"erase_cell", [layer, c], action_index, action_count)
 			terrain_undo.add_do_method(undo_manager, BetterTerrain, &"update_terrain_cells", [tilemap, layer, cells], action_index, action_count)
 			terrain_undo.create_tile_restore_point(undo_manager, tilemap, layer, cells)
 			undo_manager.commit_action()
