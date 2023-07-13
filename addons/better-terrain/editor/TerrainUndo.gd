@@ -1,6 +1,8 @@
 @tool
 extends Node
 
+var action_index := 0
+var action_count := 0
 var _current_action_index := 0
 var _current_action_count := 0
 
@@ -165,18 +167,19 @@ func restore_terrain(ts: TileSet, restore: Array) -> void:
 		BetterTerrain.set_terrain(ts, i, r.name, r.color, r.type, r.categories)
 
 
-func add_do_method(undo_manager: EditorUndoRedoManager, object:Object, method:StringName, args:Array, action_index:int, action_count:int):
-	var cb = func():
-		object.callv(method, args)
+func add_do_method(undo_manager: EditorUndoRedoManager, object:Object, method:StringName, args:Array):
 	if action_index > _current_action_index:
 		_current_action_index = action_index
 		_current_action_count = action_count
 	if action_count > _current_action_count:
 		_current_action_count = action_count
-	
-	undo_manager.add_do_method(self, "_do_method", object, method, args, action_count)
+	undo_manager.add_do_method(self, "_do_method", object, method, args, action_index, action_count)
 
 
-func _do_method(object:Object, method:StringName, args:Array, action_count:int):
-	if action_count >= _current_action_count:
+func _do_method(object:Object, method:StringName, args:Array, this_action_index:int, this_action_count:int):
+	if this_action_count >= _current_action_count:
 		object.callv(method, args)
+
+
+func finish_action():
+	_current_action_count = 0
