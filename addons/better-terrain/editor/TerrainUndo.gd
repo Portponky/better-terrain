@@ -173,10 +173,10 @@ func add_do_method(undo_manager: EditorUndoRedoManager, object:Object, method:St
 		_current_action_count = action_count
 	if action_count > _current_action_count:
 		_current_action_count = action_count
-	undo_manager.add_do_method(self, "_do_method", object, method, args, action_index, action_count)
+	undo_manager.add_do_method(self, "_do_method", object, method, args, action_count)
 
 
-func _do_method(object:Object, method:StringName, args:Array, this_action_index:int, this_action_count:int):
+func _do_method(object:Object, method:StringName, args:Array, this_action_count:int):
 	if this_action_count >= _current_action_count:
 		object.callv(method, args)
 
