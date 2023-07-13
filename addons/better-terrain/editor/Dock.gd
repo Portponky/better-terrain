@@ -93,8 +93,8 @@ func _ready() -> void:
 	tile_view.undo_manager = undo_manager
 	tile_view.terrain_undo = terrain_undo
 	
-	tile_view.connect("paste_occurred", _on_paste_occurred)
-	tile_view.connect("change_zoom_level", _on_change_zoom_level)
+	tile_view.paste_occurred.connect(_on_paste_occurred)
+	tile_view.change_zoom_level.connect(_on_change_zoom_level)
 
 
 func _get_fill_cells(target: Vector2i) -> Array:
