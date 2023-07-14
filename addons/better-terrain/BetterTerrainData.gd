@@ -28,9 +28,13 @@ static func get_terrain_peering_cells(ts: TileSet, type: int) -> Array:
 	match [ts.tile_shape, type]:
 		[TileSet.TILE_SHAPE_SQUARE, BetterTerrain.TerrainType.MATCH_TILES]:
 			return _terrain_peering_square_tiles
+		[TileSet.TILE_SHAPE_SQUARE, BetterTerrain.TerrainType.DECORATION]:
+			return _terrain_peering_square_tiles
 		[TileSet.TILE_SHAPE_SQUARE, BetterTerrain.TerrainType.MATCH_VERTICES]:
 			return _terrain_peering_square_vertices
 		[TileSet.TILE_SHAPE_ISOMETRIC, BetterTerrain.TerrainType.MATCH_TILES]:
+			return _terrain_peering_isometric_tiles
+		[TileSet.TILE_SHAPE_ISOMETRIC, BetterTerrain.TerrainType.DECORATION]:
 			return _terrain_peering_isometric_tiles
 		[TileSet.TILE_SHAPE_ISOMETRIC, BetterTerrain.TerrainType.MATCH_VERTICES]:
 			return _terrain_peering_isometric_vertices
@@ -38,9 +42,13 @@ static func get_terrain_peering_cells(ts: TileSet, type: int) -> Array:
 	match [ts.tile_offset_axis, type]:
 		[TileSet.TILE_OFFSET_AXIS_VERTICAL, BetterTerrain.TerrainType.MATCH_TILES]:
 			return _terrain_peering_vertical_tiles
+		[TileSet.TILE_OFFSET_AXIS_VERTICAL, BetterTerrain.TerrainType.DECORATION]:
+			return _terrain_peering_vertical_tiles
 		[TileSet.TILE_OFFSET_AXIS_VERTICAL, BetterTerrain.TerrainType.MATCH_VERTICES]:
 			return _terrain_peering_vertical_vertices
 		[TileSet.TILE_OFFSET_AXIS_HORIZONTAL, BetterTerrain.TerrainType.MATCH_TILES]:
+			return _terrain_peering_horiztonal_tiles
+		[TileSet.TILE_OFFSET_AXIS_HORIZONTAL, BetterTerrain.TerrainType.DECORATION]:
 			return _terrain_peering_horiztonal_tiles
 		[TileSet.TILE_OFFSET_AXIS_HORIZONTAL, BetterTerrain.TerrainType.MATCH_VERTICES]:
 			return _terrain_peering_horiztonal_vertices
@@ -415,18 +423,22 @@ static func peering_polygon(ts: TileSet, type: int, peering: int) -> PackedVecto
 	if ts.tile_shape == TileSet.TILE_SHAPE_SQUARE:
 		match type:
 			BetterTerrain.TerrainType.MATCH_TILES: return _peering_polygon_square_tiles(peering)
+			BetterTerrain.TerrainType.DECORATION: return _peering_polygon_square_tiles(peering)
 			BetterTerrain.TerrainType.MATCH_VERTICES: return _peering_polygon_square_vertices(peering)
 	elif ts.tile_shape == TileSet.TILE_SHAPE_ISOMETRIC:
 		match type:
 			BetterTerrain.TerrainType.MATCH_TILES: return _peering_polygon_isometric_tiles(peering)
+			BetterTerrain.TerrainType.DECORATION: return _peering_polygon_isometric_tiles(peering)
 			BetterTerrain.TerrainType.MATCH_VERTICES:  return _peering_polygon_isometric_vertices(peering)
 	elif ts.tile_offset_axis == TileSet.TILE_OFFSET_AXIS_HORIZONTAL:
 		match type:
 			BetterTerrain.TerrainType.MATCH_TILES: return _peering_polygon_horizontal_tiles(peering)
+			BetterTerrain.TerrainType.DECORATION: return _peering_polygon_horizontal_tiles(peering)
 			BetterTerrain.TerrainType.MATCH_VERTICES: return _peering_polygon_horizontal_vertices(peering)
 	else:
 		match type:
 			BetterTerrain.TerrainType.MATCH_TILES: return _peering_polygon_vertical_tiles(peering)
+			BetterTerrain.TerrainType.DECORATION: return _peering_polygon_vertical_tiles(peering)
 			BetterTerrain.TerrainType.MATCH_VERTICES: return _peering_polygon_vertical_vertices(peering)
 	
 	return PackedVector2Array()

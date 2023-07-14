@@ -115,6 +115,8 @@ func _build_tile_part_from_position(result: Dictionary, position: Vector2i, rect
 	var terrain := BetterTerrain.get_terrain(tileset, type)
 	if !terrain.valid:
 		return
+	if terrain.type == BetterTerrain.TerrainType.DECORATION and type != paint:
+		return
 	for p in BetterTerrain.data.get_terrain_peering_cells(tileset, terrain.type):
 		var side_polygon = BetterTerrain.data.peering_polygon(tileset, terrain.type, p)
 		if Geometry2D.is_point_in_polygon(normalize_position, side_polygon):
@@ -307,8 +309,23 @@ func _draw_tile_data(texture: Texture2D, rect: Rect2, src_rect: Rect2, td: TileD
 		return
 	
 	var transform := Transform2D(0.0, rect.size, 0.0, rect.position)
+	if terrain.type == BetterTerrain.TerrainType.DECORATION and type != paint:
+		var center_polygon = BetterTerrain.data.peering_polygon(tileset, BetterTerrain.TerrainType.MATCH_VERTICES, -1)
+		center_polygon.push_back(center_polygon[0])
+		draw_polyline(transform * center_polygon, Color(terrain.color, 0.6), 3)
+		return
+	
+	var paint_terrain := BetterTerrain.get_terrain(tileset, paint)
+	if !paint_terrain.valid:
+		return
 	var center_polygon = BetterTerrain.data.peering_polygon(tileset, terrain.type, -1)
-	draw_colored_polygon(transform * center_polygon, Color(terrain.color, 0.6))
+	if paint_terrain.type == BetterTerrain.TerrainType.DECORATION and type == paint:
+		center_polygon.push_back(center_polygon[0])
+		draw_polyline(transform * center_polygon, Color(terrain.color, 0.6), round(2*zoom_level))
+	elif paint_terrain.type == BetterTerrain.TerrainType.DECORATION and type != paint:
+		return
+	else:
+		draw_colored_polygon(transform * center_polygon, Color(terrain.color, 0.6))
 	
 	if paint < 0 or paint >= BetterTerrain.terrain_count(tileset):
 		return
@@ -316,7 +333,6 @@ func _draw_tile_data(texture: Texture2D, rect: Rect2, src_rect: Rect2, td: TileD
 	if not draw_sides:
 		return
 	
-	var paint_terrain := BetterTerrain.get_terrain(tileset, paint)
 	for p in BetterTerrain.data.get_terrain_peering_cells(tileset, terrain.type):
 		if paint in BetterTerrain.tile_peering_types(td, p):
 			var side_polygon = BetterTerrain.data.peering_polygon(tileset, terrain.type, p)

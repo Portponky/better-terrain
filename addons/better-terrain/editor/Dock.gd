@@ -18,6 +18,7 @@ const TERRAIN_PROPERTIES_SCENE := preload("res://addons/better-terrain/editor/Te
 @onready var paint_type := $VBoxContainer/Toolbar/PaintType
 @onready var paint_terrain := $VBoxContainer/Toolbar/PaintTerrain
 @onready var select_tiles := $VBoxContainer/Toolbar/SelectTiles
+@onready var shuffle_random := $VBoxContainer/Toolbar/ShuffleRandom
 
 @onready var zoom_slider := $VBoxContainer/Toolbar/Zoom
 
@@ -37,6 +38,7 @@ const TERRAIN_PROPERTIES_SCENE := preload("res://addons/better-terrain/editor/Te
 	load("res://addons/better-terrain/icons/MatchTiles.svg"),
 	load("res://addons/better-terrain/icons/MatchVertices.svg"),
 	load("res://addons/better-terrain/icons/NonModifying.svg"),
+	load("res://addons/better-terrain/icons/Decoration.svg"),
 ]
 
 var tilemap : TileMap
@@ -224,6 +226,7 @@ func _on_add_terrain_pressed() -> void:
 	
 	var popup := generate_popup()
 	popup.set_category_data(BetterTerrain.get_terrain_categories(tileset))
+	popup.set_decoration_data(BetterTerrain.get_terrain_decorations(tileset))
 	popup.terrain_name = "New terrain"
 	popup.terrain_color = Color.from_hsv(randf(), 0.3 + 0.7 * randf(), 0.6 + 0.4 * randf())
 	popup.terrain_type = 0
@@ -231,7 +234,7 @@ func _on_add_terrain_pressed() -> void:
 	await popup.visibility_changed
 	if popup.accepted:
 		undo_manager.create_action("Add terrain type", UndoRedo.MERGE_DISABLE, tileset)
-		undo_manager.add_do_method(self, &"perform_add_terrain", popup.terrain_name, popup.terrain_color, popup.terrain_type, popup.terrain_categories)
+		undo_manager.add_do_method(self, &"perform_add_terrain", popup.terrain_name, popup.terrain_color, popup.terrain_type, popup.terrain_categories, popup.terrain_decorations)
 		undo_manager.add_undo_method(self, &"perform_remove_terrain", terrain_tree.get_root().get_child_count())
 		undo_manager.commit_action()
 	popup.queue_free()
@@ -249,20 +252,23 @@ func _on_edit_terrain_pressed() -> void:
 	var t := BetterTerrain.get_terrain(tileset, item.get_index())
 	var categories = BetterTerrain.get_terrain_categories(tileset)
 	categories = categories.filter(func(x): return x.id != index)
+	var decorations = BetterTerrain.get_terrain_decorations(tileset)
 	
 	var popup := generate_popup()
 	popup.set_category_data(categories)
+	popup.set_decoration_data(decorations)
 	
 	popup.terrain_name = t.name
 	popup.terrain_type = t.type
 	popup.terrain_color = t.color
 	popup.terrain_categories = t.categories
+	popup.terrain_decorations = t.decorations
 	popup.popup_centered()
 	await popup.visibility_changed
 	if popup.accepted:
 		undo_manager.create_action("Edit terrain details", UndoRedo.MERGE_DISABLE, tileset)
-		undo_manager.add_do_method(self, &"perform_edit_terrain", index, popup.terrain_name, popup.terrain_color, popup.terrain_type, popup.terrain_categories)
-		undo_manager.add_undo_method(self, &"perform_edit_terrain", index, t.name, t.color, t.type, t.categories)
+		undo_manager.add_do_method(self, &"perform_edit_terrain", index, popup.terrain_name, popup.terrain_color, popup.terrain_type, popup.terrain_categories, popup.terrain_decorations)
+		undo_manager.add_undo_method(self, &"perform_edit_terrain", index, t.name, t.color, t.type, t.categories, t.decorations)
 		if t.type != popup.terrain_type:
 			terrain_undo.create_terran_type_restore_point(undo_manager, tileset)
 			terrain_undo.create_peering_restore_point_specific(undo_manager, tileset, index)
@@ -324,8 +330,8 @@ func _on_remove_terrain_pressed() -> void:
 		undo_manager.commit_action()
 
 
-func perform_add_terrain(name: String, color: Color, type: int, categories: Array) -> void:
-	if BetterTerrain.add_terrain(tileset, name, color, type, categories):
+func perform_add_terrain(name: String, color: Color, type: int, categories: Array, decorations: Array) -> void:
+	if BetterTerrain.add_terrain(tileset, name, color, type, categories, decorations):
 		var new_terrain = terrain_tree.create_item(terrain_tree.get_root())
 		new_terrain.set_text(0, name)
 		new_terrain.set_icon(0, terrain_icons[type])
@@ -356,12 +362,12 @@ func perform_swap_terrain(index1: int, index2: int) -> void:
 		update_tile_view_paint()
 
 
-func perform_edit_terrain(index: int, name: String, color: Color, type: int, categories: Array) -> void:
+func perform_edit_terrain(index: int, name: String, color: Color, type: int, categories: Array, decorations: Array) -> void:
 	var root = terrain_tree.get_root()
 	if index >= root.get_child_count():
 		return
 	var item = root.get_child(index)
-	if BetterTerrain.set_terrain(tileset, index, name, color, type, categories):
+	if BetterTerrain.set_terrain(tileset, index, name, color, type, categories, decorations):
 		item.set_text(0, name)
 		item.set_icon(0, terrain_icons[type])
 		item.set_icon_modulate(0, color)
@@ -374,6 +380,10 @@ func _on_bit_button_pressed(button: BaseButton) -> void:
 		paint_terrain: tile_view.paint_mode = tile_view.PaintMode.PAINT_PEERING
 		null: tile_view.paint_mode = tile_view.PaintMode.NO_PAINT
 	tile_view.queue_redraw()
+
+
+func _on_shuffle_random_pressed():
+	BetterTerrain.use_seed = !shuffle_random.button_pressed 
 
 
 func _on_layer_options_item_selected(index) -> void:

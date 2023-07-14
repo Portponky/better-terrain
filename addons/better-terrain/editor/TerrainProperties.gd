@@ -7,10 +7,15 @@ extends ConfirmationDialog
 @onready var category_label: Label = $GridContainer/CategoryLabel
 @onready var category_container: ScrollContainer = $GridContainer/CategoryContainer
 @onready var category_layout: VBoxContainer = $GridContainer/CategoryContainer/CategoryLayout
+@onready var decoration_label: Label = $GridContainer/DecorationLabel
+@onready var decoration_container: ScrollContainer = $GridContainer/DecorationContainer
+@onready var decoration_layout: VBoxContainer = $GridContainer/DecorationContainer/DecorationLayout
 
 @onready var category_icon := load("res://addons/better-terrain/icons/NonModifying.svg")
+@onready var decoration_icon := load("res://addons/better-terrain/icons/Decoration.svg")
 
 const CATEGORY_CHECK_ID = &"category_check_id"
+const DECORATION_CHECK_ID = &"decoration_check_id"
 
 var accepted := false
 
@@ -29,6 +34,7 @@ var terrain_type : int:
 	get: return type_option.selected
 
 var terrain_categories : Array: set = set_categories, get = get_categories
+var terrain_decorations : Array: set = set_decorations, get = get_decorations
 
 
 # category is name, color, id
@@ -53,6 +59,28 @@ func set_category_data(options: Array) -> void:
 		category_layout.add_child(c)
 
 
+# decoration is name, color, id
+func set_decoration_data(options: Array) -> void:
+	if !options.is_empty():
+		decoration_label.show()
+		decoration_container.show()
+	
+	for o in options:
+		var c = CheckBox.new()
+		c.text = o.name
+		c.icon = decoration_icon
+		c.add_theme_color_override(&"icon_normal_color", o.color)
+		c.add_theme_color_override(&"icon_disabled_color", Color(o.color, 0.4))
+		c.add_theme_color_override(&"icon_focus_color", o.color)
+		c.add_theme_color_override(&"icon_hover_color", o.color)
+		c.add_theme_color_override(&"icon_hover_pressed_color", o.color)
+		c.add_theme_color_override(&"icon_normal_color", o.color)
+		c.add_theme_color_override(&"icon_pressed_color", o.color)
+		
+		c.set_meta(DECORATION_CHECK_ID, o.id)
+		decoration_layout.add_child(c)
+
+
 func set_categories(ids : Array):
 	for c in category_layout.get_children():
 		c.button_pressed = c.get_meta(CATEGORY_CHECK_ID) in ids
@@ -65,6 +93,22 @@ func get_categories() -> Array:
 	for c in category_layout.get_children():
 		if c.button_pressed:
 			result.push_back(c.get_meta(CATEGORY_CHECK_ID))
+	return result
+
+
+func set_decorations(ids : Array):
+	print_debug("??", ids)
+	for d in decoration_layout.get_children():
+		d.button_pressed = d.get_meta(DECORATION_CHECK_ID) in ids
+
+
+func get_decorations() -> Array:
+	var result := []
+	if terrain_type == BetterTerrain.TerrainType.DECORATION:
+		return result
+	for d in decoration_layout.get_children():
+		if d.button_pressed:
+			result.push_back(d.get_meta(DECORATION_CHECK_ID))
 	return result
 
 
@@ -84,6 +128,9 @@ func _on_confirmed() -> void:
 
 
 func _on_type_option_item_selected(index: int) -> void:
-	var categories_available = (index != BetterTerrain.TerrainType.CATEGORY)
+	var categories_available = (index != BetterTerrain.TerrainType.CATEGORY and index != BetterTerrain.TerrainType.DECORATION)
+	var decorations_available = (index != BetterTerrain.TerrainType.DECORATION)
 	for c in category_layout.get_children():
 		c.disabled = !categories_available
+	for c in decoration_layout.get_children():
+		c.disabled = !decorations_available
