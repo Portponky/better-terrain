@@ -97,7 +97,6 @@ func get_categories() -> Array:
 
 
 func set_decorations(ids : Array):
-	print_debug("??", ids)
 	for d in decoration_layout.get_children():
 		d.button_pressed = d.get_meta(DECORATION_CHECK_ID) in ids
 
