@@ -592,9 +592,9 @@ func _gui_input(event) -> void:
 			coord = highlighted_tile_part.coord
 		}
 		undo_manager.create_action("Edit terrain details", UndoRedo.MERGE_DISABLE, tileset)
-		undo_manager.add_do_method(BetterTerrain, &"set_terrain", tileset, paint, t.name, t.color, t.type, t.categories, icon)
+		undo_manager.add_do_method(BetterTerrain, &"set_terrain", tileset, paint, t.name, t.color, t.type, t.categories, t.decorations, icon)
 		undo_manager.add_do_method(self, &"emit_terrain_updated", paint)
-		undo_manager.add_undo_method(BetterTerrain, &"set_terrain", tileset, paint, t.name, t.color, t.type, t.categories, prev_icon)
+		undo_manager.add_undo_method(BetterTerrain, &"set_terrain", tileset, paint, t.name, t.color, t.type, t.categories, t.decorations, prev_icon)
 		undo_manager.add_undo_method(self, &"emit_terrain_updated", paint)
 		undo_manager.commit_action()
 		pick_icon_terrain = -1
