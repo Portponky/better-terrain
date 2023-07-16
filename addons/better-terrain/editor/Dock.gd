@@ -34,6 +34,7 @@ const TERRAIN_ENTRY_SCENE := preload("res://addons/better-terrain/editor/Terrain
 
 @onready var terrain_list := $VBoxContainer/HSplitContainer/VBoxContainer/Panel/ScrollContainer/TerrainList
 @onready var tile_view := $VBoxContainer/HSplitContainer/Panel/ScrollArea/TileView
+@onready var grid_mode_button := $VBoxContainer/HSplitContainer/VBoxContainer/HBoxContainer/GridMode
 
 var selected_entry := -1
 
@@ -85,6 +86,7 @@ func _ready() -> void:
 	move_up_button.icon = get_theme_icon("ArrowUp", "EditorIcons")
 	move_down_button.icon = get_theme_icon("ArrowDown", "EditorIcons")
 	remove_terrain_button.icon = get_theme_icon("Remove", "EditorIcons")
+	grid_mode_button.icon = get_theme_icon("Grid", "EditorIcons")
 	
 	select_tiles.button_group.pressed.connect(_on_bit_button_pressed)
 	
@@ -212,6 +214,12 @@ func _on_clean_pressed() -> void:
 		terrain_undo.create_peering_restore_point(undo_manager, tileset)
 		undo_manager.add_undo_method(self, &"tiles_changed")
 		undo_manager.commit_action()
+
+
+func _on_grid_mode_pressed():
+	for c in terrain_list.get_children():
+		c.grid_mode = grid_mode_button.button_pressed
+		c.update_style()
 
 
 func update_tile_view_paint() -> void:
@@ -394,11 +402,11 @@ func perform_edit_terrain(index: int, name: String, color: Color, type: int, cat
 		return
 	var entry = terrain_list.get_child(index)
 	# don't overwrite empty icon
-	var _icon = icon
+	var valid_icon = icon
 	if icon.has("path") and icon.path.is_empty():
 		var terrain = BetterTerrain.get_terrain(tileset, index)
-		_icon = terrain.icon
-	if BetterTerrain.set_terrain(tileset, index, name, color, type, categories, _icon):
+		valid_icon = terrain.icon
+	if BetterTerrain.set_terrain(tileset, index, name, color, type, categories, valid_icon):
 		entry.terrain = BetterTerrain.get_terrain(tileset, index)
 		entry.update()
 		tile_view.queue_redraw()

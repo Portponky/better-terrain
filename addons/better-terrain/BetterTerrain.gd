@@ -639,6 +639,8 @@ func get_tile_sources_in_terrain(ts: TileSet, type: int) -> Array[Dictionary]:
 		return result
 	for c in tiles:
 		var source := ts.get_source(c[0]) as TileSetAtlasSource
+		if not source:
+			continue
 		var td := source.get_tile_data(c[1], c[2])
 		result.push_back({
 			source = source,

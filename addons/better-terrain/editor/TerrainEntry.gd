@@ -7,11 +7,14 @@ signal select(index)
 @onready var terrain_icon_slot := %TerrainIcon
 @onready var type_icon_slot := %TypeIcon
 @onready var name_label := %Name
+@onready var layout_container := %Layout
 
 var selected := false
 
 var tileset:TileSet
 var terrain:Dictionary
+
+var grid_mode := false
 
 var _terrain_texture:Texture2D
 var _terrain_texture_rect:Rect2i
@@ -75,6 +78,21 @@ func update():
 				terrain_icon_slot.draw_texture_rect_region(_terrain_texture, Rect2i(0,0, 44, 44), _terrain_texture_rect)
 		)
 		_icon_draw_connected = true
+	
+	update_style()
+
+
+func update_style():
+	if grid_mode:
+		custom_minimum_size = Vector2(0, 60)
+		size_flags_horizontal = Control.SIZE_FILL
+		layout_container.vertical = true
+		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	else:
+		custom_minimum_size = Vector2(2000, 60)
+		size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		layout_container.vertical = false
+		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 
 
 func set_selected(value:bool = true):
@@ -82,6 +100,7 @@ func set_selected(value:bool = true):
 	if value:
 		select.emit(get_index())
 	queue_redraw()
+
 
 func _draw():
 	if selected:
