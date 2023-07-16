@@ -22,7 +22,7 @@ extends Node
 const TERRAIN_META = &"_better_terrain"
 
 ## The current version. Used to handle future upgrades.
-const TERRAIN_SYSTEM_VERSION = "0.2"
+const TERRAIN_SYSTEM_VERSION = "0.3"
 
 var _tile_cache = {}
 var rng = RandomNumberGenerator.new()
@@ -192,10 +192,16 @@ func _update_terrain_data(ts: TileSet) -> void:
 				t.push_back([])
 		changed = true
 	
-	if float(ts_meta.version) < 0.2:
+	if float(ts_meta.version) < 0.3:
 		for t in ts_meta.terrains:
 			if t.size() == 4:
 				t.push_back([])
+				t.push_back({})
+			if t.size() == 5:
+				if t[4] is Dictionary:
+					t.insert(4, [])
+				else:
+					t.push_back({})
 		changed = true
 	
 	if changed:
@@ -468,7 +474,10 @@ func get_terrain_decorations(ts: TileSet) -> Array:
 ## can match as. The indexes must be valid terrains of the CATEGORY type.
 ## [code]decorations[/code] is an indexed list of terrain decorations that this terrain
 ## handles. The indexes must be valid terrains of the DECORATION type.
-func add_terrain(ts: TileSet, name: String, color: Color, type: int, categories: Array = [], decorations: Array = []) -> bool:
+## [code]icon[/code] is a [Dictionary] with either a [code]path[/code] string pointing
+## to a resource, or a [code]source_id[/code] [int] and a [code]coord[/code] [Vector2i].
+## The former takes priority if both are present.
+func add_terrain(ts: TileSet, name: String, color: Color, type: int, categories: Array = [], decorations: Array = [], icon: Dictionary = {}) -> bool:
 	if !ts or name.is_empty() or type < 0 or type >= TerrainType.MAX:
 		return false
 	
@@ -488,7 +497,10 @@ func add_terrain(ts: TileSet, name: String, color: Color, type: int, categories:
 		if d < 0 or d >= ts_meta.terrains.size() or ts_meta.terrains[d][2] != TerrainType.DECORATION:
 			return false
 	
-	ts_meta.terrains.push_back([name, color, type, categories, decorations])
+	if icon and not (icon.has("path") or (icon.has("source_id") and icon.has("coord"))):
+		return false
+	
+	ts_meta.terrains.push_back([name, color, type, categories, decorations, icon])
 	_set_terrain_meta(ts, ts_meta)
 	_purge_cache(ts)
 	return true
@@ -571,8 +583,10 @@ func terrain_count(ts: TileSet) -> int:
 ## [br][br]
 ## Returns a [Dictionary] describing the terrain. If it succeeds, the key [code]valid[/code]
 ## will be set to [code]true[/code]. Other keys are [code]name[/code], [code]color[/code],
-## [code]type[/code] (a [enum TerrainType]), and [code]categories[/code] which is
-## an [Array] of category type terrains that this terrain matches as.
+## [code]type[/code] (a [enum TerrainType]), [code]categories[/code] which is
+## an [Array] of category type terrains that this terrain matches as, and
+## [code]icon[/code] which is a [Dictionary] with a [code]path[/code] [String] or
+## a [code]source_id[/code] [int] and [code]coord[/code] [Vector2i]
 func get_terrain(ts: TileSet, index: int) -> Dictionary:
 	if !ts or index < 0:
 		return {valid = false}
@@ -588,6 +602,7 @@ func get_terrain(ts: TileSet, index: int) -> Dictionary:
 		type = terrain[2],
 		categories = terrain[3],
 		decorations = terrain[4],
+		icon = terrain[5],
 		valid = true
 	}
 
@@ -598,7 +613,9 @@ func get_terrain(ts: TileSet, index: int) -> Dictionary:
 ## If supplied, the [code]categories[/code] must be a list of indexes to other [code]CATEGORY[/code]
 ## type terrains, and the [code]decorations[/code] must be a list of indexes to other [code]DECORATION[/code]
 ## type terrains.
-func set_terrain(ts: TileSet, index: int, name: String, color: Color, type: int, categories: Array = [], decorations: Array = []) -> bool:
+## [code]icon[/code] is a [Dictionary] with either a [code]path[/code] string pointing
+## to a resource, or a [code]source_id[/code] [int] and a [code]coord[/code] [Vector2i].
+func set_terrain(ts: TileSet, index: int, name: String, color: Color, type: int, categories: Array = [], decorations: Array = [], icon: Dictionary = {}) -> bool:
 	if !ts or name.is_empty() or index < 0 or type < 0 or type >= TerrainType.MAX:
 		return false
 	
@@ -618,6 +635,9 @@ func set_terrain(ts: TileSet, index: int, name: String, color: Color, type: int,
 		if d < 0 or d == index or d >= ts_meta.terrains.size() or ts_meta.terrains[d][2] != TerrainType.DECORATION:
 			return false
 	
+	if icon and not (icon.has("path") or (icon.has("source_id") and icon.has("coord"))):
+		return false
+	
 	if type != TerrainType.CATEGORY:
 		for t in ts_meta.terrains:
 			t[3].erase(index)
@@ -626,7 +646,7 @@ func set_terrain(ts: TileSet, index: int, name: String, color: Color, type: int,
 		for t in ts_meta.terrains:
 			t[4].erase(index)
 	
-	ts_meta.terrains[index] = [name, color, type, categories, decorations]
+	ts_meta.terrains[index] = [name, color, type, categories, decorations, icon]
 	_set_terrain_meta(ts, ts_meta)
 	
 	_clear_invalid_peering_types(ts)
@@ -750,6 +770,33 @@ func get_tiles_in_terrain(ts: TileSet, type: int) -> Array[TileData]:
 		var source := ts.get_source(c[0]) as TileSetAtlasSource
 		var td := source.get_tile_data(c[1], c[2])
 		result.push_back(td)
+	
+	return result
+
+
+## Returns an [Array] of [Dictionary] items including information about each 
+## tile included in the specified terrain [code]type[/code] for 
+## the [TileSet] [code]ts[/code]. Each Dictionary item includes 
+## [TileSetAtlasSource] [code]source[/code], [TileData] [code]td[/code], 
+## [Vector2i] [code]coord[/code], and [int] [code]alt_id[/code].
+func get_tile_sources_in_terrain(ts: TileSet, type: int) -> Array[Dictionary]:
+	var result:Array[Dictionary] = []
+	
+	var cache := _get_cache(ts)
+	var tiles = cache[type]
+	if !tiles:
+		return result
+	for c in tiles:
+		var source := ts.get_source(c[0]) as TileSetAtlasSource
+		if not source:
+			continue
+		var td := source.get_tile_data(c[1], c[2])
+		result.push_back({
+			source = source,
+			td = td,
+			coord = c[1],
+			alt_id = c[2]
+		})
 	
 	return result
 

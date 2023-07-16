@@ -40,6 +40,15 @@ size_flags_horizontal = 3
 color = Color(1, 0.262745, 0.498039, 1)
 edit_alpha = false
 
+[node name="IconLabel" type="Label" parent="GridContainer"]
+layout_mode = 2
+text = "Icon"
+
+[node name="IconEdit" type="LineEdit" parent="GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Icon path (optional)"
+
 [node name="TypeLabel" type="Label" parent="GridContainer"]
 layout_mode = 2
 text = "Mode"
