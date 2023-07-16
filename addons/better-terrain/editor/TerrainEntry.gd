@@ -8,6 +8,7 @@ signal select(index)
 @onready var type_icon_slot := %TypeIcon
 @onready var name_label := %Name
 @onready var layout_container := %Layout
+@onready var icon_layout_container := %IconLayout
 
 var selected := false
 
@@ -15,6 +16,8 @@ var tileset:TileSet
 var terrain:Dictionary
 
 var grid_mode := false
+var color_style_list:StyleBoxFlat
+var color_style_grid:StyleBoxFlat
 
 var _terrain_texture:Texture2D
 var _terrain_texture_rect:Rect2i
@@ -37,9 +40,16 @@ func update():
 	
 	name_label.text = terrain.name
 	
-	var style:StyleBoxFlat = color_panel.get_theme_stylebox("panel").duplicate()
-	style.bg_color = terrain.color
-	color_panel.add_theme_stylebox_override("panel", style)
+	color_style_list = color_panel.get_theme_stylebox("panel").duplicate()
+	color_style_grid = color_panel.get_theme_stylebox("panel").duplicate()
+	color_style_list.bg_color = terrain.color
+	color_style_list.corner_radius_top_left = 8
+	color_style_list.corner_radius_bottom_left = 8
+	color_style_grid.bg_color = terrain.color
+	color_style_list.corner_radius_top_left = 6
+	color_style_list.corner_radius_bottom_left = 6
+	color_style_list.corner_radius_top_right = 6
+	color_style_list.corner_radius_bottom_right = 6
 	
 	type_icon_slot.texture = terrain_icons[terrain.type]
 	
@@ -88,11 +98,17 @@ func update_style():
 		size_flags_horizontal = Control.SIZE_FILL
 		layout_container.vertical = true
 		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		color_panel.add_theme_stylebox_override("panel", color_style_list)
+		color_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+		icon_layout_container.add_theme_constant_override("separation", -24)
 	else:
 		custom_minimum_size = Vector2(2000, 60)
 		size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		layout_container.vertical = false
 		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		color_panel.add_theme_stylebox_override("panel", color_style_grid)
+		color_panel.size_flags_vertical = Control.SIZE_FILL
+		icon_layout_container.add_theme_constant_override("separation", 4)
 
 
 func set_selected(value:bool = true):

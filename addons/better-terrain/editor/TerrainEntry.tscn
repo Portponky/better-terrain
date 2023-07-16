@@ -52,33 +52,35 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="HBoxContainer" type="HBoxContainer" parent="Layout"]
+[node name="IconLayout" type="HBoxContainer" parent="Layout"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 4
 
-[node name="Color" type="PanelContainer" parent="Layout/HBoxContainer"]
+[node name="Color" type="PanelContainer" parent="Layout/IconLayout"]
 unique_name_in_owner = true
+z_index = 1
 custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 size_flags_horizontal = 0
 mouse_filter = 1
 theme_override_styles/panel = SubResource("StyleBoxFlat_dqhir")
 
-[node name="PanelContainer" type="PanelContainer" parent="Layout/HBoxContainer/Color"]
+[node name="PanelContainer" type="PanelContainer" parent="Layout/IconLayout/Color"]
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
 mouse_filter = 1
 theme_override_styles/panel = SubResource("StyleBoxFlat_rohyw")
 
-[node name="TypeIcon" type="TextureRect" parent="Layout/HBoxContainer/Color/PanelContainer"]
+[node name="TypeIcon" type="TextureRect" parent="Layout/IconLayout/Color/PanelContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
 texture = ExtResource("2_wcwfd")
 
-[node name="Panel" type="PanelContainer" parent="Layout/HBoxContainer"]
+[node name="Panel" type="PanelContainer" parent="Layout/IconLayout"]
 custom_minimum_size = Vector2(52, 52)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -86,7 +88,7 @@ size_flags_vertical = 4
 mouse_filter = 1
 theme_override_styles/panel = SubResource("StyleBoxFlat_xa0fl")
 
-[node name="TerrainIcon" type="TextureRect" parent="Layout/HBoxContainer/Panel"]
+[node name="TerrainIcon" type="TextureRect" parent="Layout/IconLayout/Panel"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(40, 40)
 layout_mode = 2

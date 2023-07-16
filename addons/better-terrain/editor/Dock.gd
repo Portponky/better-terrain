@@ -174,6 +174,7 @@ func tiles_changed() -> void:
 	clean_button.visible = BetterTerrain._has_invalid_peering_types(tileset)
 	
 	tileset_dirty = false
+	_on_grid_mode_pressed()
 
 
 func queue_tiles_changed() -> void:
