@@ -117,6 +117,10 @@ func _build_tile_part_from_position(result: Dictionary, position: Vector2i, rect
 		return
 	if terrain.type == BetterTerrain.TerrainType.DECORATION and type != paint:
 		return
+	var paint_terrain := BetterTerrain.get_terrain(tileset, paint)
+	if paint_terrain.valid and paint_terrain.type == BetterTerrain.TerrainType.DECORATION \
+		and terrain.type != BetterTerrain.TerrainType.DECORATION:
+		return
 	for p in BetterTerrain.data.get_terrain_peering_cells(tileset, terrain.type):
 		var side_polygon = BetterTerrain.data.peering_polygon(tileset, terrain.type, p)
 		if Geometry2D.is_point_in_polygon(normalize_position, side_polygon):
