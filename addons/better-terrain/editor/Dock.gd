@@ -365,6 +365,7 @@ func add_terrain_entry(terrain:Dictionary, index:int = -1):
 	var entry = TERRAIN_ENTRY_SCENE.instantiate()
 	entry.tileset = tileset
 	entry.terrain = terrain
+	entry.grid_mode = grid_mode_button.button_pressed
 	entry.select.connect(_on_entry_select)
 	
 	terrain_list.add_child(entry)
