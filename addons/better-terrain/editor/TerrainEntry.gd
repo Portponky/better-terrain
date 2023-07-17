@@ -40,6 +40,7 @@ func update():
 		return
 	
 	name_label.text = terrain.name
+	tooltip_text = terrain.name
 	
 	color_style_list = color_panel.get_theme_stylebox("panel").duplicate()
 	color_style_grid = color_panel.get_theme_stylebox("panel").duplicate()
@@ -98,7 +99,7 @@ func update_style():
 		custom_minimum_size = Vector2(0, 60)
 		size_flags_horizontal = Control.SIZE_FILL
 		layout_container.vertical = true
-		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		name_label.visible = false
 		color_panel.add_theme_stylebox_override("panel", color_style_list)
 		color_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 		icon_layout_container.add_theme_constant_override("separation", -24)
@@ -106,7 +107,7 @@ func update_style():
 		custom_minimum_size = Vector2(2000, 60)
 		size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		layout_container.vertical = false
-		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		name_label.visible = true
 		color_panel.add_theme_stylebox_override("panel", color_style_grid)
 		color_panel.size_flags_vertical = Control.SIZE_FILL
 		icon_layout_container.add_theme_constant_override("separation", 4)
