@@ -217,7 +217,7 @@ func _weighted_selection(choices: Array, apply_empty_probability: bool):
 		return null
 	
 	if apply_empty_probability:
-		var max_weight = choices.reduce(func(a, c): return a + c[4], 0.0)
+		var max_weight = choices.reduce(func(a, c): return maxf(a, c[4]), 0.0)
 		if max_weight < 1.0 and randf() > max_weight:
 			return [-1, Vector2.ZERO, -1, null, 1.0]
 	
