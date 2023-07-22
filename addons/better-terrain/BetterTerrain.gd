@@ -170,6 +170,8 @@ func _clear_invalid_peering_types(ts: TileSet) -> void:
 		var valid_peering_types = data.get_terrain_peering_cells(ts, type)
 		
 		for c in cache[t]:
+			if c[0] < 0:
+				continue
 			var source := ts.get_source(c[0]) as TileSetAtlasSource
 			if !source:
 				continue
