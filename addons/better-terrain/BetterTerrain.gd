@@ -61,7 +61,7 @@ func _intersect(first: Array, second: Array) -> bool:
 func _get_terrain_meta(ts: TileSet) -> Dictionary:
 	return ts.get_meta(TERRAIN_META) if ts and ts.has_meta(TERRAIN_META) else {
 		terrains = [],
-		decoration = ["Decoration", Color.DIM_GRAY, TerrainType.DECORATION, []],
+		decoration = ["Decoration", Color.DIM_GRAY, TerrainType.DECORATION, [], {path = "res://addons/better-terrain/icons/Decoration.svg"}],
 		version = TERRAIN_SYSTEM_VERSION
 	}
 
@@ -215,6 +215,7 @@ func _update_terrain_data(ts: TileSet) -> void:
 				t.push_back([])
 		changed = true
 	
+	# add icon section
 	if float(ts_meta.version) < 0.2:
 		for t in ts_meta.terrains:
 			if t.size() == 4:

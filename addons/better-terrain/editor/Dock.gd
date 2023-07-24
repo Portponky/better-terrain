@@ -36,7 +36,7 @@ const TERRAIN_ENTRY_SCENE := preload("res://addons/better-terrain/editor/Terrain
 @onready var tile_view := $VBoxContainer/HSplitContainer/Panel/ScrollArea/TileView
 @onready var grid_mode_button := $VBoxContainer/HSplitContainer/VBoxContainer/HBoxContainer/GridMode
 
-var selected_entry := -1
+var selected_entry := -2
 
 @onready var terrain_icons := [
 	load("res://addons/better-terrain/icons/MatchTiles.svg"),
@@ -148,7 +148,7 @@ func tiles_changed() -> void:
 	
 	if item_count > terrain_list.get_child_count():
 		var terrain := BetterTerrain.get_terrain(tileset, BetterTerrain.TileCategory.EMPTY)
-		add_terrain_entry(terrain, i)
+		add_terrain_entry(terrain, item_count - 1)
 	
 	while item_count < terrain_list.get_child_count():
 		var child = terrain_list.get_child(terrain_list.get_child_count() - 1)
@@ -194,6 +194,8 @@ func queue_tiles_changed() -> void:
 
 func _on_entry_select(index:int):
 	selected_entry = index
+	if selected_entry >= BetterTerrain.terrain_count(tileset):
+		selected_entry = BetterTerrain.TileCategory.EMPTY
 	for i in range(terrain_list.get_child_count()):
 		if i != index:
 			terrain_list.get_child(i).set_selected(false)
@@ -371,9 +373,11 @@ func add_terrain_entry(terrain:Dictionary, index:int = -1):
 	var entry = TERRAIN_ENTRY_SCENE.instantiate()
 	entry.tileset = tileset
 	entry.terrain = terrain
+	entry.grid_mode = grid_mode_button.button_pressed
 	entry.select.connect(_on_entry_select)
 	
-	terrain_list.add_child(entry) #FIXME: add before end
+	terrain_list.add_child(entry)
+	terrain_list.move_child(entry, index)
 
 
 func remove_terrain_entry(index:int):
