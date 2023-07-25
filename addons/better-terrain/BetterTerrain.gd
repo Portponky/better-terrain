@@ -209,22 +209,31 @@ func _has_invalid_peering_types(ts: TileSet) -> bool:
 
 func _update_terrain_data(ts: TileSet) -> void:
 	var ts_meta = _get_terrain_meta(ts)
-	var version = ts_meta.version if ts_meta.has("version") else "0.0"
-	var changed = false
-	if version == "0.0":
+	var previous_version = ts_meta.get("version")
+	
+	# First release: no version info
+	if !ts_meta.has("version"):
+		ts_meta["version"] = "0.0"
+	
+	# 0.0 -> 0.1: add categories
+	if ts_meta.version == "0.0":
 		for t in ts_meta.terrains:
 			if t.size() == 3:
 				t.push_back([])
-		changed = true
+		ts_meta.version = "0.1"
 	
-	# add icon section
-	if float(ts_meta.version) < 0.2:
+	# 0.1 -> 0.2: add decoration tiles and terrain icons
+	if ts_meta.version == "0.1":
+		# Add terrain icon containers
 		for t in ts_meta.terrains:
 			if t.size() == 4:
 				t.push_back({})
-		changed = true
+		
+		# Add default decoration data
+		ts_meta["decoration"] = ["Decoration", Color.DIM_GRAY, TerrainType.DECORATION, [], {path = "res://addons/better-terrain/icons/Decoration.svg"}]
+		ts_meta.version = "0.2"
 	
-	if changed:
+	if previous_version != ts_meta.version:
 		_set_terrain_meta(ts, ts_meta)
 
 
@@ -664,6 +673,8 @@ func get_tiles_in_terrain(ts: TileSet, type: int) -> Array[TileData]:
 	if !tiles:
 		return result
 	for c in tiles:
+		if c[0] < 0:
+			continue
 		var source := ts.get_source(c[0]) as TileSetAtlasSource
 		var td := source.get_tile_data(c[1], c[2])
 		result.push_back(td)
@@ -684,6 +695,8 @@ func get_tile_sources_in_terrain(ts: TileSet, type: int) -> Array[Dictionary]:
 	if !tiles:
 		return result
 	for c in tiles:
+		if c[0] < 0:
+			continue
 		var source := ts.get_source(c[0]) as TileSetAtlasSource
 		if not source:
 			continue
