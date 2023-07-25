@@ -1,0 +1,113 @@
+[gd_scene load_steps=8 format=3 uid="uid://u2y444hj182c"]
+
+[ext_resource type="Script" path="res://addons/better-terrain/editor/TerrainEntry.gd" id="1_o2na3"]
+[ext_resource type="Texture2D" uid="uid://kmypxsqhynyv" path="res://addons/better-terrain/icons/Decoration.svg" id="2_ossyj"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3pdcc"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+draw_center = false
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dqhir"]
+bg_color = Color(0.243, 0.816, 0.518, 1)
+border_color = Color(0, 0, 0, 0.439216)
+corner_radius_top_left = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rohyw"]
+content_margin_left = 2.0
+content_margin_top = 2.0
+content_margin_right = 2.0
+content_margin_bottom = 2.0
+bg_color = Color(0, 0, 0, 0.439216)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xa0fl"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0, 0, 0, 0.439216)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b4rkm"]
+content_margin_left = 3.0
+bg_color = Color(0, 0, 0, 0.439216)
+draw_center = false
+
+[node name="TerrainEntry" type="PanelContainer"]
+custom_minimum_size = Vector2(60, 60)
+offset_right = 200.0
+offset_bottom = 60.0
+size_flags_vertical = 3
+focus_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_3pdcc")
+script = ExtResource("1_o2na3")
+
+[node name="Layout" type="BoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="IconLayout" type="HBoxContainer" parent="Layout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="Color" type="PanelContainer" parent="Layout/IconLayout"]
+unique_name_in_owner = true
+z_index = 1
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_dqhir")
+
+[node name="PanelContainer" type="PanelContainer" parent="Layout/IconLayout/Color"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_rohyw")
+
+[node name="TypeIcon" type="TextureRect" parent="Layout/IconLayout/Color/PanelContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("2_ossyj")
+
+[node name="TerrainIconPanel" type="PanelContainer" parent="Layout/IconLayout"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(52, 52)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_xa0fl")
+
+[node name="TerrainIcon" type="TextureRect" parent="Layout/IconLayout/TerrainIconPanel"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+expand_mode = 4
+stretch_mode = 5
+
+[node name="Name" type="Label" parent="Layout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 0
+theme_override_styles/normal = SubResource("StyleBoxFlat_b4rkm")
+text = "New Terrain"
+vertical_alignment = 1
+text_overrun_behavior = 3
+
+[connection signal="focus_entered" from="." to="." method="_on_focus_entered"]
+[connection signal="focus_exited" from="." to="." method="_on_focus_exited"]

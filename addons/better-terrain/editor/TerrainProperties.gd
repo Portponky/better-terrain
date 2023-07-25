@@ -3,6 +3,7 @@ extends ConfirmationDialog
 
 @onready var name_edit: LineEdit = $GridContainer/NameEdit
 @onready var color_picker: ColorPickerButton = $GridContainer/ColorPicker
+@onready var icon_edit: LineEdit = $GridContainer/IconEdit
 @onready var type_option: OptionButton = $GridContainer/TypeOption
 @onready var category_label: Label = $GridContainer/CategoryLabel
 @onready var category_container: ScrollContainer = $GridContainer/CategoryContainer
@@ -21,7 +22,11 @@ var terrain_name : String:
 var terrain_color : Color:
 	set(value): color_picker.color = value
 	get: return color_picker.color
-	
+
+var terrain_icon : String:
+	set(value): icon_edit.text = value
+	get: return icon_edit.text
+
 var terrain_type : int:
 	set(value):
 		type_option.selected = value

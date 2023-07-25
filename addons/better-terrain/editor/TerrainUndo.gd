@@ -74,7 +74,7 @@ func create_peering_restore_point(undo_manager: EditorUndoRedoManager, ts: TileS
 				
 				var td := source.get_tile_data(coord, alternate)
 				var tile_type := BetterTerrain.get_tile_terrain_type(td)
-				if tile_type == -1:
+				if tile_type == BetterTerrain.TileCategory.NON_TERRAIN:
 					continue
 				
 				var peering_dict := {}
@@ -101,7 +101,7 @@ func create_peering_restore_point_specific(undo_manager: EditorUndoRedoManager, 
 				
 				var td := source.get_tile_data(coord, alternate)
 				var tile_type := BetterTerrain.get_tile_terrain_type(td)
-				if tile_type == -1:
+				if tile_type == BetterTerrain.TileCategory.NON_TERRAIN:
 					continue
 				
 				var to_restore : bool = tile_type == protect
@@ -152,7 +152,7 @@ func restore_peering(ts: TileSet, restore: Array) -> void:
 				BetterTerrain.add_tile_peering_type(ts, td, peering, t)
 
 
-func create_terran_type_restore_point(undo_manager: EditorUndoRedoManager, ts: TileSet) -> void:
+func create_terrain_type_restore_point(undo_manager: EditorUndoRedoManager, ts: TileSet) -> void:
 	var count = BetterTerrain.terrain_count(ts)
 	var restore = []
 	for i in count:
@@ -164,7 +164,7 @@ func create_terran_type_restore_point(undo_manager: EditorUndoRedoManager, ts: T
 func restore_terrain(ts: TileSet, restore: Array) -> void:
 	for i in restore.size():
 		var r = restore[i]
-		BetterTerrain.set_terrain(ts, i, r.name, r.color, r.type, r.categories)
+		BetterTerrain.set_terrain(ts, i, r.name, r.color, r.type, r.categories, r.icon)
 
 
 func add_do_method(undo_manager: EditorUndoRedoManager, object:Object, method:StringName, args:Array):

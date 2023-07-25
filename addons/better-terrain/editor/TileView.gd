@@ -3,12 +3,13 @@ extends Control
 
 signal paste_occurred
 signal change_zoom_level(value)
+signal terrain_updated(index)
 
 @onready var checkerboard := get_theme_icon("Checkerboard", "EditorIcons")
 
 var tileset: TileSet
 
-var paint := -1
+var paint := BetterTerrain.TileCategory.NON_TERRAIN
 var highlighted_tile_part := { valid = false }
 var zoom_level := 1.0
 
@@ -27,6 +28,9 @@ var selection_rect : Rect2i
 var selected_tile_states : Array[Dictionary] = []
 var copied_tile_states : Array[Dictionary] = []
 var staged_paste_tile_states : Array[Dictionary] = []
+
+var pick_icon_terrain : int = -1
+var pick_icon_terrain_cancel := false
 
 var undo_manager : EditorUndoRedoManager
 var terrain_undo
@@ -106,7 +110,7 @@ func is_tile_in_source(source: TileSetAtlasSource, coord: Vector2i) -> bool:
 func _build_tile_part_from_position(result: Dictionary, position: Vector2i, rect: Rect2) -> void:
 	result.rect = rect
 	var type := BetterTerrain.get_tile_terrain_type(result.data)
-	if type == -1:
+	if type == BetterTerrain.TileCategory.NON_TERRAIN:
 		return
 	result.terrain_type = type
 	
@@ -298,7 +302,7 @@ func _draw_tile_data(texture: Texture2D, rect: Rect2, src_rect: Rect2, td: TileD
 	draw_texture_rect_region(texture, flipped_rect, src_rect, td.modulate, td.transpose)
 	
 	var type := BetterTerrain.get_tile_terrain_type(td)
-	if type == -1:
+	if type == BetterTerrain.TileCategory.NON_TERRAIN:
 		draw_rect(rect, Color(0.1, 0.1, 0.1, 0.5), true)
 		return
 	
@@ -310,7 +314,7 @@ func _draw_tile_data(texture: Texture2D, rect: Rect2, src_rect: Rect2, td: TileD
 	var center_polygon = BetterTerrain.data.peering_polygon(tileset, terrain.type, -1)
 	draw_colored_polygon(transform * center_polygon, Color(terrain.color, 0.6))
 	
-	if paint < 0 or paint >= BetterTerrain.terrain_count(tileset):
+	if paint < BetterTerrain.TileCategory.EMPTY or paint >= BetterTerrain.terrain_count(tileset):
 		return
 	
 	if not draw_sides:
@@ -399,8 +403,10 @@ func _draw() -> void:
 		if paint_mode != PaintMode.NO_PAINT:
 			var inner_rect := Rect2(highlighted_tile_part.rect.position + Vector2.ONE, highlighted_tile_part.rect.size - 2 * Vector2.ONE) 
 			draw_rect(inner_rect, Color.WHITE, false)
+	
 	if paint_mode == PaintMode.SELECT:
 		draw_rect(selection_rect, Color.WHITE, false)
+	
 	if paint_mode == PaintMode.PASTE:
 		if staged_paste_tile_states.size() > 0:
 			var base_rect = staged_paste_tile_states[0].base_rect
@@ -455,6 +461,8 @@ func paste_selection():
 	paste_occurred.emit()
 	queue_redraw()
 
+func emit_terrain_updated(index):
+	terrain_updated.emit(index)
 
 func _gui_input(event) -> void:
 	if event is InputEventKey:
@@ -554,7 +562,31 @@ func _gui_input(event) -> void:
 			paint_action = PaintAction.SELECT
 		return
 	
-	if paint >= 0 and clicked:
+	if clicked and pick_icon_terrain >= 0:
+		highlighted_tile_part = tile_part_from_position(current_position)
+		if !highlighted_tile_part.valid:
+			return
+		
+		var t = BetterTerrain.get_terrain(tileset, paint)
+		var prev_icon = t.icon.duplicate()
+		var icon = {
+			source_id = highlighted_tile_part.source_id,
+			coord = highlighted_tile_part.coord
+		}
+		undo_manager.create_action("Edit terrain details", UndoRedo.MERGE_DISABLE, tileset)
+		undo_manager.add_do_method(BetterTerrain, &"set_terrain", tileset, paint, t.name, t.color, t.type, t.categories, icon)
+		undo_manager.add_do_method(self, &"emit_terrain_updated", paint)
+		undo_manager.add_undo_method(BetterTerrain, &"set_terrain", tileset, paint, t.name, t.color, t.type, t.categories, prev_icon)
+		undo_manager.add_undo_method(self, &"emit_terrain_updated", paint)
+		undo_manager.commit_action()
+		pick_icon_terrain = -1
+		return
+	
+	if pick_icon_terrain_cancel:
+		pick_icon_terrain = -1
+		pick_icon_terrain_cancel = false
+	
+	if paint != BetterTerrain.TileCategory.NON_TERRAIN and clicked:
 		paint_action = PaintAction.NO_ACTION
 		if highlighted_tile_part.valid:
 			match [paint_mode, event.button_index]:
@@ -566,6 +598,7 @@ func _gui_input(event) -> void:
 		else:
 			match [paint_mode, event.button_index]:
 				[PaintMode.SELECT, MOUSE_BUTTON_LEFT]: paint_action = PaintAction.SELECT
+	
 	if (clicked or event is InputEventMouseMotion) and paint_action != PaintAction.NO_ACTION:
 		
 		if paint_action == PaintAction.SELECT:
@@ -606,12 +639,12 @@ func _gui_input(event) -> void:
 				
 				if paint_action == PaintAction.DRAW_TYPE or paint_action == PaintAction.ERASE_TYPE:
 					var type := BetterTerrain.get_tile_terrain_type(highlighted_tile_part.data)
-					var goal := paint if paint_action == PaintAction.DRAW_TYPE else -1
+					var goal := paint if paint_action == PaintAction.DRAW_TYPE else BetterTerrain.TileCategory.NON_TERRAIN
 					if type != goal:
 						undo_manager.create_action("Set tile terrain type " + str(terrain_undo.action_index), UndoRedo.MERGE_ALL, tileset, true)
 						terrain_undo.add_do_method(undo_manager, BetterTerrain, &"set_tile_terrain_type", [tileset, highlighted_tile_part.data, goal])
 						terrain_undo.add_do_method(undo_manager, self, &"queue_redraw", [])
-						if goal == -1:
+						if goal == BetterTerrain.TileCategory.NON_TERRAIN:
 							terrain_undo.create_peering_restore_point_tile(
 								undo_manager,
 								tileset,

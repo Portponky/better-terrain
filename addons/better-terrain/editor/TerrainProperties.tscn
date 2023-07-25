@@ -7,6 +7,7 @@
 
 [node name="TerrainProperties" type="ConfirmationDialog"]
 title = "Edit terrain properties"
+position = Vector2i(0, 36)
 size = Vector2i(317, 257)
 visible = true
 dialog_hide_on_ok = false
@@ -37,6 +38,15 @@ layout_mode = 2
 size_flags_horizontal = 3
 color = Color(1, 0.262745, 0.498039, 1)
 edit_alpha = false
+
+[node name="IconLabel" type="Label" parent="GridContainer"]
+layout_mode = 2
+text = "Icon"
+
+[node name="IconEdit" type="LineEdit" parent="GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Icon path (optional)"
 
 [node name="TypeLabel" type="Label" parent="GridContainer"]
 layout_mode = 2

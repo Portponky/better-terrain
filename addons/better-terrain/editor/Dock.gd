@@ -7,6 +7,7 @@ signal update_overlay
 # To prevent editor lag when drawing large rectangles or filling large areas
 const MAX_CANVAS_RENDER_TILES = 1500
 const TERRAIN_PROPERTIES_SCENE := preload("res://addons/better-terrain/editor/TerrainProperties.tscn")
+const TERRAIN_ENTRY_SCENE := preload("res://addons/better-terrain/editor/TerrainEntry.tscn")
 
 # Buttons
 @onready var draw_button := $VBoxContainer/Toolbar/Draw
@@ -18,6 +19,7 @@ const TERRAIN_PROPERTIES_SCENE := preload("res://addons/better-terrain/editor/Te
 @onready var paint_type := $VBoxContainer/Toolbar/PaintType
 @onready var paint_terrain := $VBoxContainer/Toolbar/PaintTerrain
 @onready var select_tiles := $VBoxContainer/Toolbar/SelectTiles
+@onready var shuffle_random := $VBoxContainer/Toolbar/ShuffleRandom
 
 @onready var zoom_slider := $VBoxContainer/Toolbar/Zoom
 
@@ -26,17 +28,22 @@ const TERRAIN_PROPERTIES_SCENE := preload("res://addons/better-terrain/editor/Te
 
 @onready var add_terrain_button := $VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar/AddTerrain
 @onready var edit_terrain_button := $VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar/EditTerrain
+@onready var pick_icon_button := $VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar/PickIcon
 @onready var move_up_button := $VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar/MoveUp
 @onready var move_down_button := $VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar/MoveDown
 @onready var remove_terrain_button := $VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar/RemoveTerrain
 
-@onready var terrain_tree := $VBoxContainer/HSplitContainer/VBoxContainer/Panel/Tree
+@onready var terrain_list := $VBoxContainer/HSplitContainer/VBoxContainer/Panel/ScrollContainer/TerrainList
 @onready var tile_view := $VBoxContainer/HSplitContainer/Panel/ScrollArea/TileView
+@onready var grid_mode_button := $VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar/GridMode
+
+var selected_entry := -2
 
 @onready var terrain_icons := [
 	load("res://addons/better-terrain/icons/MatchTiles.svg"),
 	load("res://addons/better-terrain/icons/MatchVertices.svg"),
 	load("res://addons/better-terrain/icons/NonModifying.svg"),
+	load("res://addons/better-terrain/icons/Decoration.svg"),
 ]
 
 var tilemap : TileMap
@@ -77,14 +84,13 @@ func _ready() -> void:
 	select_tiles.icon = get_theme_icon("ToolSelect", "EditorIcons")
 	add_terrain_button.icon = get_theme_icon("Add", "EditorIcons")
 	edit_terrain_button.icon = get_theme_icon("Tools", "EditorIcons")
+	pick_icon_button.icon = get_theme_icon("ColorPick", "EditorIcons")
 	move_up_button.icon = get_theme_icon("ArrowUp", "EditorIcons")
 	move_down_button.icon = get_theme_icon("ArrowDown", "EditorIcons")
 	remove_terrain_button.icon = get_theme_icon("Remove", "EditorIcons")
+	grid_mode_button.icon = get_theme_icon("Grid", "EditorIcons")
 	
 	select_tiles.button_group.pressed.connect(_on_bit_button_pressed)
-	
-	# Make a root node for the terrain tree
-	terrain_tree.create_item()
 	
 	terrain_undo = load("res://addons/better-terrain/editor/TerrainUndo.gd").new()
 	add_child(terrain_undo)
@@ -93,6 +99,7 @@ func _ready() -> void:
 	
 	tile_view.paste_occurred.connect(_on_paste_occurred)
 	tile_view.change_zoom_level.connect(_on_change_zoom_level)
+	tile_view.terrain_updated.connect(_on_terrain_updated)
 
 
 func _get_fill_cells(target: Vector2i) -> Array:
@@ -129,22 +136,25 @@ func tiles_changed() -> void:
 	BetterTerrain._update_terrain_data(tileset)
 	
 	# clear terrains
-	var root = terrain_tree.get_root()
+	for c in terrain_list.get_children():
+		terrain_list.remove_child(c)
 	
 	# load terrains from tileset
 	var terrain_count := BetterTerrain.terrain_count(tileset)
+	var item_count = terrain_count + 1
 	for i in terrain_count:
 		var terrain := BetterTerrain.get_terrain(tileset, i)
-		if i >= root.get_child_count():
-			terrain_tree.create_item(root)
-		var item = root.get_child(i)
-		item.set_text(0, terrain.name)
-		item.set_icon(0, terrain_icons[terrain.type])
-		item.set_icon_modulate(0, terrain.color)
+		if i >= terrain_list.get_child_count():
+			add_terrain_entry(terrain, i)
 	
-	while terrain_count < root.get_child_count():
-		var child = root.get_child(root.get_child_count() - 1)
-		root.remove_child(child)
+	if item_count > terrain_list.get_child_count():
+		var terrain := BetterTerrain.get_terrain(tileset, BetterTerrain.TileCategory.EMPTY)
+		if terrain.valid:
+			add_terrain_entry(terrain, item_count - 1)
+	
+	while item_count < terrain_list.get_child_count():
+		var child = terrain_list.get_child(terrain_list.get_child_count() - 1)
+		terrain_list.remove_child(child)
 		child.free()
 	
 	layer_options.clear()
@@ -172,6 +182,7 @@ func tiles_changed() -> void:
 	clean_button.visible = BetterTerrain._has_invalid_peering_types(tileset)
 	
 	tileset_dirty = false
+	_on_grid_mode_pressed()
 
 
 func queue_tiles_changed() -> void:
@@ -181,6 +192,16 @@ func queue_tiles_changed() -> void:
 	
 	tileset_dirty = true
 	call_deferred(&"tiles_changed")
+
+
+func _on_entry_select(index:int):
+	selected_entry = index
+	if selected_entry >= BetterTerrain.terrain_count(tileset):
+		selected_entry = BetterTerrain.TileCategory.EMPTY
+	for i in range(terrain_list.get_child_count()):
+		if i != index:
+			terrain_list.get_child(i).set_selected(false)
+	update_tile_view_paint()
 
 
 func _on_clean_pressed() -> void:
@@ -206,10 +227,22 @@ func _on_clean_pressed() -> void:
 		undo_manager.commit_action()
 
 
+func _on_grid_mode_pressed():
+	for c in terrain_list.get_children():
+		c.grid_mode = grid_mode_button.button_pressed
+		c.update_style()
+
+
 func update_tile_view_paint() -> void:
-	var selected = terrain_tree.get_selected()
-	tile_view.paint = selected.get_index() if selected else -1
+	tile_view.paint = selected_entry
 	tile_view.queue_redraw()
+	
+	var editable = tile_view.paint != BetterTerrain.TileCategory.EMPTY
+	edit_terrain_button.disabled = !editable
+	move_up_button.disabled = !editable or tile_view.paint == 0
+	move_down_button.disabled = !editable or tile_view.paint == BetterTerrain.terrain_count(tileset) - 1
+	remove_terrain_button.disabled = !editable
+	pick_icon_button.disabled = !editable
 
 
 func generate_popup() -> ConfirmationDialog:
@@ -226,13 +259,14 @@ func _on_add_terrain_pressed() -> void:
 	popup.set_category_data(BetterTerrain.get_terrain_categories(tileset))
 	popup.terrain_name = "New terrain"
 	popup.terrain_color = Color.from_hsv(randf(), 0.3 + 0.7 * randf(), 0.6 + 0.4 * randf())
+	popup.terrain_icon = ""
 	popup.terrain_type = 0
 	popup.popup_centered()
 	await popup.visibility_changed
 	if popup.accepted:
 		undo_manager.create_action("Add terrain type", UndoRedo.MERGE_DISABLE, tileset)
-		undo_manager.add_do_method(self, &"perform_add_terrain", popup.terrain_name, popup.terrain_color, popup.terrain_type, popup.terrain_categories)
-		undo_manager.add_undo_method(self, &"perform_remove_terrain", terrain_tree.get_root().get_child_count())
+		undo_manager.add_do_method(self, &"perform_add_terrain", popup.terrain_name, popup.terrain_color, popup.terrain_type, popup.terrain_categories, {path = popup.terrain_icon})
+		undo_manager.add_undo_method(self, &"perform_remove_terrain", terrain_list.get_child_count() - 1)
 		undo_manager.commit_action()
 	popup.queue_free()
 
@@ -241,46 +275,58 @@ func _on_edit_terrain_pressed() -> void:
 	if !tileset:
 		return
 	
-	var item = terrain_tree.get_selected()
-	if !item:
+	if selected_entry < 0:
 		return
-	var index = item.get_index()
 	
-	var t := BetterTerrain.get_terrain(tileset, item.get_index())
+	var t := BetterTerrain.get_terrain(tileset, selected_entry)
 	var categories = BetterTerrain.get_terrain_categories(tileset)
-	categories = categories.filter(func(x): return x.id != index)
+	categories = categories.filter(func(x): return x.id != selected_entry)
 	
 	var popup := generate_popup()
 	popup.set_category_data(categories)
 	
+	t.icon = t.icon.duplicate()
+	
 	popup.terrain_name = t.name
 	popup.terrain_type = t.type
 	popup.terrain_color = t.color
+	if t.has("icon") and t.icon.has("path"):
+		popup.terrain_icon = t.icon.path
 	popup.terrain_categories = t.categories
 	popup.popup_centered()
 	await popup.visibility_changed
 	if popup.accepted:
 		undo_manager.create_action("Edit terrain details", UndoRedo.MERGE_DISABLE, tileset)
-		undo_manager.add_do_method(self, &"perform_edit_terrain", index, popup.terrain_name, popup.terrain_color, popup.terrain_type, popup.terrain_categories)
-		undo_manager.add_undo_method(self, &"perform_edit_terrain", index, t.name, t.color, t.type, t.categories)
+		undo_manager.add_do_method(self, &"perform_edit_terrain", selected_entry, popup.terrain_name, popup.terrain_color, popup.terrain_type, popup.terrain_categories, {path = popup.terrain_icon})
+		undo_manager.add_undo_method(self, &"perform_edit_terrain", selected_entry, t.name, t.color, t.type, t.categories, t.icon)
 		if t.type != popup.terrain_type:
-			terrain_undo.create_terran_type_restore_point(undo_manager, tileset)
-			terrain_undo.create_peering_restore_point_specific(undo_manager, tileset, index)
+			terrain_undo.create_terrain_type_restore_point(undo_manager, tileset)
+			terrain_undo.create_peering_restore_point_specific(undo_manager, tileset, selected_entry)
 		undo_manager.commit_action()
 	popup.queue_free()
+
+
+func _on_pick_icon_pressed():
+	if selected_entry < 0:
+		return
+	tile_view.pick_icon_terrain = selected_entry
+
+
+func _on_pick_icon_focus_exited():
+	tile_view.pick_icon_terrain_cancel = true
+	pick_icon_button.button_pressed = false
 
 
 func _on_move_pressed(down: bool) -> void:
 	if !tileset:
 		return
 	
-	var item = terrain_tree.get_selected()
-	if !item:
+	if selected_entry < 0:
 		return
 	
-	var index1 = item.get_index()
+	var index1 = selected_entry
 	var index2 = index1 + (1 if down else -1)
-	if index2 < 0 or index2 >= terrain_tree.get_root().get_child_count():
+	if index2 < 0 or index2 >= terrain_list.get_child_count():
 		return
 	
 	undo_manager.create_action("Reorder terrains", UndoRedo.MERGE_DISABLE, tileset)
@@ -293,12 +339,11 @@ func _on_remove_terrain_pressed() -> void:
 	if !tileset:
 		return
 	
-	var item = terrain_tree.get_selected()
-	if !item:
+	if selected_entry < 0:
 		return
 	
 	# store confirmation in array to pass by ref
-	var t := BetterTerrain.get_terrain(tileset, item.get_index())
+	var t := BetterTerrain.get_terrain(tileset, selected_entry)
 	var confirmed := [false]
 	var popup := ConfirmationDialog.new()
 	popup.dialog_text = tr("Are you sure you want to remove {0}?").format([t.name])
@@ -314,58 +359,82 @@ func _on_remove_terrain_pressed() -> void:
 	
 	if confirmed[0]:
 		undo_manager.create_action("Remove terrain type", UndoRedo.MERGE_DISABLE, tileset)
-		undo_manager.add_do_method(self, &"perform_remove_terrain", item.get_index())
-		undo_manager.add_undo_method(self, &"perform_add_terrain", t.name, t.color, t.type)
-		for n in range(terrain_tree.get_root().get_child_count() - 1, item.get_index(), -1):
+		undo_manager.add_do_method(self, &"perform_remove_terrain", selected_entry)
+		undo_manager.add_undo_method(self, &"perform_add_terrain", t.name, t.color, t.type, t.categories, t.icon)
+		for n in range(terrain_list.get_child_count() - 2, selected_entry, -1):
 			undo_manager.add_undo_method(self, &"perform_swap_terrain", n, n - 1)
 		if t.type == BetterTerrain.TerrainType.CATEGORY:
-			terrain_undo.create_terran_type_restore_point(undo_manager, tileset)
-		terrain_undo.create_peering_restore_point_specific(undo_manager, tileset, item.get_index())
+			terrain_undo.create_terrain_type_restore_point(undo_manager, tileset)
+		terrain_undo.create_peering_restore_point_specific(undo_manager, tileset, selected_entry)
 		undo_manager.commit_action()
 
 
-func perform_add_terrain(name: String, color: Color, type: int, categories: Array) -> void:
-	if BetterTerrain.add_terrain(tileset, name, color, type, categories):
-		var new_terrain = terrain_tree.create_item(terrain_tree.get_root())
-		new_terrain.set_text(0, name)
-		new_terrain.set_icon(0, terrain_icons[type])
-		new_terrain.set_icon_modulate(0, color)
+func add_terrain_entry(terrain:Dictionary, index:int = -1):
+	if index < 0:
+		index = terrain_list.get_child_count()
+	
+	var entry = TERRAIN_ENTRY_SCENE.instantiate()
+	entry.tileset = tileset
+	entry.terrain = terrain
+	entry.grid_mode = grid_mode_button.button_pressed
+	entry.select.connect(_on_entry_select)
+	
+	terrain_list.add_child(entry)
+	terrain_list.move_child(entry, index)
+
+
+func remove_terrain_entry(index:int):
+	terrain_list.get_child(index).free()
+
+
+func perform_add_terrain(name: String, color: Color, type: int, categories: Array, icon:Dictionary = {}) -> void:
+	if BetterTerrain.add_terrain(tileset, name, color, type, categories, icon):
+		var index = BetterTerrain.terrain_count(tileset) - 1
+		var terrain = BetterTerrain.get_terrain(tileset, index)
+		add_terrain_entry(terrain, index)
 
 
 func perform_remove_terrain(index: int) -> void:
-	var root = terrain_tree.get_root()
-	if index >= root.get_child_count():
+	if index >= BetterTerrain.terrain_count(tileset):
 		return
-	var item = root.get_child(index)
+	var item = terrain_list.get_child(index)
 	if BetterTerrain.remove_terrain(tileset, index):
-		item.free()
+		remove_terrain_entry(index)
 		update_tile_view_paint()
 
 
 func perform_swap_terrain(index1: int, index2: int) -> void:
 	var lower := min(index1, index2)
 	var higher := max(index1, index2)
-	var root = terrain_tree.get_root()
-	if lower >= root.get_child_count() or higher >= root.get_child_count():
+	if lower >= terrain_list.get_child_count() or higher >= terrain_list.get_child_count():
 		return
-	var item1 = root.get_child(lower)
-	var item2 = root.get_child(higher)
+	var item1 = terrain_list.get_child(lower)
+	var item2 = terrain_list.get_child(higher)
 	if BetterTerrain.swap_terrains(tileset, lower, higher):
-		item2.move_before(item1)
-		item1.move_after(root.get_child(higher))
+		terrain_list.move_child(item1, higher)
+		selected_entry = index2
+		terrain_list.get_child(index2).set_selected(true)
 		update_tile_view_paint()
 
 
-func perform_edit_terrain(index: int, name: String, color: Color, type: int, categories: Array) -> void:
-	var root = terrain_tree.get_root()
-	if index >= root.get_child_count():
+func perform_edit_terrain(index: int, name: String, color: Color, type: int, categories: Array, icon: Dictionary = {}) -> void:
+	if index >= terrain_list.get_child_count():
 		return
-	var item = root.get_child(index)
-	if BetterTerrain.set_terrain(tileset, index, name, color, type, categories):
-		item.set_text(0, name)
-		item.set_icon(0, terrain_icons[type])
-		item.set_icon_modulate(0, color)
+	var entry = terrain_list.get_child(index)
+	# don't overwrite empty icon
+	var valid_icon = icon
+	if icon.has("path") and icon.path.is_empty():
+		var terrain = BetterTerrain.get_terrain(tileset, index)
+		valid_icon = terrain.icon
+	if BetterTerrain.set_terrain(tileset, index, name, color, type, categories, valid_icon):
+		entry.terrain = BetterTerrain.get_terrain(tileset, index)
+		entry.update()
 		tile_view.queue_redraw()
+
+
+func _on_shuffle_random_pressed():
+	BetterTerrain.use_seed = !shuffle_random.button_pressed 
+
 
 func _on_bit_button_pressed(button: BaseButton) -> void:
 	match select_tiles.button_group.get_pressed_button():
@@ -388,15 +457,20 @@ func _on_change_zoom_level(value):
 	zoom_slider.value = value
 
 
+func _on_terrain_updated(index):
+	var entry = terrain_list.get_child(index)
+	entry.terrain = BetterTerrain.get_terrain(tileset, index)
+	entry.update()
+
+
 func canvas_draw(overlay: Control) -> void:
 	if !draw_overlay:
 		return
 	
-	var selected = terrain_tree.get_selected()
-	if !selected:
+	if selected_entry < 0:
 		return
 	
-	var type = selected.get_index()
+	var type = selected_entry
 	var terrain := BetterTerrain.get_terrain(tileset, type)
 	if !terrain.valid:
 		return
@@ -441,8 +515,7 @@ func canvas_draw(overlay: Control) -> void:
 
 
 func canvas_input(event: InputEvent) -> bool:
-	var selected = terrain_tree.get_selected()
-	if !selected:
+	if selected_entry < 0:
 		return false
 	
 	draw_overlay = true
@@ -461,7 +534,7 @@ func canvas_input(event: InputEvent) -> bool:
 	var released : bool = event is InputEventMouseButton and !event.pressed
 	if released:
 		terrain_undo.finish_action()
-		var type = selected.get_index()
+		var type = selected_entry
 		if rectangle_button.button_pressed and paint_mode != PaintMode.NO_PAINT:
 			var area := Rect2i(initial_click, current_position - initial_click).abs()
 			# Fill from initial_target to target
@@ -522,7 +595,7 @@ func canvas_input(event: InputEvent) -> bool:
 			initial_click = current_position
 			terrain_undo.action_index += 1
 			terrain_undo.action_count = 0
-		var type = selected.get_index()
+		var type = selected_entry
 		
 		if paint_action == PaintAction.LINE:
 			# if painting as line, execution happens on release. 
@@ -665,3 +738,4 @@ func _get_tileset_line(from:Vector2i, to:Vector2i, tileset:TileSet) -> Array[Vec
 			points.push_back(Vector2i(current.y, current.x) if transposed else current)
 	
 	return points
+
