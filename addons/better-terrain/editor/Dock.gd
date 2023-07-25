@@ -19,6 +19,7 @@ const TERRAIN_ENTRY_SCENE := preload("res://addons/better-terrain/editor/Terrain
 @onready var paint_type := $VBoxContainer/Toolbar/PaintType
 @onready var paint_terrain := $VBoxContainer/Toolbar/PaintTerrain
 @onready var select_tiles := $VBoxContainer/Toolbar/SelectTiles
+@onready var shuffle_random := $VBoxContainer/Toolbar/ShuffleRandom
 
 @onready var zoom_slider := $VBoxContainer/Toolbar/Zoom
 
@@ -240,6 +241,7 @@ func update_tile_view_paint() -> void:
 	move_up_button.disabled = !editable or tile_view.paint == 0
 	move_down_button.disabled = !editable or tile_view.paint == BetterTerrain.terrain_count(tileset) - 1
 	remove_terrain_button.disabled = !editable
+	pick_icon_button.disabled = !editable
 
 
 func generate_popup() -> ConfirmationDialog:
@@ -427,6 +429,11 @@ func perform_edit_terrain(index: int, name: String, color: Color, type: int, cat
 		entry.terrain = BetterTerrain.get_terrain(tileset, index)
 		entry.update()
 		tile_view.queue_redraw()
+
+
+func _on_shuffle_random_pressed():
+	BetterTerrain.use_seed = !shuffle_random.button_pressed 
+
 
 func _on_bit_button_pressed(button: BaseButton) -> void:
 	match select_tiles.button_group.get_pressed_button():

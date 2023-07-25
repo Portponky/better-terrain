@@ -25,6 +25,8 @@ const TERRAIN_META = &"_better_terrain"
 const TERRAIN_SYSTEM_VERSION = "0.2"
 
 var _tile_cache = {}
+var rng = RandomNumberGenerator.new()
+var use_seed := true
 
 ## A helper class that provides functions detailing valid peering bits and
 ## polygons for different tile types.
@@ -232,7 +234,7 @@ func _weighted_selection(choices: Array, apply_empty_probability: bool):
 	
 	if apply_empty_probability:
 		var max_weight = choices.reduce(func(a, c): return maxf(a, c[4]), 0.0)
-		if max_weight < 1.0 and randf() > max_weight:
+		if max_weight < 1.0 and rng.randf() > max_weight:
 			return [-1, Vector2.ZERO, -1, null, 1.0]
 	
 	if choices.size() == 1:
@@ -240,14 +242,20 @@ func _weighted_selection(choices: Array, apply_empty_probability: bool):
 	
 	var weight = choices.reduce(func(a, c): return a + c[4], 0.0)
 	if weight == 0.0:
-		return choices[randi() % choices.size()]
+		return choices[rng.randi() % choices.size()]
 	
-	var pick = randf() * weight
+	var pick = rng.randf() * weight
 	for c in choices:
 		if pick < c[4]:
 			return c
 		pick -= c[4]
 	return choices.back()
+
+
+func _weighted_selection_seeded(choices: Array, coord: Vector2i, apply_empty_probability: bool):
+	if use_seed:
+		rng.seed = hash(coord)
+	return _weighted_selection(choices, apply_empty_probability)
 
 
 func _update_tile_tiles(tm: TileMap, layer: int, coord: Vector2i, types: Dictionary, apply_empty_probability: bool):
@@ -267,7 +275,7 @@ func _update_tile_tiles(tm: TileMap, layer: int, coord: Vector2i, types: Diction
 		elif score == best_score:
 			best.append(t)
 	
-	return _weighted_selection(best, apply_empty_probability)
+	return _weighted_selection_seeded(best, coord, apply_empty_probability)
 
 
 func _probe(tm: TileMap, coord: Vector2i, peering: int, types: Dictionary, goal: Array) -> int:
@@ -314,7 +322,7 @@ func _update_tile_vertices(tm: TileMap, layer: int, coord: Vector2i, types: Dict
 		elif score == best_score:
 			best.append(t)
 	
-	return _weighted_selection(best, false)
+	return _weighted_selection_seeded(best, coord, false)
 
 
 func _update_tile_immediate(tm: TileMap, layer: int, coord: Vector2i, ts_meta: Dictionary, types: Dictionary) -> void:

@@ -1,7 +1,7 @@
 [gd_scene load_steps=8 format=3 uid="uid://u2y444hj182c"]
 
 [ext_resource type="Script" path="res://addons/better-terrain/editor/TerrainEntry.gd" id="1_o2na3"]
-[ext_resource type="Texture2D" uid="uid://d1h1p7pcwdnjk" path="res://addons/better-terrain/icons/MatchTiles.svg" id="2_wcwfd"]
+[ext_resource type="Texture2D" uid="uid://kmypxsqhynyv" path="res://addons/better-terrain/icons/Decoration.svg" id="2_ossyj"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3pdcc"]
 content_margin_left = 4.0
@@ -12,6 +12,7 @@ draw_center = false
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dqhir"]
 bg_color = Color(0.243, 0.816, 0.518, 1)
+border_color = Color(0, 0, 0, 0.439216)
 corner_radius_top_left = 8
 corner_radius_bottom_left = 8
 
@@ -39,7 +40,7 @@ bg_color = Color(0, 0, 0, 0.439216)
 draw_center = false
 
 [node name="TerrainEntry" type="PanelContainer"]
-custom_minimum_size = Vector2(0, 60)
+custom_minimum_size = Vector2(60, 60)
 offset_right = 200.0
 offset_bottom = 60.0
 size_flags_vertical = 3
@@ -78,9 +79,10 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
-texture = ExtResource("2_wcwfd")
+texture = ExtResource("2_ossyj")
 
-[node name="Panel" type="PanelContainer" parent="Layout/IconLayout"]
+[node name="TerrainIconPanel" type="PanelContainer" parent="Layout/IconLayout"]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(52, 52)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -88,11 +90,11 @@ size_flags_vertical = 4
 mouse_filter = 1
 theme_override_styles/panel = SubResource("StyleBoxFlat_xa0fl")
 
-[node name="TerrainIcon" type="TextureRect" parent="Layout/IconLayout/Panel"]
+[node name="TerrainIcon" type="TextureRect" parent="Layout/IconLayout/TerrainIconPanel"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
-expand_mode = 5
+expand_mode = 4
 stretch_mode = 5
 
 [node name="Name" type="Label" parent="Layout"]

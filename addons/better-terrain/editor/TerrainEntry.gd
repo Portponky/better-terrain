@@ -6,6 +6,7 @@ signal select(index)
 @onready var color_panel := %Color
 @onready var terrain_icon_slot := %TerrainIcon
 @onready var type_icon_slot := %TypeIcon
+@onready var type_icon_panel := %TerrainIconPanel
 @onready var name_label := %Name
 @onready var layout_container := %Layout
 @onready var icon_layout_container := %IconLayout
@@ -18,6 +19,7 @@ var terrain:Dictionary
 var grid_mode := false
 var color_style_list:StyleBoxFlat
 var color_style_grid:StyleBoxFlat
+var color_style_decoration:StyleBoxFlat
 
 var _terrain_texture:Texture2D
 var _terrain_texture_rect:Rect2i
@@ -44,14 +46,43 @@ func update():
 	
 	color_style_list = color_panel.get_theme_stylebox("panel").duplicate()
 	color_style_grid = color_panel.get_theme_stylebox("panel").duplicate()
+	color_style_decoration = color_panel.get_theme_stylebox("panel").duplicate()
+	
 	color_style_list.bg_color = terrain.color
 	color_style_list.corner_radius_top_left = 8
 	color_style_list.corner_radius_bottom_left = 8
+	color_style_list.corner_radius_top_right = 0
+	color_style_list.corner_radius_bottom_right = 0
+	color_style_list.content_margin_left = -1
+	color_style_list.content_margin_right = -1
+	color_style_list.border_width_left = 0
+	color_style_list.border_width_right = 0
+	color_style_list.border_width_top = 0
+	color_style_list.border_width_bottom = 0
+	
 	color_style_grid.bg_color = terrain.color
-	color_style_list.corner_radius_top_left = 6
-	color_style_list.corner_radius_bottom_left = 6
-	color_style_list.corner_radius_top_right = 6
-	color_style_list.corner_radius_bottom_right = 6
+	color_style_grid.corner_radius_top_left = 6
+	color_style_grid.corner_radius_bottom_left = 6
+	color_style_grid.corner_radius_top_right = 6
+	color_style_grid.corner_radius_bottom_right = 6
+	color_style_grid.content_margin_left = -1
+	color_style_grid.content_margin_right = -1
+	color_style_grid.border_width_left = 0
+	color_style_grid.border_width_right = 0
+	color_style_grid.border_width_top = 0
+	color_style_grid.border_width_bottom = 0
+	
+	color_style_decoration.bg_color = terrain.color
+	color_style_decoration.corner_radius_top_left = 8
+	color_style_decoration.corner_radius_bottom_left = 8
+	color_style_decoration.corner_radius_top_right = 8
+	color_style_decoration.corner_radius_bottom_right = 8
+	color_style_decoration.content_margin_left = -1
+	color_style_decoration.content_margin_right = -1
+	color_style_decoration.border_width_left = 4
+	color_style_decoration.border_width_right = 4
+	color_style_decoration.border_width_top = 4
+	color_style_decoration.border_width_bottom = 4
 	
 	type_icon_slot.texture = terrain_icons[terrain.type]
 	
@@ -95,20 +126,37 @@ func update():
 
 
 func update_style():
+	if terrain.type == BetterTerrain.TerrainType.DECORATION:
+		type_icon_panel.visible = false
+		color_panel.custom_minimum_size = Vector2i(52,52)
+	else:
+		type_icon_panel.visible = true
+		color_panel.custom_minimum_size = Vector2i(24,24)
+			
 	if grid_mode:
+		if terrain.type == BetterTerrain.TerrainType.DECORATION:
+			color_panel.add_theme_stylebox_override("panel", color_style_decoration)
+			color_panel.size_flags_vertical = Control.SIZE_FILL
+			icon_layout_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		else:
+			color_panel.add_theme_stylebox_override("panel", color_style_grid)
+			color_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+			icon_layout_container.size_flags_vertical = Control.SIZE_FILL
 		custom_minimum_size = Vector2(0, 60)
 		size_flags_horizontal = Control.SIZE_FILL
 		layout_container.vertical = true
 		name_label.visible = false
-		color_panel.add_theme_stylebox_override("panel", color_style_list)
-		color_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 		icon_layout_container.add_theme_constant_override("separation", -24)
 	else:
+		if terrain.type == BetterTerrain.TerrainType.DECORATION:
+			color_panel.add_theme_stylebox_override("panel", color_style_decoration)
+		else:
+			color_panel.add_theme_stylebox_override("panel", color_style_list)
+		icon_layout_container.size_flags_vertical = Control.SIZE_FILL
 		custom_minimum_size = Vector2(2000, 60)
 		size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		layout_container.vertical = false
 		name_label.visible = true
-		color_panel.add_theme_stylebox_override("panel", color_style_grid)
 		color_panel.size_flags_vertical = Control.SIZE_FILL
 		icon_layout_container.add_theme_constant_override("separation", 4)
 
