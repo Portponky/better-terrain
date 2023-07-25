@@ -523,8 +523,8 @@ func get_terrain(ts: TileSet, index: int) -> Dictionary:
 		name = terrain[0],
 		color = terrain[1],
 		type = terrain[2],
-		categories = terrain[3],
-		icon = terrain[4],
+		categories = terrain[3].duplicate(),
+		icon = terrain[4].duplicate(),
 		valid = true
 	}
 
@@ -536,7 +536,7 @@ func get_terrain(ts: TileSet, index: int) -> Dictionary:
 ## type terrains.
 ## [code]icon[/code] is a [Dictionary] with either a [code]path[/code] string pointing
 ## to a resource, or a [code]source_id[/code] [int] and a [code]coord[/code] [Vector2i].
-func set_terrain(ts: TileSet, index: int, name: String, color: Color, type: int, categories: Array = [], icon: Dictionary = {}) -> bool:
+func set_terrain(ts: TileSet, index: int, name: String, color: Color, type: int, categories: Array = [], icon: Dictionary = {valid = false}) -> bool:
 	if !ts or name.is_empty() or index < 0 or type < 0 or type == TerrainType.DECORATION or type >= TerrainType.MAX:
 		return false
 	
@@ -550,8 +550,11 @@ func set_terrain(ts: TileSet, index: int, name: String, color: Color, type: int,
 		if c < 0 or c == index or c >= ts_meta.terrains.size() or ts_meta.terrains[c][2] != TerrainType.CATEGORY:
 			return false
 	
-	if icon and not (icon.has("path") or (icon.has("source_id") and icon.has("coord"))):
-		return false
+	var icon_valid = icon.get("valid", "true")
+	if icon_valid:
+		match icon:
+			{}, {"path"}, {"source_id", "coord"}: pass
+			_: return false
 	
 	if type != TerrainType.CATEGORY:
 		for t in ts_meta.terrains:

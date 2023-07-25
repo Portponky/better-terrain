@@ -164,7 +164,7 @@ func create_terrain_type_restore_point(undo_manager: EditorUndoRedoManager, ts: 
 func restore_terrain(ts: TileSet, restore: Array) -> void:
 	for i in restore.size():
 		var r = restore[i]
-		BetterTerrain.set_terrain(ts, i, r.name, r.color, r.type, r.categories)
+		BetterTerrain.set_terrain(ts, i, r.name, r.color, r.type, r.categories, r.icon)
 
 
 func add_do_method(undo_manager: EditorUndoRedoManager, object:Object, method:StringName, args:Array):
