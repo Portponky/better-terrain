@@ -149,7 +149,8 @@ func tiles_changed() -> void:
 	
 	if item_count > terrain_list.get_child_count():
 		var terrain := BetterTerrain.get_terrain(tileset, BetterTerrain.TileCategory.EMPTY)
-		add_terrain_entry(terrain, item_count - 1)
+		if terrain.valid:
+			add_terrain_entry(terrain, item_count - 1)
 	
 	while item_count < terrain_list.get_child_count():
 		var child = terrain_list.get_child(terrain_list.get_child_count() - 1)
