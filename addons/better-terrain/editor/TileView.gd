@@ -3,6 +3,7 @@ extends Control
 
 signal paste_occurred
 signal change_zoom_level(value)
+signal terrain_updated(index)
 
 @onready var checkerboard := get_theme_icon("Checkerboard", "EditorIcons")
 
@@ -27,6 +28,9 @@ var selection_rect : Rect2i
 var selected_tile_states : Array[Dictionary] = []
 var copied_tile_states : Array[Dictionary] = []
 var staged_paste_tile_states : Array[Dictionary] = []
+
+var pick_icon_terrain : int = -1
+var pick_icon_terrain_cancel := false
 
 var undo_manager : EditorUndoRedoManager
 var terrain_undo
@@ -457,6 +461,8 @@ func paste_selection():
 	paste_occurred.emit()
 	queue_redraw()
 
+func emit_terrain_updated(index):
+	terrain_updated.emit(index)
 
 func _gui_input(event) -> void:
 	if event is InputEventKey:
@@ -556,6 +562,30 @@ func _gui_input(event) -> void:
 			paint_action = PaintAction.SELECT
 		return
 	
+	if clicked and pick_icon_terrain >= 0:
+		highlighted_tile_part = tile_part_from_position(current_position)
+		if !highlighted_tile_part.valid:
+			return
+		
+		var t = BetterTerrain.get_terrain(tileset, paint)
+		var prev_icon = t.icon.duplicate()
+		var icon = {
+			source_id = highlighted_tile_part.source_id,
+			coord = highlighted_tile_part.coord
+		}
+		undo_manager.create_action("Edit terrain details", UndoRedo.MERGE_DISABLE, tileset)
+		undo_manager.add_do_method(BetterTerrain, &"set_terrain", tileset, paint, t.name, t.color, t.type, t.categories, icon)
+		undo_manager.add_do_method(self, &"emit_terrain_updated", paint)
+		undo_manager.add_undo_method(BetterTerrain, &"set_terrain", tileset, paint, t.name, t.color, t.type, t.categories, prev_icon)
+		undo_manager.add_undo_method(self, &"emit_terrain_updated", paint)
+		undo_manager.commit_action()
+		pick_icon_terrain = -1
+		return
+	
+	if pick_icon_terrain_cancel:
+		pick_icon_terrain = -1
+		pick_icon_terrain_cancel = false
+	
 	if paint != BetterTerrain.TileCategory.NON_TERRAIN and clicked:
 		paint_action = PaintAction.NO_ACTION
 		if highlighted_tile_part.valid:
@@ -568,6 +598,7 @@ func _gui_input(event) -> void:
 		else:
 			match [paint_mode, event.button_index]:
 				[PaintMode.SELECT, MOUSE_BUTTON_LEFT]: paint_action = PaintAction.SELECT
+	
 	if (clicked or event is InputEventMouseMotion) and paint_action != PaintAction.NO_ACTION:
 		
 		if paint_action == PaintAction.SELECT:
