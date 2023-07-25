@@ -35,7 +35,7 @@ const TERRAIN_ENTRY_SCENE := preload("res://addons/better-terrain/editor/Terrain
 
 @onready var terrain_list := $VBoxContainer/HSplitContainer/VBoxContainer/Panel/ScrollContainer/TerrainList
 @onready var tile_view := $VBoxContainer/HSplitContainer/Panel/ScrollArea/TileView
-@onready var grid_mode_button := $VBoxContainer/HSplitContainer/VBoxContainer/HBoxContainer/GridMode
+@onready var grid_mode_button := $VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar/GridMode
 
 var selected_entry := -2
 
