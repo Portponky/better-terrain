@@ -3,7 +3,7 @@ Terrain plugin for Godot 4's tilemap.
 
 This plugin implements autotile-style terrain system with multiple connections. It works with the existing tilemaps and tilesets alongside Godot 4 features.
 
-![Example of terrain system in use](https://user-images.githubusercontent.com/33663279/202700714-d4d78da4-3741-4d57-bc75-5c8f99d7543e.png)
+![Example of terrain system in use](https://github.com/Portponky/better-terrain/assets/33663279/a8399964-4595-4638-b979-fd73223a4245)
 
 ### Why?
 
@@ -11,26 +11,34 @@ Godot 4 has a terrain system built-in to its tilemap node. This system has some 
 
 ### Installation
 
+`better-terrain` is available from Godot's asset library, but the latest version is available here.
+
 To get started with `better-terrain`, follow these steps:
-1. Clone or download the repo.
-2. Copy the `addons` folder into your godot project.
-3. In `Project setings` make sure the plugin is enabled in the `Plugins` tab.
+
+1. Either:
+    * Clone or download the repo, and copy the `addons` folder into your Godot project.
+    * In Godot's asset library, search for `Better Terrain` and click download.
+
+2. In `Project setings` make sure the plugin is enabled in the `Plugins` tab.
+3. Restart Godot.
 
 Now when you select a tilemap node, a new dock tab called 'Terrains' will show up. In here, you can define terrains and paint with them.
 
 ### Usage in the editor
 
-The dock has terrain types on the left, and tiles on the right. At the bottom of the terrain types, there are buttons to add, modify, sort, or remove terrain types. A terrain type has a name, a color, and a type. The three types are:
+The dock has terrain types on the left, and tiles on the right. At the bottom of the terrain types, there are buttons to add, modify, sort, or remove terrain types. A terrain type has a name, a color, a type, and an optional icon. The four types are:
 
 * **Match tiles**: This terrain places tiles based on how well they match their neighboring tiles. It's a good replacement for '3x3' and '3x3 minimal' from Godot 3, and 'Match sides' and 'Match corners and sides' from Godot 4's built-in terrain system.
 * **Match vertices**: This terrain analyses the vertices of each tile and chooses the highest neighboring terrain type (as in, highest in the terrain list, with empty/non-terrain being the highest overall). It's a replacement for '2x2' in Godot 3, or 'Match corners' in Godot 4.
-* **Category**. Categories are used to create advanced matching rules. Tiles assigned to a category never modify the tilemap, but terrains can match against categories, and also belong to them.
+* **Category**: Categories are used to create advanced matching rules. Tiles assigned to a category never modify the tilemap, but terrains can match against categories, and also belong to them.
+* **Decoration**: There is always only one decoration type available at the end of your terrain list. It treats its tiles equivalent to empty cells, and is used to add supplimentary tiles around the edge of other terrains. It behaves like 'Match tiles' otherwise.
 
 Along the top, you will find the following buttons:
 
-* Pen, rectangle, and fill tools. These are for drawing in the scene. Right click will erase.
-* Change type and change peering connecting types. Note that these are both unselected by default to prevent accidental alterations to the terrain settings. You can unselect them after using them.
+* Pen, line, rectangle, and fill tools. These are for drawing in the scene. Right click will erase.
+* Select, change type and change peering connecting types. Note that these are unselected by default to prevent accidental alterations to the terrain settings. You can unselect them after using them.
 * A zoom slider for the tiles.
+* An option to control the level of randomization used.
 * A layer selector for the scene. Unfortunately, the layer highlight option is not exposed to GDScript, so that is unavailable.
 
 You may also see a "Clean data" button, which occurs when terrain has data that does not apply to the current tileset shape or offset axis (for example, you set up rectangle terrain then change the tileset to be hexagonal).
@@ -39,7 +47,7 @@ You may also see a "Clean data" button, which occurs when terrain has data that 
 
 The terrain system is usable via code via the `BetterTerrain` autoload, which the plugin handles. The editor dock is implemented entirely using this class, so it is fully featured.
 
-To edit terrain at runtime, first you must set terrain into cells, and then you must run an update function for the cells to allow it to pick the best tile for each terrain.
+To edit terrain at runtime, first you must set terrain into cells, and then you must run an update function for the cells to allow it to pick the best tile for each terrain. This is similar to the API for Godot 3.
 
 To set or get terrain in cells, these functions are available. Terrain types are integer indexes into the list you see in the editor (e.g. the first terrain is 0, the second is 1, etc...)
 
