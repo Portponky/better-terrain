@@ -850,6 +850,9 @@ func set_cells(tm: TileMap, layer: int, coords: Array, type: int) -> bool:
 	if type >= cache.size():
 		return false
 	
+	if cache[type].is_empty():
+		return false
+	
 	var tile = cache[type].front()
 	for c in coords:
 		tm.set_cell(layer, c, tile[0], tile[1], tile[2])
