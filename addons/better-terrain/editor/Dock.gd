@@ -191,7 +191,7 @@ func queue_tiles_changed() -> void:
 		return
 	
 	tileset_dirty = true
-	call_deferred(&"tiles_changed")
+	tiles_changed.call_deferred()
 
 
 func _on_entry_select(index:int):
