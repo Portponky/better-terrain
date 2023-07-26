@@ -628,7 +628,7 @@ func _gui_input(event) -> void:
 			var prev_position_vec2 = Vector2(prev_position)
 			var mouse_dist = current_position_vec2.distance_to(prev_position_vec2)
 			var step_size = (tile_part_size.x * zoom_level)
-			var steps = ceil(mouse_dist / step_size)
+			var steps = ceil(mouse_dist / step_size) + 1
 			for i in range(steps):
 				var t = float(i) / steps 
 				var check_position = prev_position_vec2.lerp(current_position_vec2, t)
