@@ -7,6 +7,11 @@ signal terrain_updated(index)
 
 @onready var checkerboard := get_theme_icon("Checkerboard", "EditorIcons")
 
+# Draw checkerboard and tiles with specific  materials in
+# individual canvas items via rendering server
+var _canvas_item_map = {}
+var _canvas_item_background : RID
+
 var tileset: TileSet
 
 var paint := BetterTerrain.TileCategory.NON_TERRAIN
@@ -60,6 +65,19 @@ enum PaintAction {
 var paint_action := PaintAction.NO_ACTION
 
 const ALTERNATE_TILE_MARGIN := 18
+
+func _enter_tree() -> void:
+	_canvas_item_background = RenderingServer.canvas_item_create()
+	RenderingServer.canvas_item_set_parent(_canvas_item_background, get_canvas_item())
+	RenderingServer.canvas_item_set_draw_behind_parent(_canvas_item_background, true)
+
+
+func _exit_tree() -> void:
+	RenderingServer.free_rid(_canvas_item_background)
+	for p in _canvas_item_map:
+		RenderingServer.free_rid(_canvas_item_map[p])
+	_canvas_item_map.clear()
+
 
 func refresh_tileset(ts: TileSet) -> void:
 	tileset = ts
@@ -293,13 +311,36 @@ func tile_parts_from_rect(rect:Rect2) -> Array[Dictionary]:
 	return tiles
 
 
+func _get_canvas_item(td: TileData) -> RID:
+	if !td.material:
+		return self.get_canvas_item()
+	if _canvas_item_map.has(td.material):
+		return _canvas_item_map[td.material]
+	
+	var rid = RenderingServer.canvas_item_create()
+	RenderingServer.canvas_item_set_material(rid, td.material.get_rid())
+	RenderingServer.canvas_item_set_parent(rid, get_canvas_item())
+	RenderingServer.canvas_item_set_draw_behind_parent(rid, true)
+	RenderingServer.canvas_item_set_default_texture_filter(rid, RenderingServer.CANVAS_ITEM_TEXTURE_FILTER_NEAREST)
+	_canvas_item_map[td.material] = rid
+	return rid
+
+
 func _draw_tile_data(texture: Texture2D, rect: Rect2, src_rect: Rect2, td: TileData, draw_sides: bool = true) -> void:
 	var flipped_rect := rect
 	if td.flip_h:
 		flipped_rect.size.x = -rect.size.x
 	if td.flip_v:
 		flipped_rect.size.y = -rect.size.y
-	draw_texture_rect_region(texture, flipped_rect, src_rect, td.modulate, td.transpose)
+	
+	RenderingServer.canvas_item_add_texture_rect_region(
+		_get_canvas_item(td),
+		flipped_rect,
+		texture.get_rid(),
+		src_rect,
+		td.modulate,
+		td.transpose
+	)
 	
 	var type := BetterTerrain.get_tile_terrain_type(td)
 	if type == BetterTerrain.TileCategory.NON_TERRAIN:
@@ -331,16 +372,32 @@ func _draw() -> void:
 	if !tileset:
 		return
 	
+	# Clear material-based render targets
+	RenderingServer.canvas_item_clear(_canvas_item_background)
+	for p in _canvas_item_map:
+		RenderingServer.canvas_item_clear(_canvas_item_map[p])
+	
 	var offset := Vector2.ZERO
 	var alt_offset := Vector2.RIGHT * (zoom_level * tiles_size.x + ALTERNATE_TILE_MARGIN)
 	
-	draw_texture_rect(checkerboard, Rect2(alt_offset, zoom_level * alternate_size), true)
+	RenderingServer.canvas_item_add_texture_rect(
+		_canvas_item_background,
+		Rect2(alt_offset, zoom_level * alternate_size),
+		checkerboard.get_rid(),
+		true
+	)
 	
 	for s in tileset.get_source_count():
 		var source := tileset.get_source(tileset.get_source_id(s)) as TileSetAtlasSource
 		if !source or !source.texture:
 			continue
-		draw_texture_rect(checkerboard, Rect2(offset, zoom_level * source.texture.get_size()), true)
+		
+		RenderingServer.canvas_item_add_texture_rect(
+			_canvas_item_background,
+			Rect2(offset, zoom_level * source.texture.get_size()),
+			checkerboard.get_rid(),
+			true
+		)
 		for t in source.get_tiles_count():
 			var coord := source.get_tile_id(t)
 			var rect := source.get_tile_texture_region(coord, 0)
@@ -435,6 +492,7 @@ func _draw() -> void:
 							draw_colored_polygon(transform * side_polygon, color)
 				
 				draw_rect(staged_rect, Color.DEEP_PINK, false)
+	
 
 
 func delete_selection():
@@ -450,8 +508,10 @@ func delete_selection():
 	undo_manager.add_undo_method(self, &"queue_redraw")
 	undo_manager.commit_action()
 
+
 func copy_selection():
 	copied_tile_states = selected_tile_states
+
 
 func paste_selection():
 	staged_paste_tile_states = copied_tile_states
@@ -461,8 +521,10 @@ func paste_selection():
 	paste_occurred.emit()
 	queue_redraw()
 
+
 func emit_terrain_updated(index):
 	terrain_updated.emit(index)
+
 
 func _gui_input(event) -> void:
 	if event is InputEventKey:
