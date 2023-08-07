@@ -33,6 +33,7 @@ const TERRAIN_ENTRY_SCENE := preload("res://addons/better-terrain/editor/Terrain
 @onready var move_down_button := $VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar/MoveDown
 @onready var remove_terrain_button := $VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar/RemoveTerrain
 
+@onready var scroll_container := $VBoxContainer/HSplitContainer/VBoxContainer/Panel/ScrollContainer
 @onready var terrain_list := $VBoxContainer/HSplitContainer/VBoxContainer/Panel/ScrollContainer/TerrainList
 @onready var tile_view := $VBoxContainer/HSplitContainer/Panel/ScrollArea/TileView
 @onready var grid_mode_button := $VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar/GridMode
@@ -100,6 +101,10 @@ func _ready() -> void:
 	tile_view.paste_occurred.connect(_on_paste_occurred)
 	tile_view.change_zoom_level.connect(_on_change_zoom_level)
 	tile_view.terrain_updated.connect(_on_terrain_updated)
+
+
+func _process(delta):
+	scroll_container.scroll_horizontal = 0
 
 
 func _get_fill_cells(target: Vector2i) -> Array:
