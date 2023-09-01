@@ -23,6 +23,8 @@ const TERRAIN_ENTRY_SCENE := preload("res://addons/better-terrain/editor/Terrain
 
 @onready var zoom_slider := $VBoxContainer/Toolbar/Zoom
 
+@onready var terrain_selector_popup := $VBoxContainer/Toolbar/Terrain/Terrain
+
 @onready var clean_button := $VBoxContainer/Toolbar/Clean
 @onready var layer_options := $VBoxContainer/Toolbar/LayerOptions
 
@@ -161,6 +163,29 @@ func tiles_changed() -> void:
 		var child = terrain_list.get_child(terrain_list.get_child_count() - 1)
 		terrain_list.remove_child(child)
 		child.free()
+	
+	terrain_selector_popup.clear()
+	terrain_selector_popup.add_item("All", 1000000)
+	terrain_selector_popup.add_item("None", 1000001)
+	for s in tileset.get_source_count():
+		var source_id = tileset.get_source_id(s)
+		var source := tileset.get_source(source_id)
+		var name := source.resource_name
+		if name.is_empty() && source is TileSetAtlasSource:
+			var texture := (source as TileSetAtlasSource).texture
+			var texture_name := texture.resource_name if texture else ""
+			if !texture_name.is_empty():
+				name = texture_name
+			else:
+				var texture_path := texture.resource_path if texture else ""
+				if !texture_path.is_empty():
+					name = texture_path.get_file()
+		if name.is_empty():
+			name = "%d" % source.get_rid().get_id()
+		
+		terrain_selector_popup.add_check_item(name, source_id)
+		terrain_selector_popup.set_item_checked( \
+		        terrain_selector_popup.get_item_index(source_id), true)
 	
 	layer_options.clear()
 	if tilemap and tilemap.get_layers_count() == 0:
@@ -744,3 +769,26 @@ func _get_tileset_line(from:Vector2i, to:Vector2i, tileset:TileSet) -> Array[Vec
 	
 	return points
 
+
+func _on_terrain_enable_id_pressed(id):
+	if id == 1000000:
+		for i in terrain_selector_popup.item_count:
+			if terrain_selector_popup.is_item_checkable(i):
+				terrain_selector_popup.set_item_checked(i, true)
+		tile_view.disabled_sources.clear()
+	elif id == 1000001:
+		var list: Array[int] = []
+		for i in terrain_selector_popup.item_count:
+			if terrain_selector_popup.is_item_checkable(i):
+				terrain_selector_popup.set_item_checked(i, false)
+				list.push_back(terrain_selector_popup.get_item_id(i))
+		tile_view.disabled_sources = list
+	else:
+		var index = terrain_selector_popup.get_item_index(id)
+		if terrain_selector_popup.is_item_checkable(index):
+			if terrain_selector_popup.is_item_checked(index):
+				terrain_selector_popup.set_item_checked(index, false)
+				tile_view.disabled_sources.push_back(id)
+			else:
+				terrain_selector_popup.set_item_checked(index, true)
+				tile_view.disabled_sources.erase(id)
