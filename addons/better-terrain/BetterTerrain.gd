@@ -48,6 +48,49 @@ enum TileCategory {
 	ERROR = -3
 }
 
+enum SymmetryType {
+	NONE,
+	MIRROR,
+	FLIP,
+	REFLECT,
+	ROTATE_CLOCKWISE,
+	ROTATE_COUNTER_CLOCKWISE,
+	ROTATE_180,
+	ROTATE_ALL,
+	ALL
+}
+
+const _symmetry_mapping := {
+	SymmetryType.NONE: [0],
+	SymmetryType.MIRROR: [0, TileSetAtlasSource.TRANSFORM_FLIP_H],
+	SymmetryType.FLIP: [0, TileSetAtlasSource.TRANSFORM_FLIP_V],
+	SymmetryType.REFLECT: [
+		0,
+		TileSetAtlasSource.TRANSFORM_FLIP_H,
+		TileSetAtlasSource.TRANSFORM_FLIP_V,
+		TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_FLIP_V
+	],
+	SymmetryType.ROTATE_CLOCKWISE: [0, TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_TRANSPOSE],
+	SymmetryType.ROTATE_COUNTER_CLOCKWISE: [0, TileSetAtlasSource.TRANSFORM_FLIP_V | TileSetAtlasSource.TRANSFORM_TRANSPOSE],
+	SymmetryType.ROTATE_180: [0, TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_FLIP_V],
+	SymmetryType.ROTATE_ALL: [
+		0,
+		TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_TRANSPOSE,
+		TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_FLIP_V,
+		TileSetAtlasSource.TRANSFORM_FLIP_V | TileSetAtlasSource.TRANSFORM_TRANSPOSE
+	],
+	SymmetryType.ALL: [
+		0,
+		TileSetAtlasSource.TRANSFORM_FLIP_H,
+		TileSetAtlasSource.TRANSFORM_FLIP_V,
+		TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_FLIP_V,
+		TileSetAtlasSource.TRANSFORM_TRANSPOSE,
+		TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_TRANSPOSE,
+		TileSetAtlasSource.TRANSFORM_FLIP_V | TileSetAtlasSource.TRANSFORM_TRANSPOSE,
+		TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_FLIP_V | TileSetAtlasSource.TRANSFORM_TRANSPOSE
+	]
+}
+
 
 func _intersect(first: Array, second: Array) -> bool:
 	if first.size() > second.size():
@@ -140,9 +183,19 @@ func _get_cache(ts: TileSet) -> Array:
 					
 					peering[key] = targets
 				
-				# Only interface with decoration tiles that have at least some peering data
-				if td_meta.type != TileCategory.EMPTY or peering:
+				# Decoration tiles without peering are skipped
+				if td_meta.type == TileCategory.EMPTY and !peering:
+					continue
+				
+				var symmetry = td_meta.get("symmetry", SymmetryType.NONE)
+				# Branch out no symmetry tiles early
+				if symmetry == SymmetryType.NONE:
 					cache[td_meta.type].push_back([source_id, coord, alternate, peering, td.probability])
+					continue
+				
+				for flags in _symmetry_mapping[symmetry]:
+					var symmetric_peering = data.peering_bits_after_symmetry(peering, flags)
+					cache[td_meta.type].push_back([source_id, coord, alternate | flags, symmetric_peering, td.probability])
 	
 	return cache
 
@@ -659,6 +712,30 @@ func get_tile_terrain_type(td: TileData) -> int:
 		return TileCategory.ERROR
 	var td_meta := _get_tile_meta(td)
 	return td_meta.type
+
+
+## Sets a [code]SymmetryType[/code] on the tile. 
+func set_tile_symmetry_type(ts: TileSet, td: TileData, type: int) -> bool:
+	if !ts or !td or type < SymmetryType.NONE or type > SymmetryType.ALL:
+		return false
+	
+	var td_meta := _get_tile_meta(td)
+	if td_meta.type == TileCategory.NON_TERRAIN:
+		return false
+	
+	td_meta.symmetry = type
+	_set_tile_meta(td, td_meta)
+	_purge_cache(ts)
+	return true
+
+
+## To describe
+func get_tile_symmetry_type(td: TileData) -> int:
+	if !td:
+		return SymmetryType.NONE
+	
+	var td_meta := _get_tile_meta(td)
+	return td_meta.get("symmetry", SymmetryType.NONE)
 
 
 ## Returns an Array of all [TileData] tiles included in the specified
