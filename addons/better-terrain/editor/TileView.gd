@@ -561,10 +561,34 @@ func delete_selection():
 			if old_peering.has(paint):
 				undo_manager.add_do_method(BetterTerrain, &"remove_tile_peering_type", tileset, t.part.data, side, paint)
 				undo_manager.add_undo_method(BetterTerrain, &"add_tile_peering_type", tileset, t.part.data, side, paint)
-			
+	
 	undo_manager.add_do_method(self, &"queue_redraw")
 	undo_manager.add_undo_method(self, &"queue_redraw")
 	undo_manager.commit_action()
+
+
+func toggle_selection():
+	undo_manager.create_action("Toggle tile terrain", UndoRedo.MERGE_DISABLE, tileset, true)
+	for t in selected_tile_states:
+		var type := BetterTerrain.get_tile_terrain_type(t.part.data)
+		var goal := paint if paint != type else BetterTerrain.TileCategory.NON_TERRAIN
+		
+		terrain_undo.add_do_method(undo_manager, BetterTerrain, &"set_tile_terrain_type", [tileset, t.part.data, goal])
+		if goal == BetterTerrain.TileCategory.NON_TERRAIN:
+			terrain_undo.create_peering_restore_point_tile(
+				undo_manager,
+				tileset,
+				t.part.source_id,
+				t.part.coord,
+				t.part.alternate
+			)
+		else:
+			undo_manager.add_undo_method(BetterTerrain, &"set_tile_terrain_type", tileset, t.part.data, type)
+	
+	terrain_undo.add_do_method(undo_manager, self, &"queue_redraw", [])
+	undo_manager.add_undo_method(self, &"queue_redraw")
+	undo_manager.commit_action()
+	terrain_undo.action_count += 1
 
 
 func copy_selection():
@@ -585,10 +609,13 @@ func emit_terrain_updated(index):
 
 
 func _gui_input(event) -> void:
-	if event is InputEventKey:
+	if event is InputEventKey and event.is_pressed():
 		if event.keycode == KEY_DELETE and not event.echo:
 			accept_event()
 			delete_selection()
+		if event.keycode == KEY_ENTER and not event.echo:
+			accept_event()
+			toggle_selection()
 		if event.keycode == KEY_ESCAPE and not event.echo:
 			accept_event()
 			if paint_action == PaintAction.PASTE:
