@@ -19,8 +19,11 @@ const TERRAIN_ENTRY_SCENE := preload("res://addons/better-terrain/editor/Terrain
 @onready var paint_type := $VBoxContainer/Toolbar/PaintType
 @onready var paint_terrain := $VBoxContainer/Toolbar/PaintTerrain
 @onready var select_tiles := $VBoxContainer/Toolbar/SelectTiles
-@onready var shuffle_random := $VBoxContainer/Toolbar/ShuffleRandom
 
+@onready var paint_symmetry := $VBoxContainer/Toolbar/PaintSymmetry
+@onready var symmetry_options = $VBoxContainer/Toolbar/SymmetryOptions
+
+@onready var shuffle_random := $VBoxContainer/Toolbar/ShuffleRandom
 @onready var zoom_slider := $VBoxContainer/Toolbar/Zoom
 
 @onready var clean_button := $VBoxContainer/Toolbar/Clean
@@ -101,6 +104,9 @@ func _ready() -> void:
 	tile_view.paste_occurred.connect(_on_paste_occurred)
 	tile_view.change_zoom_level.connect(_on_change_zoom_level)
 	tile_view.terrain_updated.connect(_on_terrain_updated)
+	
+	symmetry_options.select(0)
+	symmetry_options.item_selected.connect(_on_symmetry_selected)
 
 
 func _process(delta):
@@ -446,8 +452,13 @@ func _on_bit_button_pressed(button: BaseButton) -> void:
 		select_tiles: tile_view.paint_mode = tile_view.PaintMode.SELECT
 		paint_type: tile_view.paint_mode = tile_view.PaintMode.PAINT_TYPE
 		paint_terrain: tile_view.paint_mode = tile_view.PaintMode.PAINT_PEERING
+		paint_symmetry: tile_view.paint_mode = tile_view.PaintMode.PAINT_SYMMETRY
 		null: tile_view.paint_mode = tile_view.PaintMode.NO_PAINT
 	tile_view.queue_redraw()
+
+
+func _on_symmetry_selected(index):
+	tile_view.paint_symmetry = index
 
 
 func _on_layer_options_item_selected(index) -> void:
@@ -743,4 +754,3 @@ func _get_tileset_line(from:Vector2i, to:Vector2i, tileset:TileSet) -> Array[Vec
 			points.push_back(Vector2i(current.y, current.x) if transposed else current)
 	
 	return points
-
