@@ -19,6 +19,38 @@ const _terrain_peering_hflip = [8, 9, 6, 7, 4, 5, 2, 3, 0, 1, 14, 15, 12, 13, 10
 const _terrain_peering_vflip = [0, 1, 14, 15, 12, 13, 10, 11, 8, 9, 6, 7, 4, 5, 2, 3]
 const _terrain_peering_transpose = [4, 5, 2, 3, 0, 1, 14, 15, 12, 13, 10, 11, 8, 9, 6, 7]
 
+const symmetry_mapping := {
+	BetterTerrain.SymmetryType.NONE: [0],
+	BetterTerrain.SymmetryType.MIRROR: [0, TileSetAtlasSource.TRANSFORM_FLIP_H],
+	BetterTerrain.SymmetryType.FLIP: [0, TileSetAtlasSource.TRANSFORM_FLIP_V],
+	BetterTerrain.SymmetryType.REFLECT: [
+		0,
+		TileSetAtlasSource.TRANSFORM_FLIP_H,
+		TileSetAtlasSource.TRANSFORM_FLIP_V,
+		TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_FLIP_V
+	],
+	BetterTerrain.SymmetryType.ROTATE_CLOCKWISE: [0, TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_TRANSPOSE],
+	BetterTerrain.SymmetryType.ROTATE_COUNTER_CLOCKWISE: [0, TileSetAtlasSource.TRANSFORM_FLIP_V | TileSetAtlasSource.TRANSFORM_TRANSPOSE],
+	BetterTerrain.SymmetryType.ROTATE_180: [0, TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_FLIP_V],
+	BetterTerrain.SymmetryType.ROTATE_ALL: [
+		0,
+		TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_TRANSPOSE,
+		TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_FLIP_V,
+		TileSetAtlasSource.TRANSFORM_FLIP_V | TileSetAtlasSource.TRANSFORM_TRANSPOSE
+	],
+	BetterTerrain.SymmetryType.ALL: [
+		0,
+		TileSetAtlasSource.TRANSFORM_FLIP_H,
+		TileSetAtlasSource.TRANSFORM_FLIP_V,
+		TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_FLIP_V,
+		TileSetAtlasSource.TRANSFORM_TRANSPOSE,
+		TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_TRANSPOSE,
+		TileSetAtlasSource.TRANSFORM_FLIP_V | TileSetAtlasSource.TRANSFORM_TRANSPOSE,
+		TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_FLIP_V | TileSetAtlasSource.TRANSFORM_TRANSPOSE
+	]
+}
+
+
 ## Returns an [Array] of ints of type [enum TileSet.CellNeighbor] which represent
 ## the valid neighboring tiles for a terrain of [code]type[/code] in TileSet
 static func get_terrain_peering_cells(ts: TileSet, type: int) -> Array:

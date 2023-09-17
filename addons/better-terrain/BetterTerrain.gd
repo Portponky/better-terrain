@@ -50,45 +50,14 @@ enum TileCategory {
 
 enum SymmetryType {
 	NONE,
-	MIRROR,
-	FLIP,
-	REFLECT,
+	MIRROR, ## Horizontally mirror
+	FLIP, ## Vertically flip
+	REFLECT, ## All four reflections
 	ROTATE_CLOCKWISE,
 	ROTATE_COUNTER_CLOCKWISE,
 	ROTATE_180,
-	ROTATE_ALL,
-	ALL
-}
-
-const _symmetry_mapping := {
-	SymmetryType.NONE: [0],
-	SymmetryType.MIRROR: [0, TileSetAtlasSource.TRANSFORM_FLIP_H],
-	SymmetryType.FLIP: [0, TileSetAtlasSource.TRANSFORM_FLIP_V],
-	SymmetryType.REFLECT: [
-		0,
-		TileSetAtlasSource.TRANSFORM_FLIP_H,
-		TileSetAtlasSource.TRANSFORM_FLIP_V,
-		TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_FLIP_V
-	],
-	SymmetryType.ROTATE_CLOCKWISE: [0, TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_TRANSPOSE],
-	SymmetryType.ROTATE_COUNTER_CLOCKWISE: [0, TileSetAtlasSource.TRANSFORM_FLIP_V | TileSetAtlasSource.TRANSFORM_TRANSPOSE],
-	SymmetryType.ROTATE_180: [0, TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_FLIP_V],
-	SymmetryType.ROTATE_ALL: [
-		0,
-		TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_TRANSPOSE,
-		TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_FLIP_V,
-		TileSetAtlasSource.TRANSFORM_FLIP_V | TileSetAtlasSource.TRANSFORM_TRANSPOSE
-	],
-	SymmetryType.ALL: [
-		0,
-		TileSetAtlasSource.TRANSFORM_FLIP_H,
-		TileSetAtlasSource.TRANSFORM_FLIP_V,
-		TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_FLIP_V,
-		TileSetAtlasSource.TRANSFORM_TRANSPOSE,
-		TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_TRANSPOSE,
-		TileSetAtlasSource.TRANSFORM_FLIP_V | TileSetAtlasSource.TRANSFORM_TRANSPOSE,
-		TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_FLIP_V | TileSetAtlasSource.TRANSFORM_TRANSPOSE
-	]
+	ROTATE_ALL, ## All four rotated forms
+	ALL ## All rotated and reflected forms
 }
 
 
@@ -193,7 +162,7 @@ func _get_cache(ts: TileSet) -> Array:
 					cache[td_meta.type].push_back([source_id, coord, alternate, peering, td.probability])
 					continue
 				
-				for flags in _symmetry_mapping[symmetry]:
+				for flags in data.symmetry_mapping[symmetry]:
 					var symmetric_peering = data.peering_bits_after_symmetry(peering, flags)
 					cache[td_meta.type].push_back([source_id, coord, alternate | flags, symmetric_peering, td.probability])
 	
@@ -714,7 +683,9 @@ func get_tile_terrain_type(td: TileData) -> int:
 	return td_meta.type
 
 
-## Sets a [code]SymmetryType[/code] on the tile. 
+## For a tile represented by [TileData] [code]td[/code] in [TileSet]
+## [code]ts[/code], sets [enum SymmetryType] [code]type[/code]. This controls
+## how the tile is rotated/mirrored during placement.
 func set_tile_symmetry_type(ts: TileSet, td: TileData, type: int) -> bool:
 	if !ts or !td or type < SymmetryType.NONE or type > SymmetryType.ALL:
 		return false
@@ -729,7 +700,8 @@ func set_tile_symmetry_type(ts: TileSet, td: TileData, type: int) -> bool:
 	return true
 
 
-## To describe
+## For a tile [code]td[/code], returns the [enum SymmetryType] which that
+## tile uses.
 func get_tile_symmetry_type(td: TileData) -> int:
 	if !td:
 		return SymmetryType.NONE
