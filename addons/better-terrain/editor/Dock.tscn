@@ -19,7 +19,7 @@
 
 [sub_resource type="ButtonGroup" id="ButtonGroup_aon7c"]
 
-[sub_resource type="Image" id="Image_s48dj"]
+[sub_resource type="Image" id="Image_otswe"]
 data = {
 "data": PackedByteArray(255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 94, 94, 127, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 93, 93, 255, 255, 94, 94, 127, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 94, 94, 127, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 94, 94, 127, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 231, 255, 94, 94, 54, 255, 94, 94, 57, 255, 93, 93, 233, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 231, 255, 94, 94, 54, 255, 94, 94, 57, 255, 93, 93, 233, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 97, 97, 42, 255, 255, 255, 0, 255, 255, 255, 0, 255, 97, 97, 42, 255, 93, 93, 233, 255, 93, 93, 232, 255, 93, 93, 41, 255, 255, 255, 0, 255, 255, 255, 0, 255, 97, 97, 42, 255, 93, 93, 233, 255, 93, 93, 232, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 96, 96, 45, 255, 93, 93, 44, 255, 255, 255, 0, 255, 97, 97, 42, 255, 97, 97, 42, 255, 255, 255, 0, 255, 96, 96, 45, 255, 93, 93, 44, 255, 255, 255, 0, 255, 97, 97, 42, 255, 97, 97, 42, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 96, 96, 45, 255, 93, 93, 235, 255, 94, 94, 234, 255, 95, 95, 43, 255, 255, 255, 0, 255, 255, 255, 0, 255, 96, 96, 45, 255, 93, 93, 235, 255, 94, 94, 234, 255, 95, 95, 43, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 235, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 233, 255, 95, 95, 59, 255, 96, 96, 61, 255, 93, 93, 235, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 233, 255, 95, 95, 59, 255, 96, 96, 61, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0),
 "format": "RGBA8",
@@ -28,8 +28,8 @@ data = {
 "width": 16
 }
 
-[sub_resource type="ImageTexture" id="ImageTexture_0o2as"]
-image = SubResource("Image_s48dj")
+[sub_resource type="ImageTexture" id="ImageTexture_22pf7"]
+image = SubResource("Image_otswe")
 
 [sub_resource type="ButtonGroup" id="ButtonGroup_3wrxn"]
 allow_unpress = true
@@ -66,7 +66,7 @@ tooltip_text = "Draw terrain"
 toggle_mode = true
 button_pressed = true
 button_group = SubResource("ButtonGroup_aon7c")
-icon = SubResource("ImageTexture_0o2as")
+icon = SubResource("ImageTexture_22pf7")
 flat = true
 
 [node name="Line" type="Button" parent="VBoxContainer/Toolbar"]
@@ -74,7 +74,7 @@ layout_mode = 2
 tooltip_text = "Draw line"
 toggle_mode = true
 button_group = SubResource("ButtonGroup_aon7c")
-icon = SubResource("ImageTexture_0o2as")
+icon = SubResource("ImageTexture_22pf7")
 flat = true
 
 [node name="Rectangle" type="Button" parent="VBoxContainer/Toolbar"]
@@ -82,7 +82,7 @@ layout_mode = 2
 tooltip_text = "Fill a rectangle of terrain"
 toggle_mode = true
 button_group = SubResource("ButtonGroup_aon7c")
-icon = SubResource("ImageTexture_0o2as")
+icon = SubResource("ImageTexture_22pf7")
 flat = true
 
 [node name="Fill" type="Button" parent="VBoxContainer/Toolbar"]
@@ -90,7 +90,7 @@ layout_mode = 2
 tooltip_text = "Bucket fill terrain"
 toggle_mode = true
 button_group = SubResource("ButtonGroup_aon7c")
-icon = SubResource("ImageTexture_0o2as")
+icon = SubResource("ImageTexture_22pf7")
 flat = true
 
 [node name="Replace" type="Button" parent="VBoxContainer/Toolbar"]
@@ -107,7 +107,7 @@ layout_mode = 2
 tooltip_text = "Select"
 toggle_mode = true
 button_group = SubResource("ButtonGroup_3wrxn")
-icon = SubResource("ImageTexture_0o2as")
+icon = SubResource("ImageTexture_22pf7")
 flat = true
 
 [node name="PaintType" type="Button" parent="VBoxContainer/Toolbar"]
@@ -128,16 +128,18 @@ flat = true
 
 [node name="PaintSymmetry" type="Button" parent="VBoxContainer/Toolbar"]
 layout_mode = 2
-tooltip_text = "Paint terrain types"
+tooltip_text = "Paint tile symmetry"
 toggle_mode = true
 button_group = SubResource("ButtonGroup_3wrxn")
 icon = ExtResource("5_kfjwu")
 flat = true
 
 [node name="SymmetryOptions" type="OptionButton" parent="VBoxContainer/Toolbar"]
+visible = false
 custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 item_count = 9
+selected = 0
 popup/item_0/text = "No Symmetry"
 popup/item_0/id = 8
 popup/item_1/text = "Mirror"
@@ -226,7 +228,7 @@ layout_mode = 2
 layout_mode = 2
 tooltip_text = "Toggle grid view"
 toggle_mode = true
-icon = SubResource("ImageTexture_0o2as")
+icon = SubResource("ImageTexture_22pf7")
 flat = true
 
 [node name="VSeparator" type="VSeparator" parent="VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar"]
@@ -239,38 +241,38 @@ size_flags_horizontal = 3
 [node name="AddTerrain" type="Button" parent="VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar"]
 layout_mode = 2
 tooltip_text = "Add terrain type"
-icon = SubResource("ImageTexture_0o2as")
+icon = SubResource("ImageTexture_22pf7")
 flat = true
 
 [node name="EditTerrain" type="Button" parent="VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar"]
 layout_mode = 2
 tooltip_text = "Edit terrain type"
-icon = SubResource("ImageTexture_0o2as")
+icon = SubResource("ImageTexture_22pf7")
 flat = true
 
 [node name="PickIcon" type="Button" parent="VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar"]
 layout_mode = 2
 tooltip_text = "Pick terrain icon from tileset"
 toggle_mode = true
-icon = SubResource("ImageTexture_0o2as")
+icon = SubResource("ImageTexture_22pf7")
 flat = true
 
 [node name="MoveUp" type="Button" parent="VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar"]
 layout_mode = 2
 tooltip_text = "Move selected terrain up"
-icon = SubResource("ImageTexture_0o2as")
+icon = SubResource("ImageTexture_22pf7")
 flat = true
 
 [node name="MoveDown" type="Button" parent="VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar"]
 layout_mode = 2
 tooltip_text = "Move selected terrain down"
-icon = SubResource("ImageTexture_0o2as")
+icon = SubResource("ImageTexture_22pf7")
 flat = true
 
 [node name="RemoveTerrain" type="Button" parent="VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar"]
 layout_mode = 2
 tooltip_text = "Remove selected terrain type(s)"
-icon = SubResource("ImageTexture_0o2as")
+icon = SubResource("ImageTexture_22pf7")
 flat = true
 
 [node name="Panel" type="Panel" parent="VBoxContainer/HSplitContainer"]
