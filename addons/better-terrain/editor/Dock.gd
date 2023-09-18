@@ -457,7 +457,7 @@ func _on_bit_button_pressed(button: BaseButton) -> void:
 		paint_type: tile_view.paint_mode = tile_view.PaintMode.PAINT_TYPE
 		paint_terrain: tile_view.paint_mode = tile_view.PaintMode.PAINT_PEERING
 		paint_symmetry: tile_view.paint_mode = tile_view.PaintMode.PAINT_SYMMETRY
-		null: tile_view.paint_mode = tile_view.PaintMode.NO_PAINT
+		_: tile_view.paint_mode = tile_view.PaintMode.NO_PAINT
 	tile_view.queue_redraw()
 	
 	symmetry_options.visible = paint_symmetry.button_pressed

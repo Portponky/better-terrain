@@ -833,23 +833,25 @@ func _gui_input(event) -> void:
 							undo_manager.commit_action()
 							terrain_undo.action_count += 1
 				elif paint_action == PaintAction.DRAW_SYMMETRY:
-					undo_manager.create_action("Set tile symmetry type " + str(terrain_undo.action_index), UndoRedo.MERGE_ALL, tileset, true)
-					var old_symmetry = BetterTerrain.get_tile_symmetry_type(highlighted_tile_part.data)
-					terrain_undo.add_do_method(undo_manager, BetterTerrain, &"set_tile_symmetry_type", [tileset, highlighted_tile_part.data, paint_symmetry])
-					terrain_undo.add_do_method(undo_manager, self, &"queue_redraw", [])
-					undo_manager.add_undo_method(BetterTerrain, &"set_tile_symmetry_type", tileset, highlighted_tile_part.data, old_symmetry)
-					undo_manager.add_undo_method(self, &"queue_redraw")
-					undo_manager.commit_action()
-					terrain_undo.action_count += 1
+					if paint == BetterTerrain.get_tile_terrain_type(highlighted_tile_part.data):
+						undo_manager.create_action("Set tile symmetry type " + str(terrain_undo.action_index), UndoRedo.MERGE_ALL, tileset, true)
+						var old_symmetry = BetterTerrain.get_tile_symmetry_type(highlighted_tile_part.data)
+						terrain_undo.add_do_method(undo_manager, BetterTerrain, &"set_tile_symmetry_type", [tileset, highlighted_tile_part.data, paint_symmetry])
+						terrain_undo.add_do_method(undo_manager, self, &"queue_redraw", [])
+						undo_manager.add_undo_method(BetterTerrain, &"set_tile_symmetry_type", tileset, highlighted_tile_part.data, old_symmetry)
+						undo_manager.add_undo_method(self, &"queue_redraw")
+						undo_manager.commit_action()
+						terrain_undo.action_count += 1
 				elif paint_action == PaintAction.ERASE_SYMMETRY:
-					undo_manager.create_action("Remove tile symmetry type " + str(terrain_undo.action_index), UndoRedo.MERGE_ALL, tileset, true)
-					var old_symmetry = BetterTerrain.get_tile_symmetry_type(highlighted_tile_part.data)
-					terrain_undo.add_do_method(undo_manager, BetterTerrain, &"set_tile_symmetry_type", [tileset, highlighted_tile_part.data, BetterTerrain.SymmetryType.NONE])
-					terrain_undo.add_do_method(undo_manager, self, &"queue_redraw", [])
-					undo_manager.add_undo_method(BetterTerrain, &"set_tile_symmetry_type", tileset, highlighted_tile_part.data, old_symmetry)
-					undo_manager.add_undo_method(self, &"queue_redraw")
-					undo_manager.commit_action()
-					terrain_undo.action_count += 1
+					if paint == BetterTerrain.get_tile_terrain_type(highlighted_tile_part.data):
+						undo_manager.create_action("Remove tile symmetry type " + str(terrain_undo.action_index), UndoRedo.MERGE_ALL, tileset, true)
+						var old_symmetry = BetterTerrain.get_tile_symmetry_type(highlighted_tile_part.data)
+						terrain_undo.add_do_method(undo_manager, BetterTerrain, &"set_tile_symmetry_type", [tileset, highlighted_tile_part.data, BetterTerrain.SymmetryType.NONE])
+						terrain_undo.add_do_method(undo_manager, self, &"queue_redraw", [])
+						undo_manager.add_undo_method(BetterTerrain, &"set_tile_symmetry_type", tileset, highlighted_tile_part.data, old_symmetry)
+						undo_manager.add_undo_method(self, &"queue_redraw")
+						undo_manager.commit_action()
+						terrain_undo.action_count += 1
 
 
 func _on_zoom_value_changed(value) -> void:
