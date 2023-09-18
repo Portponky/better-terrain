@@ -133,7 +133,8 @@ func create_peering_restore_point_tile(undo_manager: EditorUndoRedoManager, ts: 
 	var peering_dict := {}
 	for c in BetterTerrain.tile_peering_keys(td):
 		peering_dict[c] = BetterTerrain.tile_peering_types(td, c)
-	restore.append([source_id, coord, alternate, tile_type, peering_dict])
+	var symmetry = BetterTerrain.get_tile_symmetry_type(td)
+	restore.append([source_id, coord, alternate, tile_type, peering_dict, symmetry])
 	
 	undo_manager.add_undo_method(self, &"restore_peering", ts, restore)
 
@@ -150,6 +151,8 @@ func restore_peering(ts: TileSet, restore: Array) -> void:
 				BetterTerrain.remove_tile_peering_type(ts, td, peering, t)
 			for t in peering_types[peering]:
 				BetterTerrain.add_tile_peering_type(ts, td, peering, t)
+		var symmetry = r[5]
+		BetterTerrain.set_tile_symmetry_type(ts, td, symmetry)
 
 
 func create_terrain_type_restore_point(undo_manager: EditorUndoRedoManager, ts: TileSet) -> void:
