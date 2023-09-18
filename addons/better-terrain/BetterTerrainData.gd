@@ -19,34 +19,40 @@ const _terrain_peering_hflip = [8, 9, 6, 7, 4, 5, 2, 3, 0, 1, 14, 15, 12, 13, 10
 const _terrain_peering_vflip = [0, 1, 14, 15, 12, 13, 10, 11, 8, 9, 6, 7, 4, 5, 2, 3]
 const _terrain_peering_transpose = [4, 5, 2, 3, 0, 1, 14, 15, 12, 13, 10, 11, 8, 9, 6, 7]
 
+# Replacement values for TileSetAtlasSource.TRANSFORM_*
+# Copied here for backwards compatibilityW
+const _transform_flip_h = 0x1000
+const _transform_flip_v = 0x2000
+const _transform_transpose = 0x4000
+
 const symmetry_mapping := {
 	BetterTerrain.SymmetryType.NONE: [0],
-	BetterTerrain.SymmetryType.MIRROR: [0, TileSetAtlasSource.TRANSFORM_FLIP_H],
-	BetterTerrain.SymmetryType.FLIP: [0, TileSetAtlasSource.TRANSFORM_FLIP_V],
+	BetterTerrain.SymmetryType.MIRROR: [0, _transform_flip_h],
+	BetterTerrain.SymmetryType.FLIP: [0, _transform_flip_v],
 	BetterTerrain.SymmetryType.REFLECT: [
 		0,
-		TileSetAtlasSource.TRANSFORM_FLIP_H,
-		TileSetAtlasSource.TRANSFORM_FLIP_V,
-		TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_FLIP_V
+		_transform_flip_h,
+		_transform_flip_v,
+		_transform_flip_h | _transform_flip_v
 	],
-	BetterTerrain.SymmetryType.ROTATE_CLOCKWISE: [0, TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_TRANSPOSE],
-	BetterTerrain.SymmetryType.ROTATE_COUNTER_CLOCKWISE: [0, TileSetAtlasSource.TRANSFORM_FLIP_V | TileSetAtlasSource.TRANSFORM_TRANSPOSE],
-	BetterTerrain.SymmetryType.ROTATE_180: [0, TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_FLIP_V],
+	BetterTerrain.SymmetryType.ROTATE_CLOCKWISE: [0, _transform_flip_h | _transform_transpose],
+	BetterTerrain.SymmetryType.ROTATE_COUNTER_CLOCKWISE: [0, _transform_flip_v | _transform_transpose],
+	BetterTerrain.SymmetryType.ROTATE_180: [0, _transform_flip_h | _transform_flip_v],
 	BetterTerrain.SymmetryType.ROTATE_ALL: [
 		0,
-		TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_TRANSPOSE,
-		TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_FLIP_V,
-		TileSetAtlasSource.TRANSFORM_FLIP_V | TileSetAtlasSource.TRANSFORM_TRANSPOSE
+		_transform_flip_h | _transform_transpose,
+		_transform_flip_h | _transform_flip_v,
+		_transform_flip_v | _transform_transpose
 	],
 	BetterTerrain.SymmetryType.ALL: [
 		0,
-		TileSetAtlasSource.TRANSFORM_FLIP_H,
-		TileSetAtlasSource.TRANSFORM_FLIP_V,
-		TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_FLIP_V,
-		TileSetAtlasSource.TRANSFORM_TRANSPOSE,
-		TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_TRANSPOSE,
-		TileSetAtlasSource.TRANSFORM_FLIP_V | TileSetAtlasSource.TRANSFORM_TRANSPOSE,
-		TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_FLIP_V | TileSetAtlasSource.TRANSFORM_TRANSPOSE
+		_transform_flip_h,
+		_transform_flip_v,
+		_transform_flip_h | _transform_flip_v,
+		_transform_transpose,
+		_transform_flip_h | _transform_transpose,
+		_transform_flip_v | _transform_transpose,
+		_transform_flip_h | _transform_flip_v | _transform_transpose
 	]
 }
 
@@ -578,11 +584,11 @@ static func cells_adjacent_for_fill(ts: TileSet) -> Array:
 
 
 static func peering_bit_after_symmetry(bit: int, altflags: int) -> int:
-	if altflags & TileSetAtlasSource.TRANSFORM_TRANSPOSE:
+	if altflags & _transform_transpose:
 		bit = _terrain_peering_transpose[bit]
-	if altflags & TileSetAtlasSource.TRANSFORM_FLIP_H:
+	if altflags & _transform_flip_h:
 		bit = _terrain_peering_hflip[bit]
-	if altflags & TileSetAtlasSource.TRANSFORM_FLIP_V:
+	if altflags & _transform_flip_v:
 		bit = _terrain_peering_vflip[bit]
 	return bit
 
