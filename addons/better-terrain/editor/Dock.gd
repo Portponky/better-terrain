@@ -105,10 +105,6 @@ func _ready() -> void:
 	tile_view.change_zoom_level.connect(_on_change_zoom_level)
 	tile_view.terrain_updated.connect(_on_terrain_updated)
 	
-	symmetry_options.select(0)
-	symmetry_options.item_selected.connect(_on_symmetry_selected)
-	symmetry_options.visible = false
-	
 	if Engine.get_version_info().hex < 0x040200:
 		paint_symmetry.visible = false
 
