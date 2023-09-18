@@ -107,6 +107,10 @@ func _ready() -> void:
 	
 	symmetry_options.select(0)
 	symmetry_options.item_selected.connect(_on_symmetry_selected)
+	symmetry_options.visible = false
+	
+	if Engine.get_version_info().hex < 0x040200:
+		paint_symmetry.visible = false
 
 
 func _process(delta):
@@ -455,6 +459,8 @@ func _on_bit_button_pressed(button: BaseButton) -> void:
 		paint_symmetry: tile_view.paint_mode = tile_view.PaintMode.PAINT_SYMMETRY
 		null: tile_view.paint_mode = tile_view.PaintMode.NO_PAINT
 	tile_view.queue_redraw()
+	
+	symmetry_options.visible = paint_symmetry.button_pressed
 
 
 func _on_symmetry_selected(index):

@@ -126,9 +126,6 @@ button_group = SubResource("ButtonGroup_3wrxn")
 icon = ExtResource("3_pqb1p")
 flat = true
 
-[node name="VSeparator2" type="VSeparator" parent="VBoxContainer/Toolbar"]
-layout_mode = 2
-
 [node name="PaintSymmetry" type="Button" parent="VBoxContainer/Toolbar"]
 layout_mode = 2
 tooltip_text = "Paint terrain types"
