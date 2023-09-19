@@ -5,6 +5,7 @@ type="CompressedTexture2D"
 uid="uid://b7fx4mk18lmls"
 path="res://.godot/imported/SymmetryRotateAll.svg-959ef9f7a9c5b12d37b3a1c9ddcf2432.ctex"
 metadata={
+"has_editor_variant": true,
 "vram_texture": false
 }
 
@@ -33,5 +34,5 @@ process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
 svg/scale=1.0
-editor/scale_with_editor_scale=false
+editor/scale_with_editor_scale=true
 editor/convert_colors_with_editor_theme=false
