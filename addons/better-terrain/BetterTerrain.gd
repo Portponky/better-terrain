@@ -48,6 +48,18 @@ enum TileCategory {
 	ERROR = -3
 }
 
+enum SymmetryType {
+	NONE,
+	MIRROR, ## Horizontally mirror
+	FLIP, ## Vertically flip
+	REFLECT, ## All four reflections
+	ROTATE_CLOCKWISE,
+	ROTATE_COUNTER_CLOCKWISE,
+	ROTATE_180,
+	ROTATE_ALL, ## All four rotated forms
+	ALL ## All rotated and reflected forms
+}
+
 
 func _intersect(first: Array, second: Array) -> bool:
 	if first.size() > second.size():
@@ -140,9 +152,19 @@ func _get_cache(ts: TileSet) -> Array:
 					
 					peering[key] = targets
 				
-				# Only interface with decoration tiles that have at least some peering data
-				if td_meta.type != TileCategory.EMPTY or peering:
+				# Decoration tiles without peering are skipped
+				if td_meta.type == TileCategory.EMPTY and !peering:
+					continue
+				
+				var symmetry = td_meta.get("symmetry", SymmetryType.NONE)
+				# Branch out no symmetry tiles early
+				if symmetry == SymmetryType.NONE:
 					cache[td_meta.type].push_back([source_id, coord, alternate, peering, td.probability])
+					continue
+				
+				for flags in data.symmetry_mapping[symmetry]:
+					var symmetric_peering = data.peering_bits_after_symmetry(peering, flags)
+					cache[td_meta.type].push_back([source_id, coord, alternate | flags, symmetric_peering, td.probability])
 	
 	return cache
 
@@ -659,6 +681,33 @@ func get_tile_terrain_type(td: TileData) -> int:
 		return TileCategory.ERROR
 	var td_meta := _get_tile_meta(td)
 	return td_meta.type
+
+
+## For a tile represented by [TileData] [code]td[/code] in [TileSet]
+## [code]ts[/code], sets [enum SymmetryType] [code]type[/code]. This controls
+## how the tile is rotated/mirrored during placement.
+func set_tile_symmetry_type(ts: TileSet, td: TileData, type: int) -> bool:
+	if !ts or !td or type < SymmetryType.NONE or type > SymmetryType.ALL:
+		return false
+	
+	var td_meta := _get_tile_meta(td)
+	if td_meta.type == TileCategory.NON_TERRAIN:
+		return false
+	
+	td_meta.symmetry = type
+	_set_tile_meta(td, td_meta)
+	_purge_cache(ts)
+	return true
+
+
+## For a tile [code]td[/code], returns the [enum SymmetryType] which that
+## tile uses.
+func get_tile_symmetry_type(td: TileData) -> int:
+	if !td:
+		return SymmetryType.NONE
+	
+	var td_meta := _get_tile_meta(td)
+	return td_meta.get("symmetry", SymmetryType.NONE)
 
 
 ## Returns an Array of all [TileData] tiles included in the specified
