@@ -15,6 +15,47 @@ const _terrain_peering_vertical_tiles := [2, 4, 6, 10, 12, 14]
 const _terrain_peering_vertical_vertices := [1, 3, 7, 9, 11, 15]
 const _terrain_peering_non_modifying := []
 
+const _terrain_peering_hflip = [8, 9, 6, 7, 4, 5, 2, 3, 0, 1, 14, 15, 12, 13, 10, 11]
+const _terrain_peering_vflip = [0, 1, 14, 15, 12, 13, 10, 11, 8, 9, 6, 7, 4, 5, 2, 3]
+const _terrain_peering_transpose = [4, 5, 2, 3, 0, 1, 14, 15, 12, 13, 10, 11, 8, 9, 6, 7]
+
+# Replacement values for TileSetAtlasSource.TRANSFORM_*
+# Copied here for backwards compatibilityW
+const _transform_flip_h = 0x1000
+const _transform_flip_v = 0x2000
+const _transform_transpose = 0x4000
+
+const symmetry_mapping := {
+	BetterTerrain.SymmetryType.NONE: [0],
+	BetterTerrain.SymmetryType.MIRROR: [0, _transform_flip_h],
+	BetterTerrain.SymmetryType.FLIP: [0, _transform_flip_v],
+	BetterTerrain.SymmetryType.REFLECT: [
+		0,
+		_transform_flip_h,
+		_transform_flip_v,
+		_transform_flip_h | _transform_flip_v
+	],
+	BetterTerrain.SymmetryType.ROTATE_CLOCKWISE: [0, _transform_flip_h | _transform_transpose],
+	BetterTerrain.SymmetryType.ROTATE_COUNTER_CLOCKWISE: [0, _transform_flip_v | _transform_transpose],
+	BetterTerrain.SymmetryType.ROTATE_180: [0, _transform_flip_h | _transform_flip_v],
+	BetterTerrain.SymmetryType.ROTATE_ALL: [
+		0,
+		_transform_flip_h | _transform_transpose,
+		_transform_flip_h | _transform_flip_v,
+		_transform_flip_v | _transform_transpose
+	],
+	BetterTerrain.SymmetryType.ALL: [
+		0,
+		_transform_flip_h,
+		_transform_flip_v,
+		_transform_flip_h | _transform_flip_v,
+		_transform_transpose,
+		_transform_flip_h | _transform_transpose,
+		_transform_flip_v | _transform_transpose,
+		_transform_flip_h | _transform_flip_v | _transform_transpose
+	]
+}
+
 
 ## Returns an [Array] of ints of type [enum TileSet.CellNeighbor] which represent
 ## the valid neighboring tiles for a terrain of [code]type[/code] in TileSet
@@ -540,3 +581,22 @@ static func cells_adjacent_for_fill(ts: TileSet) -> Array:
 	if ts.tile_offset_axis == TileSet.TILE_OFFSET_AXIS_HORIZONTAL:
 		return _terrain_peering_horiztonal_tiles
 	return _terrain_peering_vertical_tiles
+
+
+static func peering_bit_after_symmetry(bit: int, altflags: int) -> int:
+	if altflags & _transform_transpose:
+		bit = _terrain_peering_transpose[bit]
+	if altflags & _transform_flip_h:
+		bit = _terrain_peering_hflip[bit]
+	if altflags & _transform_flip_v:
+		bit = _terrain_peering_vflip[bit]
+	return bit
+
+
+static func peering_bits_after_symmetry(dict: Dictionary, altflags: int):
+	# rearrange dictionary keys based on altflags
+	var result := {}
+	for k in dict:
+		result[peering_bit_after_symmetry(k, altflags)] = dict[k]
+	return result
+

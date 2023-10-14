@@ -65,9 +65,9 @@ Documentation is available in Godot's editor help system, accessed by pressing F
 
 ### Videos
 
-I made some impromptu videos on how to use this plugin.
+I made some videos on how to use this plugin.
 
-[![Tutorial videos](http://img.youtube.com/vi/o0wHgqYQf48/0.jpg)](https://www.youtube.com/watch?v=o0wHgqYQf48&list=PL2lDzGzxtEmeKDUQcpYx4YA1HpH3tzYqZ "Tutorial videos")
+[![Tutorial videos](http://i3.ytimg.com/vi/7m3OeacBaLE/hqdefault.jpg)](https://www.youtube.com/watch?v=7m3OeacBaLE&list=PL2lDzGzxtEmeKDUQcpYx4YA1HpH3tzYqZ "Tutorial videos")
 
 ### Contact
 

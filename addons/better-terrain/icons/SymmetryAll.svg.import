@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cs4mdmluiydj6"
-path="res://.godot/imported/ShuffleRandom.svg-15ee49f7a06c55a1e95e1ed056732dc5.ctex"
+uid="uid://cyjra4g05dwh"
+path="res://.godot/imported/SymmetryAll.svg-cd6a02766f60c09344aa97e0325457c1.ctex"
 metadata={
 "has_editor_variant": true,
 "vram_texture": false
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://addons/better-terrain/icons/ShuffleRandom.svg"
-dest_files=["res://.godot/imported/ShuffleRandom.svg-15ee49f7a06c55a1e95e1ed056732dc5.ctex"]
+source_file="res://addons/better-terrain/icons/SymmetryAll.svg"
+dest_files=["res://.godot/imported/SymmetryAll.svg-cd6a02766f60c09344aa97e0325457c1.ctex"]
 
 [params]
 
