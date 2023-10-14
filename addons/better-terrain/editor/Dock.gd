@@ -431,8 +431,12 @@ func add_terrain_entry(terrain:Dictionary, index:int = -1):
 	terrain_list.move_child(entry, index)
 
 
-func remove_terrain_entry(index:int):
+func remove_terrain_entry(index: int):
 	terrain_list.get_child(index).free()
+	for i in range(index, terrain_list.get_child_count()):
+		var child = terrain_list.get_child(i)
+		child.terrain = BetterTerrain.get_terrain(tileset, i)
+		child.update()
 
 
 func perform_add_terrain(name: String, color: Color, type: int, categories: Array, icon:Dictionary = {}) -> void:
@@ -460,6 +464,10 @@ func perform_swap_terrain(index1: int, index2: int) -> void:
 	var item2 = terrain_list.get_child(higher)
 	if BetterTerrain.swap_terrains(tileset, lower, higher):
 		terrain_list.move_child(item1, higher)
+		item1.terrain = BetterTerrain.get_terrain(tileset, higher)
+		item1.update()
+		item2.terrain = BetterTerrain.get_terrain(tileset, lower)
+		item2.update()
 		selected_entry = index2
 		terrain_list.get_child(index2).set_selected(true)
 		update_tile_view_paint()

@@ -542,6 +542,7 @@ func get_terrain(ts: TileSet, index: int) -> Dictionary:
 	
 	var terrain = _get_cache_terrain(ts_meta, index)
 	return {
+		id = index,
 		name = terrain[0],
 		color = terrain[1],
 		type = terrain[2],
