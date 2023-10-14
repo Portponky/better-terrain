@@ -179,6 +179,13 @@ max_value = 8.0
 step = 0.1
 value = 1.0
 
+[node name="Sources" type="MenuBar" parent="VBoxContainer/Toolbar"]
+layout_mode = 2
+
+[node name="Sources" type="PopupMenu" parent="VBoxContainer/Toolbar/Sources"]
+hide_on_item_selection = false
+hide_on_checkable_item_selection = false
+
 [node name="Spacer" type="Control" parent="VBoxContainer/Toolbar"]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -300,6 +307,7 @@ script = ExtResource("4_nqppq")
 
 [connection signal="item_selected" from="VBoxContainer/Toolbar/SymmetryOptions" to="." method="_on_symmetry_selected"]
 [connection signal="value_changed" from="VBoxContainer/Toolbar/Zoom" to="VBoxContainer/HSplitContainer/Panel/ScrollArea/TileView" method="_on_zoom_value_changed"]
+[connection signal="id_pressed" from="VBoxContainer/Toolbar/Sources/Sources" to="." method="_on_terrain_enable_id_pressed"]
 [connection signal="pressed" from="VBoxContainer/Toolbar/ShuffleRandom" to="." method="_on_shuffle_random_pressed"]
 [connection signal="pressed" from="VBoxContainer/Toolbar/Clean" to="." method="_on_clean_pressed"]
 [connection signal="item_selected" from="VBoxContainer/Toolbar/LayerOptions" to="." method="_on_layer_options_item_selected"]

@@ -26,6 +26,9 @@ const TERRAIN_ENTRY_SCENE := preload("res://addons/better-terrain/editor/Terrain
 @onready var shuffle_random := $VBoxContainer/Toolbar/ShuffleRandom
 @onready var zoom_slider := $VBoxContainer/Toolbar/Zoom
 
+@onready var source_selector := $VBoxContainer/Toolbar/Sources
+@onready var source_selector_popup := $VBoxContainer/Toolbar/Sources/Sources
+
 @onready var clean_button := $VBoxContainer/Toolbar/Clean
 @onready var layer_options := $VBoxContainer/Toolbar/LayerOptions
 
@@ -72,6 +75,11 @@ enum PaintMode {
 enum PaintAction {
 	NO_ACTION,
 	LINE
+}
+
+enum SourceSelectors {
+	ALL = 1000000,
+	NONE = 1000001,
 }
 
 var paint_mode := PaintMode.NO_PAINT
@@ -167,6 +175,35 @@ func tiles_changed() -> void:
 		var child = terrain_list.get_child(terrain_list.get_child_count() - 1)
 		terrain_list.remove_child(child)
 		child.free()
+	
+	source_selector_popup.clear()
+	source_selector_popup.add_item("All", SourceSelectors.ALL)
+	source_selector_popup.add_item("None", SourceSelectors.NONE)
+	var source_count = tileset.get_source_count() if tileset else 0
+	for s in source_count:
+		var source_id = tileset.get_source_id(s)
+		var source := tileset.get_source(source_id)
+		if !(source is TileSetAtlasSource):
+			continue
+		
+		var name := source.resource_name
+		if name.is_empty():
+			var texture := (source as TileSetAtlasSource).texture
+			var texture_name := texture.resource_name if texture else ""
+			if !texture_name.is_empty():
+				name = texture_name
+			else:
+				var texture_path := texture.resource_path if texture else ""
+				if !texture_path.is_empty():
+					name = texture_path.get_file()
+		
+		if !name.is_empty():
+			name += " "
+		name += " (ID: %d)" % source_id
+		
+		source_selector_popup.add_check_item(name, source_id)
+		source_selector_popup.set_item_checked(source_selector_popup.get_item_index(source_id), true)
+	source_selector.visible = source_selector_popup.item_count > 3 # All, None and more than one source
 	
 	layer_options.clear()
 	if tilemap and tilemap.get_layers_count() == 0:
@@ -756,3 +793,21 @@ func _get_tileset_line(from:Vector2i, to:Vector2i, tileset:TileSet) -> Array[Vec
 			points.push_back(Vector2i(current.y, current.x) if transposed else current)
 	
 	return points
+
+
+func _on_terrain_enable_id_pressed(id):
+	if id in [SourceSelectors.ALL, SourceSelectors.NONE]:
+		for i in source_selector_popup.item_count:
+			if source_selector_popup.is_item_checkable(i):
+				source_selector_popup.set_item_checked(i, id == SourceSelectors.ALL)
+	else:
+		var index = source_selector_popup.get_item_index(id)
+		var checked = source_selector_popup.is_item_checked(index)
+		source_selector_popup.set_item_checked(index, !checked)
+	
+	var disabled_sources : Array[int]
+	for i in source_selector_popup.item_count:
+		if source_selector_popup.is_item_checkable(i) and !source_selector_popup.is_item_checked(i):
+			disabled_sources.append(source_selector_popup.get_item_id(i))
+	tile_view.disabled_sources = disabled_sources
+

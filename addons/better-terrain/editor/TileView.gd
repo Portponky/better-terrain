@@ -25,6 +25,7 @@ var _canvas_item_map = {}
 var _canvas_item_background : RID
 
 var tileset: TileSet
+var disabled_sources: Array[int] = []: set = set_disabled_sources
 
 var paint := BetterTerrain.TileCategory.NON_TERRAIN
 var paint_symmetry := BetterTerrain.SymmetryType.NONE
@@ -101,6 +102,7 @@ func refresh_tileset(ts: TileSet) -> void:
 	tiles_size = Vector2.ZERO
 	alternate_size = Vector2.ZERO
 	alternate_lookup = []
+	disabled_sources = []
 	
 	if !tileset:
 		return
@@ -169,6 +171,8 @@ func tile_part_from_position(position: Vector2i) -> Dictionary:
 	var alt_offset := Vector2.RIGHT * (zoom_level * tiles_size.x + ALTERNATE_TILE_MARGIN)
 	if Rect2(alt_offset, zoom_level * alternate_size).has_point(position):
 		for a in alternate_lookup:
+			if a[1] in disabled_sources:
+				continue
 			var next_offset_y = alt_offset.y + zoom_level * a[0].y
 			if position.y > next_offset_y:
 				alt_offset.y = next_offset_y
@@ -201,8 +205,10 @@ func tile_part_from_position(position: Vector2i) -> Dictionary:
 	else:
 		for s in tileset.get_source_count():
 			var source_id := tileset.get_source_id(s)
+			if source_id in disabled_sources:
+				continue
 			var source := tileset.get_source(source_id) as TileSetAtlasSource
-			if !source:
+			if !source || !source.texture:
 				continue
 			for t in source.get_tiles_count():
 				var coord := source.get_tile_id(t)
@@ -234,6 +240,8 @@ func tile_rect_from_position(position: Vector2i) -> Rect2:
 	var alt_offset := Vector2.RIGHT * (zoom_level * tiles_size.x + ALTERNATE_TILE_MARGIN)
 	if Rect2(alt_offset, zoom_level * alternate_size).has_point(position):
 		for a in alternate_lookup:
+			if a[1] in disabled_sources:
+				continue
 			var next_offset_y = alt_offset.y + zoom_level * a[0].y
 			if position.y > next_offset_y:
 				alt_offset.y = next_offset_y
@@ -256,6 +264,8 @@ func tile_rect_from_position(position: Vector2i) -> Rect2:
 	else:
 		for s in tileset.get_source_count():
 			var source_id := tileset.get_source_id(s)
+			if source_id in disabled_sources:
+				continue
 			var source := tileset.get_source(source_id) as TileSetAtlasSource
 			if !source:
 				continue
@@ -437,7 +447,10 @@ func _draw() -> void:
 	)
 	
 	for s in tileset.get_source_count():
-		var source := tileset.get_source(tileset.get_source_id(s)) as TileSetAtlasSource
+		var source_id := tileset.get_source_id(s)
+		if source_id in disabled_sources:
+			continue
+		var source := tileset.get_source(source_id) as TileSetAtlasSource
 		if !source or !source.texture:
 			continue
 		
@@ -494,6 +507,8 @@ func _draw() -> void:
 	# Blank out unused alternate tile sections
 	alt_offset = Vector2.RIGHT * (zoom_level * tiles_size.x + ALTERNATE_TILE_MARGIN)
 	for a in alternate_lookup:
+		if a[1] in disabled_sources:
+			continue
 		var source := tileset.get_source(a[1]) as TileSetAtlasSource
 		if source:
 			var count := source.get_alternative_tiles_count(a[2]) - 1
@@ -601,6 +616,11 @@ func paste_selection():
 	paint_mode = PaintMode.PASTE
 	paint_action = PaintAction.PASTE
 	paste_occurred.emit()
+	queue_redraw()
+
+
+func set_disabled_sources(list):
+	disabled_sources = list
 	queue_redraw()
 
 
