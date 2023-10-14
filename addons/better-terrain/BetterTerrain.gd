@@ -911,11 +911,10 @@ func set_cells(tm: TileMap, layer: int, coords: Array, type: int) -> bool:
 
 ## Replaces an existing tile on the [TileMap] for the [code]layer[/code]
 ## and [code]coord[/code] with a new tile in the provided terrain [code]type[/code] 
-## in [TileSet] [code]ts[/code] *only if* there is a tile with a matching set of 
-## peering sides in this terrain.
+## *only if* there is a tile with a matching set of peering sides in this terrain.
 ## Returns [code]true[/code] if any tiles were changed. Use [method replace_cells]
 ## to replace multiple tiles at once.
-func replace_cell(tm: TileMap, layer: int, coord: Vector2i, ts: TileSet, type: int) -> bool:
+func replace_cell(tm: TileMap, layer: int, coord: Vector2i, type: int) -> bool:
 	if !tm or !tm.tile_set or layer < 0 or layer >= tm.get_layers_count() or type < 0:
 		return false
 	
@@ -930,13 +929,13 @@ func replace_cell(tm: TileMap, layer: int, coord: Vector2i, ts: TileSet, type: i
 	if !td:
 		return false
 	
-	var ts_meta := _get_terrain_meta(ts)
+	var ts_meta := _get_terrain_meta(tm.tileset)
 	var categories = ts_meta.terrains[type][3]
 	var check_types = [type] + categories
 	
 	for check_type in check_types:
 		var placed_peering = tile_peering_for_type(td, check_type)
-		for pt in get_tiles_in_terrain(ts, type):
+		for pt in get_tiles_in_terrain(tm.tileset, type):
 			var check_peering = tile_peering_for_type(pt, check_type)
 			if placed_peering == check_peering:
 				var tile = cache[type].front()
@@ -948,10 +947,10 @@ func replace_cell(tm: TileMap, layer: int, coord: Vector2i, ts: TileSet, type: i
 
 ## Replaces existing tiles on the [TileMap] for the [code]layer[/code]
 ## and [code]coords[/code] with new tiles in the provided terrain [code]type[/code] 
-## in [TileSet] [code]ts[/code] *only if* there is a tile with a matching set of 
-## peering sides in this terrain for each tile.
+## *only if* there is a tile with a matching set of peering sides in this terrain
+## for each tile.
 ## Returns [code]true[/code] if any tiles were changed.
-func replace_cells(tm: TileMap, layer: int, coords: Array, ts: TileSet, type: int) -> bool:
+func replace_cells(tm: TileMap, layer: int, coords: Array, type: int) -> bool:
 	if !tm or !tm.tile_set or layer < 0 or layer >= tm.get_layers_count() or type < 0:
 		return false
 	
@@ -962,12 +961,12 @@ func replace_cells(tm: TileMap, layer: int, coords: Array, ts: TileSet, type: in
 	if cache[type].is_empty():
 		return false
 	
-	var ts_meta := _get_terrain_meta(ts)
+	var ts_meta := _get_terrain_meta(tm.tile_set)
 	var categories = ts_meta.terrains[type][3]
 	var check_types = [type] + categories
 	
 	var changed = false
-	var potential_tiles = get_tiles_in_terrain(ts, type)
+	var potential_tiles = get_tiles_in_terrain(tm.tile_set, type)
 	for c in coords:
 		var found = false
 		var td = tm.get_cell_tile_data(layer, c)

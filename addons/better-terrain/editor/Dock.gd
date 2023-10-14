@@ -606,7 +606,7 @@ func canvas_input(event: InputEvent) -> bool:
 					var coord := Vector2i(x, y)
 					if paint_mode == PaintMode.PAINT:
 						if replace_mode:
-							undo_manager.add_do_method(BetterTerrain, &"replace_cell", tilemap, layer, coord, tileset, type)
+							undo_manager.add_do_method(BetterTerrain, &"replace_cell", tilemap, layer, coord, type)
 						else:
 							undo_manager.add_do_method(BetterTerrain, &"set_cell", tilemap, layer, coord, type)
 					else:
@@ -621,7 +621,7 @@ func canvas_input(event: InputEvent) -> bool:
 			var cells := _get_tileset_line(initial_click, current_position, tileset)
 			if paint_mode == PaintMode.PAINT:
 				if replace_mode:
-					undo_manager.add_do_method(BetterTerrain, &"replace_cells", tilemap, layer, cells, tileset, type)
+					undo_manager.add_do_method(BetterTerrain, &"replace_cells", tilemap, layer, cells, type)
 				else:
 					undo_manager.add_do_method(BetterTerrain, &"set_cells", tilemap, layer, cells, type)
 			elif paint_mode == PaintMode.ERASE:
@@ -668,7 +668,7 @@ func canvas_input(event: InputEvent) -> bool:
 			var cells := _get_tileset_line(prev_position, current_position, tileset)
 			if paint_mode == PaintMode.PAINT:
 				if replace_mode:
-					terrain_undo.add_do_method(undo_manager, BetterTerrain, &"replace_cells", [tilemap, layer, cells, tileset, type])
+					terrain_undo.add_do_method(undo_manager, BetterTerrain, &"replace_cells", [tilemap, layer, cells, type])
 				else:
 					terrain_undo.add_do_method(undo_manager, BetterTerrain, &"set_cells", [tilemap, layer, cells, type])
 			elif paint_mode == PaintMode.ERASE:
@@ -683,7 +683,7 @@ func canvas_input(event: InputEvent) -> bool:
 			undo_manager.create_action(tr("Fill terrain"), UndoRedo.MERGE_DISABLE, tilemap)
 			if paint_mode == PaintMode.PAINT:
 				if replace_mode:
-					undo_manager.add_do_method(BetterTerrain, &"replace_cells", tilemap, layer, cells, tileset, type)
+					undo_manager.add_do_method(BetterTerrain, &"replace_cells", tilemap, layer, cells, type)
 				else:
 					undo_manager.add_do_method(BetterTerrain, &"set_cells", tilemap, layer, cells, type)
 			elif paint_mode == PaintMode.ERASE:
