@@ -449,7 +449,6 @@ func perform_add_terrain(name: String, color: Color, type: int, categories: Arra
 func perform_remove_terrain(index: int) -> void:
 	if index >= BetterTerrain.terrain_count(tileset):
 		return
-	var item = terrain_list.get_child(index)
 	if BetterTerrain.remove_terrain(tileset, index):
 		remove_terrain_entry(index)
 		update_tile_view_paint()

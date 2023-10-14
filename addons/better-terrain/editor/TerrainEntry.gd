@@ -36,7 +36,7 @@ func _ready():
 	update()
 
 func update():
-	if !terrain:
+	if !terrain or !terrain.valid:
 		return
 	if !tileset:
 		return
