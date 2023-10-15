@@ -29,13 +29,13 @@ Very simple example:
 	}
 ```
 
-The function available are the same as BetterTerrain's, though the TileMap or
+The functions available are the same as BetterTerrain's, though the TileMap or
 TileSet parameters are automatically filled in. The help is not duplicated here,
 refer to the GDScript version for specifics.
 
 */
 
-public class BetterTerrain : Object
+public class BetterTerrain
 {
 	Node bt;
 	TileMap tm;
@@ -72,9 +72,9 @@ public class BetterTerrain : Object
 	
 	public bool AddTerrain(string name, Color color, TerrainType type, Array<int> categories = null, Dictionary<Variant, Variant> icon = null)
 	{
-		if (categories == null)
+		if (categories is null)
 			categories = new Array<int>();
-		if (icon == null)
+		if (icon is null)
 			icon = new Dictionary<Variant, Variant>();
 		return (bool)bt.Call("add_terrain", tm.TileSet, name, color, (int)type, categories, icon);
 	}
@@ -96,9 +96,9 @@ public class BetterTerrain : Object
 	
 	public bool SetTerrain(int index, string name, Color color, TerrainType type, Array<int> categories = null, Dictionary<Variant, Variant> icon = null)
 	{
-		if (categories == null)
+		if (categories is null)
 			categories = new Array<int>();
-		if (icon == null)
+		if (icon is null)
 			icon = new Dictionary<Variant, Variant>();
 		return (bool)bt.Call("set_terrain", tm.TileSet, index, name, color, (int)type, categories, icon);
 	}
