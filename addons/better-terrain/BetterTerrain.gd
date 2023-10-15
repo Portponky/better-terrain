@@ -289,13 +289,12 @@ func _weighted_selection_seeded(choices: Array, coord: Vector2i, apply_empty_pro
 	return _weighted_selection(choices, apply_empty_probability)
 
 
-func _update_tile_tiles(tm: TileMap, layer: int, coord: Vector2i, types: Dictionary, apply_empty_probability: bool):
+func _update_tile_tiles(tm: TileMap, layer: int, coord: Vector2i, types: Dictionary, cache: Array, apply_empty_probability: bool):
 	var type = types[coord]
-	var c := _get_cache(tm.tile_set)
 	
 	var best_score := -1000 # Impossibly bad score
 	var best := []
-	for t in c[type]:
+	for t in cache[type]:
 		var score = 0
 		for peering in t[3]:
 			score += 3 if t[3][peering].has(types[tm.get_neighbor_cell(coord, peering)]) else -10
@@ -336,13 +335,12 @@ func _probe(tm: TileMap, coord: Vector2i, peering: int, types: Dictionary, goal:
 	return -5
 
 
-func _update_tile_vertices(tm: TileMap, layer: int, coord: Vector2i, types: Dictionary):
+func _update_tile_vertices(tm: TileMap, layer: int, coord: Vector2i, types: Dictionary, cache: Array):
 	var type = types[coord]
-	var c := _get_cache(tm.tile_set)
 	
 	var best_score := -1000 # Impossibly bad score
 	var best = []
-	for t in c[type]:
+	for t in cache[type]:
 		var score := 0
 		for peering in t[3]:
 			score += _probe(tm, coord, peering, types, t[3][peering])
@@ -356,7 +354,7 @@ func _update_tile_vertices(tm: TileMap, layer: int, coord: Vector2i, types: Dict
 	return _weighted_selection_seeded(best, coord, false)
 
 
-func _update_tile_immediate(tm: TileMap, layer: int, coord: Vector2i, ts_meta: Dictionary, types: Dictionary) -> void:
+func _update_tile_immediate(tm: TileMap, layer: int, coord: Vector2i, ts_meta: Dictionary, types: Dictionary, cache: Array) -> void:
 	var type = types[coord]
 	if type < TileCategory.EMPTY or type >= ts_meta.terrains.size():
 		return
@@ -364,9 +362,9 @@ func _update_tile_immediate(tm: TileMap, layer: int, coord: Vector2i, ts_meta: D
 	var placement
 	var terrain = _get_cache_terrain(ts_meta, type)
 	if terrain[2] in [TerrainType.MATCH_TILES, TerrainType.DECORATION]:
-		placement = _update_tile_tiles(tm, layer, coord, types, terrain[2] == TerrainType.DECORATION)
+		placement = _update_tile_tiles(tm, layer, coord, types, cache, terrain[2] == TerrainType.DECORATION)
 	elif terrain[2] == TerrainType.MATCH_VERTICES:
-		placement = _update_tile_vertices(tm, layer, coord, types)
+		placement = _update_tile_vertices(tm, layer, coord, types, cache)
 	else:
 		return
 	
@@ -374,14 +372,14 @@ func _update_tile_immediate(tm: TileMap, layer: int, coord: Vector2i, ts_meta: D
 		tm.set_cell(layer, coord, placement[0], placement[1], placement[2])
 
 
-func _update_tile_deferred(tm: TileMap, layer: int, coord: Vector2i, ts_meta: Dictionary, types: Dictionary):
+func _update_tile_deferred(tm: TileMap, layer: int, coord: Vector2i, ts_meta: Dictionary, types: Dictionary, cache: Array):
 	var type = types[coord]
 	if type >= TileCategory.EMPTY and type < ts_meta.terrains.size():
 		var terrain = _get_cache_terrain(ts_meta, type)
 		if terrain[2] in [TerrainType.MATCH_TILES, TerrainType.DECORATION]:
-			return _update_tile_tiles(tm, layer, coord, types, terrain[2] == TerrainType.DECORATION)
+			return _update_tile_tiles(tm, layer, coord, types, cache, terrain[2] == TerrainType.DECORATION)
 		elif terrain[2] == TerrainType.MATCH_VERTICES:
-			return _update_tile_vertices(tm, layer, coord, types)
+			return _update_tile_vertices(tm, layer, coord, types, cache)
 	return null
 
 
@@ -1025,8 +1023,9 @@ func update_terrain_cells(tm: TileMap, layer: int, cells: Array, and_surrounding
 		types[c] = get_cell(tm, layer, c)
 	
 	var ts_meta := _get_terrain_meta(tm.tile_set)
+	var cache = _get_cache(tm.tileset)
 	for c in cells:
-		_update_tile_immediate(tm, layer, c, ts_meta, types)
+		_update_tile_immediate(tm, layer, c, ts_meta, types, cache)
 
 
 ## Runs the tile solving algorithm on the [TileMap] for the given [code]layer[/code]
@@ -1075,12 +1074,13 @@ func update_terrain_area(tm: TileMap, layer: int, area: Rect2i, and_surrounding_
 		types[c] = get_cell(tm, layer, c)
 	
 	var ts_meta := _get_terrain_meta(tm.tile_set)
+	var cache = _get_cache(tm.tileset)
 	for y in range(area.position.y, area.end.y):
 		for x in range(area.position.x, area.end.x):
 			var coord := Vector2i(x, y)
-			_update_tile_immediate(tm, layer, coord, ts_meta, types)
+			_update_tile_immediate(tm, layer, coord, ts_meta, types, cache)
 	for c in additional_cells:
-		_update_tile_immediate(tm, layer, c, ts_meta, types)
+		_update_tile_immediate(tm, layer, c, ts_meta, types, cache)
 
 
 ## For a [TileMap], on a specific [code]layer[/code], create a changeset that will
@@ -1108,7 +1108,7 @@ func create_terrain_changeset(tm: TileMap, layer: int, paint: Dictionary) -> Dic
 	
 	var ts_meta := _get_terrain_meta(tm.tile_set)
 	var work := func(n: int):
-		placements[n] = _update_tile_deferred(tm, layer, cells[n], ts_meta, types)
+		placements[n] = _update_tile_deferred(tm, layer, cells[n], ts_meta, types, _cache)
 	
 	return {
 		"valid": true,
