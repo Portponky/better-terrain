@@ -927,13 +927,13 @@ func replace_cell(tm: TileMap, layer: int, coord: Vector2i, type: int) -> bool:
 	if !td:
 		return false
 	
-	var ts_meta := _get_terrain_meta(tm.tileset)
+	var ts_meta := _get_terrain_meta(tm.tile_set)
 	var categories = ts_meta.terrains[type][3]
 	var check_types = [type] + categories
 	
 	for check_type in check_types:
 		var placed_peering = tile_peering_for_type(td, check_type)
-		for pt in get_tiles_in_terrain(tm.tileset, type):
+		for pt in get_tiles_in_terrain(tm.tile_set, type):
 			var check_peering = tile_peering_for_type(pt, check_type)
 			if placed_peering == check_peering:
 				var tile = cache[type].front()
@@ -1023,7 +1023,7 @@ func update_terrain_cells(tm: TileMap, layer: int, cells: Array, and_surrounding
 		types[c] = get_cell(tm, layer, c)
 	
 	var ts_meta := _get_terrain_meta(tm.tile_set)
-	var cache = _get_cache(tm.tileset)
+	var cache = _get_cache(tm.tile_set)
 	for c in cells:
 		_update_tile_immediate(tm, layer, c, ts_meta, types, cache)
 
@@ -1074,7 +1074,7 @@ func update_terrain_area(tm: TileMap, layer: int, area: Rect2i, and_surrounding_
 		types[c] = get_cell(tm, layer, c)
 	
 	var ts_meta := _get_terrain_meta(tm.tile_set)
-	var cache = _get_cache(tm.tileset)
+	var cache = _get_cache(tm.tile_set)
 	for y in range(area.position.y, area.end.y):
 		for x in range(area.position.x, area.end.x):
 			var coord := Vector2i(x, y)
