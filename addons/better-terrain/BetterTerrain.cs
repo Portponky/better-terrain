@@ -1,6 +1,5 @@
 using Godot;
 using Godot.Collections;
-using System;
 
 /*
 
@@ -15,18 +14,18 @@ autoload, and to fill in as a parameter to simplify all the subsequent calls.
 Very simple example:
 
 ```
-	BetterTerrain bt;
-	
-	public override void _Ready()
-	{
-		TileMap tm = GetNode<TileMap>("TileMap");
-		bt = new BetterTerrain(tm);
-		
-		var layer = 0;
-		var coord = new Vector2I(0, 0);
-		bt.SetCell(layer, coord, 1);
-		bt.UpdateTerrainCell(layer, coord);
-	}
+    BetterTerrain betterTerrain;
+
+    public override void _Ready()
+    {
+        TileMap tileMap = GetNode<TileMap>("TileMap");
+        betterTerrain = new BetterTerrain(tm);
+
+        var layer = 0;
+        var coordinates = new Vector2I(0, 0);
+        betterTerrain.SetCell(layer, coordinates, 1);
+        betterTerrain.UpdateTerrainCell(layer, coordinates);
+    }
 ```
 
 The functions available are the same as BetterTerrain's, though the TileMap or
@@ -37,189 +36,222 @@ refer to the GDScript version for specifics.
 
 public class BetterTerrain
 {
-	Node bt;
-	TileMap tm;
-	
-	public enum TerrainType {
-		MatchTiles = 0,
-		MatchVertices = 1,
-		Category = 2,
-		Decoration = 3
-	}
-	
-	public enum SymmetryType {
-		None = 0,
-		Mirror = 1, // Horizontally mirror
-		Flip = 2, // Vertically flip
-		Reflect = 3, // All four reflections
-		RotateClockwise = 4,
-		RotateCounterClockwise = 5,
-		Rotate180 = 6,
-		RotateAll = 7, // All four rotated forms
-		All = 8 // All rotated and reflected forms
-	}
-	
-	public BetterTerrain(TileMap _tm)
-	{
-		tm = _tm;
-		bt = tm.GetNode("/root/BetterTerrain");
-	}
-	
-	public Array<Dictionary<string, Variant>> GetTerrainCategories()
-	{
-		return (Array<Dictionary<string, Variant>>)bt.Call("get_terrain_categories", tm.TileSet);
-	}
-	
-	public bool AddTerrain(string name, Color color, TerrainType type, Array<int> categories = null, Dictionary<Variant, Variant> icon = null)
-	{
-		if (categories is null)
-			categories = new Array<int>();
-		if (icon is null)
-			icon = new Dictionary<Variant, Variant>();
-		return (bool)bt.Call("add_terrain", tm.TileSet, name, color, (int)type, categories, icon);
-	}
-	
-	public bool RemoveTerrain(int index)
-	{
-		return (bool)bt.Call("remove_terrain", tm.TileSet, index);
-	}
-	
-	public int TerrainCount()
-	{
-		return (int)bt.Call("terrain_count", tm.TileSet);
-	}
-	
-	public Dictionary<string, Variant> GetTerrain(int index)
-	{
-		return (Dictionary<string, Variant>)bt.Call("get_terrain", tm.TileSet, index);
-	}
-	
-	public bool SetTerrain(int index, string name, Color color, TerrainType type, Array<int> categories = null, Dictionary<Variant, Variant> icon = null)
-	{
-		if (categories is null)
-			categories = new Array<int>();
-		if (icon is null)
-			icon = new Dictionary<Variant, Variant>();
-		return (bool)bt.Call("set_terrain", tm.TileSet, index, name, color, (int)type, categories, icon);
-	}
-	
-	public bool SwapTerrains(int index1, int index2)
-	{
-		return (bool)bt.Call("swap_terrains", tm.TileSet, index1, index2);
-	}
-	
-	public bool SetTileTerrainType(TileData td, int type)
-	{
-		return (bool)bt.Call("set_tile_terrain_type", tm.TileSet, td, type);
-	}
-	
-	public int GetTileTerrainType(TileData td)
-	{
-		return (int)bt.Call("get_tile_terrain_type", td);
-	}
-	
-	public bool SetTileSymmetryType(TileData td, SymmetryType type)
-	{
-		return (bool)bt.Call("set_tile_symmetry_type", tm.TileSet, td, (int)type);
-	}
-	
-	public SymmetryType GetTileSymmetryType(TileData td)
-	{
-		return (SymmetryType)(int)bt.Call("get_tile_symmetry_type", td);
-	}
-	
-	public Array<TileData> GetTilesInTerrain(int type)
-	{
-		return (Array<TileData>)bt.Call("get_tiles_in_terrain", tm.TileSet, type);
-	}
-	
-	public Array<Dictionary<string, Variant>> GetTileSourcesInTerrain(int type)
-	{
-		return (Array<Dictionary<string, Variant>>)bt.Call("get_tile_sources_in_terrain", tm.TileSet, type);
-	}
-	
-	public bool AddTilePeeringType(TileData td, TileSet.CellNeighbor peering, int type)
-	{
-		return (bool)bt.Call("add_tile_peering_type", tm.TileSet, td, (int)peering, type);
-	}
-	
-	public bool RemoveTilePeeringType(TileData td, TileSet.CellNeighbor peering, int type)
-	{
-		return (bool)bt.Call("remove_tile_peering_type", tm.TileSet, td, (int)peering, type);
-	}
-	
-	public Array<TileSet.CellNeighbor> TilePeeringKeys(TileData td)
-	{
-		return (Array<TileSet.CellNeighbor>)bt.Call("tile_peering_keys", td);
-	}
-	
-	public Array<int> TilePeeringTypes(TileData td, TileSet.CellNeighbor peering)
-	{
-		return (Array<int>)bt.Call("tile_peering_types", td, (int)peering);
-	}
-	
-	public Array<TileSet.CellNeighbor> TilePeeringForType(TileData td, int type)
-	{
-		return (Array<TileSet.CellNeighbor>)bt.Call("tile_peering_for_type", td, type);
-	}
-	
-	public bool SetCell(int layer, Vector2I coord, int type)
-	{
-		return (bool)bt.Call("set_cell", tm, layer, coord, type);
-	}
-	
-	public bool SetCells(int layer, Array<Vector2I> coords, int type)
-	{
-		return (bool)bt.Call("set_cells", tm, layer, coords, type);
-	}
-	
-	public bool ReplaceCell(int layer, Vector2I coord, int type)
-	{
-		return (bool)bt.Call("replace_cell", tm, layer, coord, type);
-	}
-	
-	public bool ReplaceCells(int layer, Array<Vector2I> coords, int type)
-	{
-		return (bool)bt.Call("replace_cells", tm, layer, coords, type);
-	}
-	
-	public int GetCell(int layer, Vector2I coord)
-	{
-		return (int)bt.Call("get_cell", tm, layer, coord);
-	}
-	
-	public void UpdateTerrainCells(int layer, Array<Vector2I> cells, bool and_surrounding_cells = true)
-	{
-		bt.Call("update_terrain_cells", tm, layer, cells, and_surrounding_cells);
-	}
-	
-	public void UpdateTerrainCell(int layer, Vector2I cell, bool and_surrounding_cells = true)
-	{
-		bt.Call("update_terrain_cell", tm, layer, cell, and_surrounding_cells);
-	}
-	
-	public void UpdateTerrainArea(int layer, Rect2I area, bool and_surrounding_cells = true)
-	{
-		bt.Call("update_terrain_area", tm, layer, area, and_surrounding_cells);
-	}
-	
-	public Dictionary<Variant, Variant> CreateTerrainChangeset(int layer, Dictionary<Vector2I, int> paint)
-	{
-		return (Dictionary<Variant, Variant>)bt.Call("create_terrain_changeset", tm, layer, paint);
-	}
-	
-	public bool IsTerrainChangesetReady(Dictionary<Variant, Variant> change)
-	{
-		return (bool)bt.Call("is_terrain_changeset_ready", change);
-	}
-	
-	public void WaitForTerrainChangeset(Dictionary<Variant, Variant> change)
-	{
-		bt.Call("wait_for_terrain_changeset", change);
-	}
-	
-	public void ApplyTerrainChangeset(Dictionary<Variant, Variant> change)
-	{
-		bt.Call("apply_terrain_changeset", change);
-	}
+    public enum TerrainType
+    {
+        MatchTiles = 0,
+        MatchVertices = 1,
+        Category = 2,
+        Decoration = 3
+    }
+
+    public enum SymmetryType
+    {
+        None = 0,
+        Mirror = 1, // Horizontally mirror
+        Flip = 2, // Vertically flip
+        Reflect = 3, // All four reflections
+        RotateClockwise = 4,
+        RotateCounterClockwise = 5,
+        Rotate180 = 6,
+        RotateAll = 7, // All four rotated forms
+        All = 8 // All rotated and reflected forms
+    }
+
+    private static readonly NodePath nodePath = new("/root/BetterTerrain");
+    private readonly Node betterTerrain;
+    private readonly TileMap tileMap;
+
+    public BetterTerrain(TileMap tileMap)
+    {
+        this.tileMap = tileMap;
+        betterTerrain = tileMap.GetNode(nodePath);
+    }
+
+    public Array<Godot.Collections.Dictionary<string, Variant>> GetTerrainCategories()
+    {
+        return (Array<Godot.Collections.Dictionary<string, Variant>>)betterTerrain.Call(MethodName.GetTerrainCategories, tileMap.TileSet);
+    }
+
+    public bool AddTerrain(string name, Color color, TerrainType type, Array<int>? categories = null, Godot.Collections.Dictionary<Variant, Variant>? icon = null)
+    {
+        categories ??= new Array<int>();
+        icon ??= new Godot.Collections.Dictionary<Variant, Variant>();
+        return (bool)betterTerrain.Call(MethodName.AddTerrain, tileMap.TileSet, name, color, (int)type, categories, icon);
+    }
+
+    public bool RemoveTerrain(int index)
+    {
+        return (bool)betterTerrain.Call(MethodName.RemoveTerrain, tileMap.TileSet, index);
+    }
+
+    public int TerrainCount()
+    {
+        return (int)betterTerrain.Call(MethodName.TerrainCount, tileMap.TileSet);
+    }
+
+    public Godot.Collections.Dictionary<string, Variant> GetTerrain(int index)
+    {
+        return (Godot.Collections.Dictionary<string, Variant>)betterTerrain.Call(MethodName.GetTerrain, tileMap.TileSet, index);
+    }
+
+    public bool SetTerrain(int index, string name, Color color, TerrainType type, Array<int>? categories = null, Godot.Collections.Dictionary<Variant, Variant>? icon = null)
+    {
+        categories ??= new Array<int>();
+        icon ??= new Godot.Collections.Dictionary<Variant, Variant>();
+        return (bool)betterTerrain.Call(MethodName.SetTerrain, tileMap.TileSet, index, name, color, (int)type, categories, icon);
+    }
+
+    public bool SwapTerrains(int index1, int index2)
+    {
+        return (bool)betterTerrain.Call(MethodName.SwapTerrains, tileMap.TileSet, index1, index2);
+    }
+
+    public bool SetTileTerrainType(TileData tileData, int type)
+    {
+        return (bool)betterTerrain.Call(MethodName.SetTileTerrainType, tileMap.TileSet, tileData, type);
+    }
+
+    public int GetTileTerrainType(TileData tileData)
+    {
+        return (int)betterTerrain.Call(MethodName.GetTileTerrainType, tileData);
+    }
+
+    public bool SetTileSymmetryType(TileData tileData, SymmetryType type)
+    {
+        return (bool)betterTerrain.Call(MethodName.SetTileSymmetryType, tileMap.TileSet, tileData, (int)type);
+    }
+
+    public SymmetryType GetTileSymmetryType(TileData tileData)
+    {
+        return (SymmetryType)(int)betterTerrain.Call(MethodName.GetTileSymmetryType, tileData);
+    }
+
+    public Array<TileData> GetTilesInTerrain(int type)
+    {
+        return (Array<TileData>)betterTerrain.Call(MethodName.GetTilesInTerrain, tileMap.TileSet, type);
+    }
+
+    public Array<Godot.Collections.Dictionary<string, Variant>> GetTileSourcesInTerrain(int type)
+    {
+        return (Array<Godot.Collections.Dictionary<string, Variant>>)betterTerrain.Call(MethodName.GetTileSourcesInTerrain, tileMap.TileSet, type);
+    }
+
+    public bool AddTilePeeringType(TileData tileData, TileSet.CellNeighbor peering, int type)
+    {
+        return (bool)betterTerrain.Call(MethodName.AddTilePeeringType, tileMap.TileSet, tileData, (int)peering, type);
+    }
+
+    public bool RemoveTilePeeringType(TileData tileData, TileSet.CellNeighbor peering, int type)
+    {
+        return (bool)betterTerrain.Call(MethodName.RemoveTilePeeringType, tileMap.TileSet, tileData, (int)peering, type);
+    }
+
+    public Array<TileSet.CellNeighbor> TilePeeringKeys(TileData tileData)
+    {
+        return (Array<TileSet.CellNeighbor>)betterTerrain.Call(MethodName.TilePeeringKeys, tileData);
+    }
+
+    public Array<int> TilePeeringTypes(TileData tileData, TileSet.CellNeighbor peering)
+    {
+        return (Array<int>)betterTerrain.Call(MethodName.TilePeeringTypes, tileData, (int)peering);
+    }
+
+    public Array<TileSet.CellNeighbor> TilePeeringForType(TileData tileData, int type)
+    {
+        return (Array<TileSet.CellNeighbor>)betterTerrain.Call(MethodName.TilePeeringForType, tileData, type);
+    }
+
+    public bool SetCell(int layer, Vector2I coordinate, int type)
+    {
+        return (bool)betterTerrain.Call(MethodName.SetCell, tileMap, layer, coordinate, type);
+    }
+
+    public bool SetCells(int layer, Array<Vector2I> coordinates, int type)
+    {
+        return (bool)betterTerrain.Call(MethodName.SetCells, tileMap, layer, coordinates, type);
+    }
+
+    public bool ReplaceCell(int layer, Vector2I coordinate, int type)
+    {
+        return (bool)betterTerrain.Call(MethodName.ReplaceCell, tileMap, layer, coordinate, type);
+    }
+
+    public bool ReplaceCells(int layer, Array<Vector2I> coordinates, int type)
+    {
+        return (bool)betterTerrain.Call(MethodName.ReplaceCells, tileMap, layer, coordinates, type);
+    }
+
+    public int GetCell(int layer, Vector2I coordinate)
+    {
+        return (int)betterTerrain.Call(MethodName.GetCell, tileMap, layer, coordinate);
+    }
+
+    public void UpdateTerrainCells(int layer, Array<Vector2I> cells, bool updateSurroundingCells = true)
+    {
+        betterTerrain.Call(MethodName.UpdateTerrainCells, tileMap, layer, cells, updateSurroundingCells);
+    }
+
+    public void UpdateTerrainCell(int layer, Vector2I cell, bool updateSurroundingCells = true)
+    {
+        betterTerrain.Call(MethodName.UpdateTerrainCell, tileMap, layer, cell, updateSurroundingCells);
+    }
+
+    public void UpdateTerrainArea(int layer, Rect2I area, bool updateSurroundingCells = true)
+    {
+        betterTerrain.Call(MethodName.UpdateTerrainArea, tileMap, layer, area, updateSurroundingCells);
+    }
+
+    public Godot.Collections.Dictionary<Variant, Variant> CreateTerrainChangeset(int layer, Godot.Collections.Dictionary<Vector2I, int> paint)
+    {
+        return (Godot.Collections.Dictionary<Variant, Variant>)betterTerrain.Call(MethodName.CreateTerrainChangeset, tileMap, layer, paint);
+    }
+
+    public bool IsTerrainChangesetReady(Godot.Collections.Dictionary<Variant, Variant> changeset)
+    {
+        return (bool)betterTerrain.Call(MethodName.IsTerrainChangesetReady, changeset);
+    }
+
+    public void WaitForTerrainChangeset(Godot.Collections.Dictionary<Variant, Variant> changeset)
+    {
+        betterTerrain.Call(MethodName.WaitForTerrainChangeset, changeset);
+    }
+
+    public void ApplyTerrainChangeset(Godot.Collections.Dictionary<Variant, Variant> changeset)
+    {
+        betterTerrain.Call(MethodName.ApplyTerrainChangeset, changeset);
+    }
+
+    private static class MethodName
+    {
+        public static readonly StringName GetTerrainCategories = "get_terrain_categories";
+        public static readonly StringName AddTerrain = "add_terrain";
+        public static readonly StringName RemoveTerrain = "remove_terrain";
+        public static readonly StringName TerrainCount = "terrain_count";
+        public static readonly StringName GetTerrain = "get_terrain";
+        public static readonly StringName SetTerrain = "set_terrain";
+        public static readonly StringName SwapTerrains = "swap_terrains";
+        public static readonly StringName SetTileTerrainType = "set_tile_terrain_type";
+        public static readonly StringName GetTileTerrainType = "get_tile_terrain_type";
+        public static readonly StringName SetTileSymmetryType = "set_tile_symmetry_type";
+        public static readonly StringName GetTileSymmetryType = "get_tile_symmetry_type";
+        public static readonly StringName GetTilesInTerrain = "get_tiles_in_terrain";
+        public static readonly StringName GetTileSourcesInTerrain = "get_tile_sources_in_terrain";
+        public static readonly StringName AddTilePeeringType = "add_tile_peering_type";
+        public static readonly StringName RemoveTilePeeringType = "remove_tile_peering_type";
+        public static readonly StringName TilePeeringKeys = "tile_peering_keys";
+        public static readonly StringName TilePeeringTypes = "tile_peering_types";
+        public static readonly StringName TilePeeringForType = "tile_peering_for_type";
+        public static readonly StringName SetCell = "set_cell";
+        public static readonly StringName SetCells = "set_cells";
+        public static readonly StringName ReplaceCell = "replace_cell";
+        public static readonly StringName ReplaceCells = "replace_cells";
+        public static readonly StringName GetCell = "get_cell";
+        public static readonly StringName UpdateTerrainCells = "update_terrain_cells";
+        public static readonly StringName UpdateTerrainCell = "update_terrain_cell";
+        public static readonly StringName UpdateTerrainArea = "update_terrain_area";
+        public static readonly StringName CreateTerrainChangeset = "create_terrain_changeset";
+        public static readonly StringName IsTerrainChangesetReady = "is_terrain_changeset_ready";
+        public static readonly StringName WaitForTerrainChangeset = "wait_for_terrain_changeset";
+        public static readonly StringName ApplyTerrainChangeset = "apply_terrain_changeset";
+    }
 }
