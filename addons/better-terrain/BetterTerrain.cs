@@ -36,9 +36,6 @@ refer to the GDScript version for specifics.
 
 public class BetterTerrain
 {
-    private readonly Node betterTerrain;
-    private readonly TileMap tileMap;
-
     public enum TerrainType
     {
         MatchTiles = 0,
@@ -60,10 +57,14 @@ public class BetterTerrain
         All = 8 // All rotated and reflected forms
     }
 
+    private static readonly NodePath nodePath = new("/root/BetterTerrain");
+    private readonly Node betterTerrain;
+    private readonly TileMap tileMap;
+
     public BetterTerrain(TileMap tileMap)
     {
         this.tileMap = tileMap;
-        betterTerrain = tileMap.GetNode("/root/BetterTerrain");
+        betterTerrain = tileMap.GetNode(nodePath);
     }
 
     public Array<Godot.Collections.Dictionary<string, Variant>> GetTerrainCategories()
