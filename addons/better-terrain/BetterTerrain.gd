@@ -321,7 +321,6 @@ func _probe(tm: TileMap, coord: Vector2i, peering: int, type: int, types: Dictio
 	return targets.reduce(func(a, t): return min(a, t))
 
 
-
 func _update_tile_vertices(tm: TileMap, coord: Vector2i, types: Dictionary, cache: Array):
 	var type = types[coord]
 	
@@ -330,7 +329,7 @@ func _update_tile_vertices(tm: TileMap, coord: Vector2i, types: Dictionary, cach
 	for t in cache[type]:
 		var score := 0
 		for peering in t[3]:
-			score += 10 if _probe(tm, coord, peering, type, types) in t[3][peering] else -3
+			score += 3 if _probe(tm, coord, peering, type, types) in t[3][peering] else -10
 		
 		if score > best_score:
 			best_score = score
