@@ -289,7 +289,7 @@ func _weighted_selection_seeded(choices: Array, coord: Vector2i, apply_empty_pro
 	return _weighted_selection(choices, apply_empty_probability)
 
 
-func _update_tile_tiles(tm: TileMap, layer: int, coord: Vector2i, types: Dictionary, cache: Array, apply_empty_probability: bool):
+func _update_tile_tiles(tm: TileMap, coord: Vector2i, types: Dictionary, cache: Array, apply_empty_probability: bool):
 	var type = types[coord]
 	
 	var best_score := -1000 # Impossibly bad score
@@ -308,34 +308,20 @@ func _update_tile_tiles(tm: TileMap, layer: int, coord: Vector2i, types: Diction
 	return _weighted_selection_seeded(best, coord, apply_empty_probability)
 
 
-func _probe(tm: TileMap, coord: Vector2i, peering: int, types: Dictionary, goal: Array) -> int:
+func _probe(tm: TileMap, coord: Vector2i, peering: int, type: int, types: Dictionary) -> int:
 	var targets = data.associated_vertex_cells(tm, coord, peering)
+	targets = targets.map(func(c): return types[c])
 	
-	var partial_match := false
-	var best = types[targets[0]]
-	for t in targets:
-		var test = types[t]
-		best = min(best, test)
-		if test in goal:
-			partial_match = true
+	var first = targets[0]
+	if targets.all(func(t): return t == first):
+		return first
 	
-	# Best - exact match on lowest type
-	if best in goal:
-		return 3
-	
-	# Bad - any match of any type
-	if partial_match:
-		return -1
-	
-	# Worse - only match current terrain
-	if types[coord] in goal:
-		return -3
-	
-	# Worst - no kind of match at all
-	return -5
+	# if different, use the lowest  non-same
+	targets = targets.filter(func(t): return t != type)
+	return targets.reduce(func(a, t): return min(a, t))
 
 
-func _update_tile_vertices(tm: TileMap, layer: int, coord: Vector2i, types: Dictionary, cache: Array):
+func _update_tile_vertices(tm: TileMap, coord: Vector2i, types: Dictionary, cache: Array):
 	var type = types[coord]
 	
 	var best_score := -1000 # Impossibly bad score
@@ -343,7 +329,7 @@ func _update_tile_vertices(tm: TileMap, layer: int, coord: Vector2i, types: Dict
 	for t in cache[type]:
 		var score := 0
 		for peering in t[3]:
-			score += _probe(tm, coord, peering, types, t[3][peering])
+			score += 3 if _probe(tm, coord, peering, type, types) in t[3][peering] else -10
 		
 		if score > best_score:
 			best_score = score
@@ -362,9 +348,9 @@ func _update_tile_immediate(tm: TileMap, layer: int, coord: Vector2i, ts_meta: D
 	var placement
 	var terrain = _get_cache_terrain(ts_meta, type)
 	if terrain[2] in [TerrainType.MATCH_TILES, TerrainType.DECORATION]:
-		placement = _update_tile_tiles(tm, layer, coord, types, cache, terrain[2] == TerrainType.DECORATION)
+		placement = _update_tile_tiles(tm, coord, types, cache, terrain[2] == TerrainType.DECORATION)
 	elif terrain[2] == TerrainType.MATCH_VERTICES:
-		placement = _update_tile_vertices(tm, layer, coord, types, cache)
+		placement = _update_tile_vertices(tm, coord, types, cache)
 	else:
 		return
 	
@@ -372,22 +358,23 @@ func _update_tile_immediate(tm: TileMap, layer: int, coord: Vector2i, ts_meta: D
 		tm.set_cell(layer, coord, placement[0], placement[1], placement[2])
 
 
-func _update_tile_deferred(tm: TileMap, layer: int, coord: Vector2i, ts_meta: Dictionary, types: Dictionary, cache: Array):
+func _update_tile_deferred(tm: TileMap, coord: Vector2i, ts_meta: Dictionary, types: Dictionary, cache: Array):
 	var type = types[coord]
 	if type >= TileCategory.EMPTY and type < ts_meta.terrains.size():
 		var terrain = _get_cache_terrain(ts_meta, type)
 		if terrain[2] in [TerrainType.MATCH_TILES, TerrainType.DECORATION]:
-			return _update_tile_tiles(tm, layer, coord, types, cache, terrain[2] == TerrainType.DECORATION)
+			return _update_tile_tiles(tm, coord, types, cache, terrain[2] == TerrainType.DECORATION)
 		elif terrain[2] == TerrainType.MATCH_VERTICES:
-			return _update_tile_vertices(tm, layer, coord, types, cache)
+			return _update_tile_vertices(tm, coord, types, cache)
 	return null
 
 
 func _widen(tm: TileMap, coords: Array) -> Array:
 	var result := {}
+	var peering_neighbors = data.get_terrain_peering_cells(tm.tile_set, TerrainType.MATCH_TILES)
 	for c in coords:
 		result[c] = true
-		var neighbors = data.neighboring_coords(tm, c, data.get_terrain_peering_cells(tm.tile_set, TerrainType.MATCH_TILES))
+		var neighbors = data.neighboring_coords(tm, c, peering_neighbors)
 		for t in neighbors:
 			result[t] = true
 	return result.keys()
@@ -395,10 +382,11 @@ func _widen(tm: TileMap, coords: Array) -> Array:
 
 func _widen_with_exclusion(tm: TileMap, coords: Array, exclusion: Rect2i) -> Array:
 	var result := {}
+	var peering_neighbors = data.get_terrain_peering_cells(tm.tile_set, TerrainType.MATCH_TILES)
 	for c in coords:
 		if !exclusion.has_point(c):
 			result[c] = true
-		var neighbors = data.neighboring_coords(tm, c, data.get_terrain_peering_cells(tm.tile_set, TerrainType.MATCH_TILES))
+		var neighbors = data.neighboring_coords(tm, c, peering_neighbors)
 		for t in neighbors:
 			if !exclusion.has_point(t):
 				result[t] = true
@@ -1108,7 +1096,7 @@ func create_terrain_changeset(tm: TileMap, layer: int, paint: Dictionary) -> Dic
 	
 	var ts_meta := _get_terrain_meta(tm.tile_set)
 	var work := func(n: int):
-		placements[n] = _update_tile_deferred(tm, layer, cells[n], ts_meta, types, _cache)
+		placements[n] = _update_tile_deferred(tm, cells[n], ts_meta, types, _cache)
 	
 	return {
 		"valid": true,
