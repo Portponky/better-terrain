@@ -19,7 +19,7 @@ To get started with `better-terrain`, follow these steps:
     * Clone or download the repo, and copy the `addons` folder into your Godot project.
     * In Godot's asset library, search for `Better Terrain` and click download.
 
-2. In `Project setings` make sure the plugin is enabled in the `Plugins` tab.
+2. In `Project settings` make sure the plugin is enabled in the `Plugins` tab.
 3. Restart Godot.
 
 Now when you select a tilemap node, a new dock tab called 'Terrains' will show up. In here, you can define terrains and paint with them.
