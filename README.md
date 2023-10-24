@@ -22,7 +22,7 @@ To get started with `better-terrain`, follow these steps:
 2. In `Project settings` make sure the plugin is enabled in the `Plugins` tab.
 3. Restart Godot.
 
-Now when you select a tilemap node, a new dock tab called 'Terrains' will show up. In here, you can define terrains and paint with them.
+Now when you select a tilemap node, a new dock tab called 'Terrains' will show up. Here, you can define terrains and paint with them.
 
 ### Usage in the editor
 
@@ -31,7 +31,7 @@ The dock has terrain types on the left, and tiles on the right. At the bottom of
 * **Match tiles**: This terrain places tiles based on how well they match their neighboring tiles. It's a good replacement for '3x3' and '3x3 minimal' from Godot 3, and 'Match sides' and 'Match corners and sides' from Godot 4's built-in terrain system.
 * **Match vertices**: This terrain analyses the vertices of each tile and chooses the highest neighboring terrain type (as in, highest in the terrain list, with empty/non-terrain being the highest overall). It's a replacement for '2x2' in Godot 3, or 'Match corners' in Godot 4.
 * **Category**: Categories are used to create advanced matching rules. Tiles assigned to a category never modify the tilemap, but terrains can match against categories, and also belong to them.
-* **Decoration**: There is always only one decoration type available at the end of your terrain list. It treats its tiles equivalent to empty cells, and is used to add supplimentary tiles around the edge of other terrains. It behaves like 'Match tiles' otherwise.
+* **Decoration**: There is always only one decoration type available at the end of your terrain list. It treats its tiles equivalent to empty cells, and is used to add supplementary tiles around the edge of other terrains. It behaves like 'Match tiles' otherwise.
 
 Along the top, you will find the following buttons:
 
