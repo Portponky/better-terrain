@@ -1,3 +1,4 @@
+<div id="top"></div>
 # better-terrain
 Terrain plugin for Godot 4's tilemap.
 
@@ -72,3 +73,5 @@ I made some videos on how to use this plugin.
 ### Contact
 
 Feel free to report bugs here, or find me (Portponky#6300) on the Godot official discord server. Have fun!
+
+<p align="right">(<a href="#top">🔼 Back to top</a>)</p>
