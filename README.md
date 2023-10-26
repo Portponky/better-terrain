@@ -41,7 +41,7 @@ Along the top, you will find the following buttons:
 * An option to control the level of randomization used.
 * A layer selector for the scene. Unfortunately, the layer highlight option is not exposed to GDScript, so that is unavailable.
 
-You may also see a "Clean data" button, which occurs when terrain has data that does not apply to the current tileset shape or offset axis (for example, you set up rectangle terrain then change the tileset to be hexagonal).
+You may also see a "Clean data" button, which occurs when the terrain has data that does not apply to the current tileset shape or offset axis (for example, you set up rectangle terrain and then change the tileset to be hexagonal).
 
 ### Usage in code
 
@@ -49,7 +49,7 @@ The terrain system is usable via code via the `BetterTerrain` autoload, which th
 
 To edit terrain at runtime, first you must set terrain into cells, and then you must run an update function for the cells to allow it to pick the best tile for each terrain. This is similar to the API for Godot 3.
 
-To set or get terrain in cells, these functions are available. Terrain types are integer indexes into the list you see in the editor (e.g. the first terrain is 0, the second is 1, etc...)
+To set or get terrain in cells, these functions are available. Terrain types are integer indexes in the list you see in the editor (e.g. the first terrain is 0, the second is 1, etc...)
 
 * `func set_cell(tm: TileMap, layer: int, coord: Vector2i, type: int) -> bool`
 * `func set_cells(tm: TileMap, layer: int, coords: Array, type: int) -> bool`
