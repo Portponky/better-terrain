@@ -36,12 +36,12 @@ The dock has terrain types on the left, and tiles on the right. At the bottom of
 Along the top, you will find the following buttons:
 
 * Pen, line, rectangle, and fill tools. These are for drawing in the scene. Right click will erase.
-* Select, change type and change peering connecting types. Note that these are unselected by default to prevent accidental alterations to the terrain settings. You can unselect them after using them.
+* Select, change type, and change peering connecting types. Note that these are unselected by default to prevent accidental alterations to the terrain settings. You can unselect them after using them.
 * A zoom slider for the tiles.
 * An option to control the level of randomization used.
 * A layer selector for the scene. Unfortunately, the layer highlight option is not exposed to GDScript, so that is unavailable.
 
-You may also see a "Clean data" button, which occurs when terrain has data that does not apply to the current tileset shape or offset axis (for example, you set up rectangle terrain then change the tileset to be hexagonal).
+You may also see a "Clean data" button, which occurs when terrain has data that does not apply to the current tileset shape or offset axis (for example, you set up rectangle terrain and then change the tileset to be hexagonal).
 
 ### Usage in code
 
