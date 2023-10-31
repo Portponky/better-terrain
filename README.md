@@ -1,7 +1,7 @@
 # better-terrain
 Terrain plugin for Godot 4's tilemap.
 
-This plugin implements autotile-style terrain system with multiple connections. It works with the existing tilemaps and tilesets alongside Godot 4 features.
+This plugin implements an autotile-style terrain system with multiple connections. It works with the existing tilemaps and tilesets alongside Godot 4 features.
 
 ![Example of terrain system in use](https://github.com/Portponky/better-terrain/assets/33663279/a8399964-4595-4638-b979-fd73223a4245)
 
@@ -29,19 +29,19 @@ Now when you select a tilemap node, a new dock tab called 'Terrains' will show u
 The dock has terrain types on the left, and tiles on the right. At the bottom of the terrain types, there are buttons to add, modify, sort, or remove terrain types. A terrain type has a name, a color, a type, and an optional icon. The four types are:
 
 * **Match tiles**: This terrain places tiles based on how well they match their neighboring tiles. It's a good replacement for '3x3' and '3x3 minimal' from Godot 3, and 'Match sides' and 'Match corners and sides' from Godot 4's built-in terrain system.
-* **Match vertices**: This terrain analyses the vertices of each tile and chooses the highest neighboring terrain type (as in, highest in the terrain list, with empty/non-terrain being the highest overall). It's a replacement for '2x2' in Godot 3, or 'Match corners' in Godot 4.
+* **Match vertices**: This terrain analyzes the vertices of each tile and chooses the highest neighboring terrain type (as in, highest in the terrain list, with empty/non-terrain being the highest overall). It's a replacement for '2x2' in Godot 3, or 'Match corners' in Godot 4.
 * **Category**: Categories are used to create advanced matching rules. Tiles assigned to a category never modify the tilemap, but terrains can match against categories, and also belong to them.
 * **Decoration**: There is always only one decoration type available at the end of your terrain list. It treats its tiles equivalent to empty cells, and is used to add supplementary tiles around the edge of other terrains. It behaves like 'Match tiles' otherwise.
 
 Along the top, you will find the following buttons:
 
-* Pen, line, rectangle, and fill tools. These are for drawing in the scene. Right click will erase.
+* Pen, line, rectangle, and fill tools. These are for drawing the scene. Right click will erase.
 * Select, change type and change peering connecting types. Note that these are unselected by default to prevent accidental alterations to the terrain settings. You can unselect them after using them.
 * A zoom slider for the tiles.
 * An option to control the level of randomization used.
 * A layer selector for the scene. Unfortunately, the layer highlight option is not exposed to GDScript, so that is unavailable.
 
-You may also see a "Clean data" button, which occurs when terrain has data that does not apply to the current tileset shape or offset axis (for example, you set up rectangle terrain then change the tileset to be hexagonal).
+You may also see a "Clean data" button, which occurs when terrain has data that does not apply to the current tileset shape or offset axis (for example, if you set up rectangle terrain then change the tileset to be hexagonal).
 
 ### Usage in code
 
