@@ -291,6 +291,8 @@ func tile_parts_from_rect(rect:Rect2) -> Array[Dictionary]:
 	var alt_offset := Vector2.RIGHT * (zoom_level * tiles_size.x + ALTERNATE_TILE_MARGIN)
 	for s in tileset.get_source_count():
 		var source_id := tileset.get_source_id(s)
+		if source_id in disabled_sources:
+			continue
 		var source := tileset.get_source(source_id) as TileSetAtlasSource
 		if !source:
 			continue
