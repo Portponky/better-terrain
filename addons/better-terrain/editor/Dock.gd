@@ -636,11 +636,17 @@ func canvas_input(event: InputEvent) -> bool:
 		return true
 	
 	var clicked : bool = event is InputEventMouseButton and event.pressed
-	var shift : bool = event.shift_pressed
 	if clicked:
 		paint_mode = PaintMode.NO_PAINT
 		
-		if (draw_button.button_pressed and shift) or line_button.button_pressed:
+		if event.ctrl_pressed:
+			var pick = BetterTerrain.get_cell(tilemap, layer, current_position)
+			if pick >= 0:
+				terrain_list.get_children()[pick]._on_focus_entered()
+				#_on_entry_select(pick)
+			return true
+		
+		if (draw_button.button_pressed and event.shift_pressed) or line_button.button_pressed:
 			paint_action = PaintAction.LINE
 		else:
 			paint_action = PaintAction.NO_ACTION
