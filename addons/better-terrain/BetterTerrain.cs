@@ -72,7 +72,7 @@ public class BetterTerrain
         return (Array<Godot.Collections.Dictionary<string, Variant>>)betterTerrain.Call(MethodName.GetTerrainCategories, tileMap.TileSet);
     }
 
-    public bool AddTerrain(string name, Color color, TerrainType type, Array<int>? categories = null, Godot.Collections.Dictionary<Variant, Variant>? icon = null)
+    public bool AddTerrain(string name, Color color, TerrainType type, Array<int> categories = null, Godot.Collections.Dictionary<Variant, Variant> icon = null)
     {
         categories ??= new Array<int>();
         icon ??= new Godot.Collections.Dictionary<Variant, Variant>();
@@ -94,7 +94,7 @@ public class BetterTerrain
         return (Godot.Collections.Dictionary<string, Variant>)betterTerrain.Call(MethodName.GetTerrain, tileMap.TileSet, index);
     }
 
-    public bool SetTerrain(int index, string name, Color color, TerrainType type, Array<int>? categories = null, Godot.Collections.Dictionary<Variant, Variant>? icon = null)
+    public bool SetTerrain(int index, string name, Color color, TerrainType type, Array<int> categories = null, Godot.Collections.Dictionary<Variant, Variant> icon = null)
     {
         categories ??= new Array<int>();
         icon ??= new Godot.Collections.Dictionary<Variant, Variant>();
