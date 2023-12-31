@@ -92,6 +92,7 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_xa0fl")
 
 [node name="TerrainIcon" type="TextureRect" parent="Layout/IconLayout/TerrainIconPanel"]
 unique_name_in_owner = true
+texture_filter = 1
 custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
 expand_mode = 4
