@@ -1,6 +1,8 @@
 using Godot;
 using Godot.Collections;
 
+#nullable disable
+
 /*
 
 This is a lightweight wrapper for Better Terrain in C#.
