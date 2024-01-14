@@ -93,7 +93,7 @@ func update():
 			_terrain_texture = null
 			terrain_icon_slot.queue_redraw()
 			has_icon = true
-		elif terrain.icon.has("source_id"):
+		elif terrain.icon.has("source_id") and tileset.has_source(terrain.icon.source_id):
 			var source := tileset.get_source(terrain.icon.source_id) as TileSetAtlasSource
 			var coord := terrain.icon.coord as Vector2i
 			var rect := source.get_tile_texture_region(coord, 0)
