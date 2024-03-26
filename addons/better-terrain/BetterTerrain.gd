@@ -987,7 +987,7 @@ func get_cell(tm: TileMap, layer: int, coord: Vector2i) -> int:
 	
 	var t = tm.get_cell_tile_data(layer, coord)
 	if !t:
-		return TileCategory.EMPTY
+		return TileCategory.NON_TERRAIN
 	
 	return _get_tile_meta(t).type
 
