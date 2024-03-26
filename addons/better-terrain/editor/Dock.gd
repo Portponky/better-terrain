@@ -46,13 +46,6 @@ const TERRAIN_ENTRY_SCENE := preload("res://addons/better-terrain/editor/Terrain
 
 var selected_entry := -2
 
-@onready var terrain_icons := [
-	load("res://addons/better-terrain/icons/MatchTiles.svg"),
-	load("res://addons/better-terrain/icons/MatchVertices.svg"),
-	load("res://addons/better-terrain/icons/NonModifying.svg"),
-	load("res://addons/better-terrain/icons/Decoration.svg"),
-]
-
 var tilemap : TileMap
 var tileset : TileSet
 
@@ -157,6 +150,7 @@ func tiles_changed() -> void:
 	# clear terrains
 	for c in terrain_list.get_children():
 		terrain_list.remove_child(c)
+		c.queue_free()
 	
 	# load terrains from tileset
 	var terrain_count := BetterTerrain.terrain_count(tileset)

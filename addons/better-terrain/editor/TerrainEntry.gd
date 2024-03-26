@@ -25,12 +25,6 @@ var _terrain_texture:Texture2D
 var _terrain_texture_rect:Rect2i
 var _icon_draw_connected := false
 
-@onready var terrain_icons := [
-	load("res://addons/better-terrain/icons/MatchTiles.svg"),
-	load("res://addons/better-terrain/icons/MatchVertices.svg"),
-	load("res://addons/better-terrain/icons/NonModifying.svg"),
-	load("res://addons/better-terrain/icons/Decoration.svg"),
-]
 
 func _ready():
 	update()
@@ -84,7 +78,15 @@ func update():
 	color_style_decoration.border_width_top = 4
 	color_style_decoration.border_width_bottom = 4
 	
-	type_icon_slot.texture = terrain_icons[terrain.type]
+	match terrain.type:
+		BetterTerrain.TerrainType.MATCH_TILES:
+			type_icon_slot.texture = load("res://addons/better-terrain/icons/MatchTiles.svg")
+		BetterTerrain.TerrainType.MATCH_VERTICES:
+			type_icon_slot.texture = load("res://addons/better-terrain/icons/MatchVertices.svg")
+		BetterTerrain.TerrainType.CATEGORY:
+			type_icon_slot.texture = load("res://addons/better-terrain/icons/NonModifying.svg")
+		BetterTerrain.TerrainType.DECORATION:
+			type_icon_slot.texture = load("res://addons/better-terrain/icons/Decoration.svg")
 	
 	var has_icon = false
 	if terrain.has("icon"):
