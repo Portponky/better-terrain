@@ -98,7 +98,7 @@ func _get_cache(ts: TileSet) -> Array:
 	if _tile_cache.has(ts):
 		return _tile_cache[ts]
 	
-	var cache = []
+	var cache := []
 	if !ts:
 		return cache
 	_tile_cache[ts] = cache
@@ -140,12 +140,12 @@ func _get_cache(ts: TileSet) -> Array:
 					continue
 				
 				td.changed.connect(watcher.activate)
-				var peering = {}
+				var peering := {}
 				for key in td_meta.keys():
 					if !(key is int):
 						continue
 					
-					var targets = []
+					var targets := []
 					for k in types:
 						if _intersect(types[k], td_meta[key]):
 							targets.push_back(k)
@@ -200,7 +200,7 @@ func _clear_invalid_peering_types(ts: TileSet) -> void:
 			if !source:
 				continue
 			var td := source.get_tile_data(c[1], c[2])
-			var td_meta = _get_tile_meta(td)
+			var td_meta := _get_tile_meta(td)
 			
 			for peering in c[3].keys():
 				if valid_peering_types.has(peering):
@@ -264,7 +264,7 @@ func _weighted_selection(choices: Array, apply_empty_probability: bool):
 		return null
 	
 	if apply_empty_probability:
-		var max_weight = choices.reduce(func(a, c): return maxf(a, c[4]), 0.0)
+		var max_weight := choices.reduce(func(a, c): return maxf(a, c[4]), 0.0)
 		if max_weight < 1.0 and rng.randf() > max_weight:
 			return [-1, Vector2.ZERO, -1, null, 1.0]
 	
@@ -295,7 +295,7 @@ func _update_tile_tiles(tm: TileMap, coord: Vector2i, types: Dictionary, cache: 
 	var best_score := -1000 # Impossibly bad score
 	var best := []
 	for t in cache[type]:
-		var score = 0
+		var score := 0
 		for peering in t[3]:
 			score += 3 if t[3][peering].has(types[tm.get_neighbor_cell(coord, peering)]) else -10
 		
@@ -325,7 +325,7 @@ func _update_tile_vertices(tm: TileMap, coord: Vector2i, types: Dictionary, cach
 	var type = types[coord]
 	
 	var best_score := -1000 # Impossibly bad score
-	var best = []
+	var best := []
 	for t in cache[type]:
 		var score := 0
 		for peering in t[3]:
@@ -398,7 +398,7 @@ func _widen_with_exclusion(tm: TileMap, coords: Array, exclusion: Rect2i) -> Arr
 ## are marked with [enum TerrainType] of [code]CATEGORY[/code]. Each entry in the
 ## array is a [Dictionary] with [code]name[/code], [code]color[/code], and [code]id[/code].
 func get_terrain_categories(ts: TileSet) -> Array:
-	var result = []
+	var result := []
 	if !ts:
 		return result
 	
@@ -526,7 +526,7 @@ func get_terrain(ts: TileSet, index: int) -> Dictionary:
 	if index >= ts_meta.terrains.size():
 		return {valid = false}
 	
-	var terrain = _get_cache_terrain(ts_meta, index)
+	var terrain := _get_cache_terrain(ts_meta, index)
 	return {
 		id = index,
 		name = terrain[0],
@@ -824,8 +824,8 @@ func tile_peering_for_type(td: TileData, type: int) -> Array:
 		return []
 	
 	var td_meta := _get_tile_meta(td)
-	var result = []
-	var sides = tile_peering_keys(td)
+	var result := []
+	var sides := tile_peering_keys(td)
 	for side in sides:
 		if td_meta[side].has(type):
 			result.push_back(side)
@@ -922,7 +922,7 @@ func replace_cell(tm: TileMap, layer: int, coord: Vector2i, type: int) -> bool:
 	for check_type in check_types:
 		var placed_peering = tile_peering_for_type(td, check_type)
 		for pt in get_tiles_in_terrain(tm.tile_set, type):
-			var check_peering = tile_peering_for_type(pt, check_type)
+			var check_peering := tile_peering_for_type(pt, check_type)
 			if placed_peering == check_peering:
 				var tile = cache[type].front()
 				tm.set_cell(layer, coord, tile[0], tile[1], tile[2])
@@ -985,7 +985,7 @@ func get_cell(tm: TileMap, layer: int, coord: Vector2i) -> int:
 	if tm.get_cell_source_id(layer, coord) == -1:
 		return TileCategory.EMPTY
 	
-	var t = tm.get_cell_tile_data(layer, coord)
+	var t := tm.get_cell_tile_data(layer, coord)
 	if !t:
 		return TileCategory.NON_TERRAIN
 	
@@ -1011,7 +1011,7 @@ func update_terrain_cells(tm: TileMap, layer: int, cells: Array, and_surrounding
 		types[c] = get_cell(tm, layer, c)
 	
 	var ts_meta := _get_terrain_meta(tm.tile_set)
-	var cache = _get_cache(tm.tile_set)
+	var cache := _get_cache(tm.tile_set)
 	for c in cells:
 		_update_tile_immediate(tm, layer, c, ts_meta, types, cache)
 
@@ -1062,7 +1062,7 @@ func update_terrain_area(tm: TileMap, layer: int, area: Rect2i, and_surrounding_
 		types[c] = get_cell(tm, layer, c)
 	
 	var ts_meta := _get_terrain_meta(tm.tile_set)
-	var cache = _get_cache(tm.tile_set)
+	var cache := _get_cache(tm.tile_set)
 	for y in range(area.position.y, area.end.y):
 		for x in range(area.position.x, area.end.x):
 			var coord := Vector2i(x, y)

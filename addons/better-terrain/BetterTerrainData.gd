@@ -5,25 +5,25 @@
 ## This data class has functions for retrieving data regarding the mathematical
 ## properties of a tile set.
 
-const _terrain_peering_square_tiles := [0, 3, 4, 7, 8, 11, 12, 15]
-const _terrain_peering_square_vertices := [3, 7, 11, 15]
-const _terrain_peering_isometric_tiles := [1, 2, 5, 6, 9, 10, 13, 14]
-const _terrain_peering_isometric_vertices := [1, 5, 9, 13]
-const _terrain_peering_horiztonal_tiles := [0, 2, 6, 8, 10, 14]
-const _terrain_peering_horiztonal_vertices := [3, 5, 7, 11, 13, 15]
-const _terrain_peering_vertical_tiles := [2, 4, 6, 10, 12, 14]
-const _terrain_peering_vertical_vertices := [1, 3, 7, 9, 11, 15]
-const _terrain_peering_non_modifying := []
+const _terrain_peering_square_tiles : Array[int] = [0, 3, 4, 7, 8, 11, 12, 15]
+const _terrain_peering_square_vertices : Array[int] = [3, 7, 11, 15]
+const _terrain_peering_isometric_tiles : Array[int] = [1, 2, 5, 6, 9, 10, 13, 14]
+const _terrain_peering_isometric_vertices : Array[int] = [1, 5, 9, 13]
+const _terrain_peering_horiztonal_tiles : Array[int] = [0, 2, 6, 8, 10, 14]
+const _terrain_peering_horiztonal_vertices : Array[int] = [3, 5, 7, 11, 13, 15]
+const _terrain_peering_vertical_tiles : Array[int] = [2, 4, 6, 10, 12, 14]
+const _terrain_peering_vertical_vertices : Array[int] = [1, 3, 7, 9, 11, 15]
+const _terrain_peering_non_modifying : Array[int] = []
 
-const _terrain_peering_hflip = [8, 9, 6, 7, 4, 5, 2, 3, 0, 1, 14, 15, 12, 13, 10, 11]
-const _terrain_peering_vflip = [0, 1, 14, 15, 12, 13, 10, 11, 8, 9, 6, 7, 4, 5, 2, 3]
-const _terrain_peering_transpose = [4, 5, 2, 3, 0, 1, 14, 15, 12, 13, 10, 11, 8, 9, 6, 7]
+const _terrain_peering_hflip : Array[int] = [8, 9, 6, 7, 4, 5, 2, 3, 0, 1, 14, 15, 12, 13, 10, 11]
+const _terrain_peering_vflip : Array[int] = [0, 1, 14, 15, 12, 13, 10, 11, 8, 9, 6, 7, 4, 5, 2, 3]
+const _terrain_peering_transpose : Array[int] = [4, 5, 2, 3, 0, 1, 14, 15, 12, 13, 10, 11, 8, 9, 6, 7]
 
 # Replacement values for TileSetAtlasSource.TRANSFORM_*
 # Copied here for backwards compatibilityW
-const _transform_flip_h = 0x1000
-const _transform_flip_v = 0x2000
-const _transform_transpose = 0x4000
+const _transform_flip_h := 0x1000
+const _transform_flip_v := 0x2000
+const _transform_transpose := 0x4000
 
 const symmetry_mapping := {
 	BetterTerrain.SymmetryType.NONE: [0],
@@ -59,7 +59,7 @@ const symmetry_mapping := {
 
 ## Returns an [Array] of ints of type [enum TileSet.CellNeighbor] which represent
 ## the valid neighboring tiles for a terrain of [code]type[/code] in TileSet
-static func get_terrain_peering_cells(ts: TileSet, type: int) -> Array:
+static func get_terrain_peering_cells(ts: TileSet, type: int) -> Array[int]:
 	if !ts or type < 0 or type >= BetterTerrain.TerrainType.MAX:
 		return []
 	
@@ -98,7 +98,7 @@ static func is_terrain_peering_cell(ts: TileSet, type: int, peering: int) -> boo
 
 
 static func _peering_polygon_square_tiles(peering: int) -> PackedVector2Array:
-	const t = 1.0 / 3.0
+	const t := 1.0 / 3.0
 	var result : PackedVector2Array
 	match peering:
 		TileSet.CELL_NEIGHBOR_RIGHT_SIDE: result.append(Vector2(2*t, t))
@@ -117,7 +117,7 @@ static func _peering_polygon_square_tiles(peering: int) -> PackedVector2Array:
 
 
 static func _peering_polygon_square_vertices(peering: int) -> PackedVector2Array:
-	const t = 1.0 / 2.0
+	const t := 1.0 / 2.0
 	var result : PackedVector2Array
 	match peering:
 		TileSet.CELL_NEIGHBOR_BOTTOM_RIGHT_CORNER:
@@ -145,7 +145,7 @@ static func _peering_polygon_square_vertices(peering: int) -> PackedVector2Array
 
 
 static func _peering_polygon_isometric_tiles(peering: int) -> PackedVector2Array:
-	const t = 1.0 / 4.0
+	const t := 1.0 / 4.0
 	match peering:
 		-1: return PackedVector2Array([Vector2(2 * t, t), Vector2(3 * t, 2 * t), Vector2(2 * t, 3 * t), Vector2(t, 2 * t)])
 		TileSet.CELL_NEIGHBOR_RIGHT_CORNER:
@@ -168,8 +168,8 @@ static func _peering_polygon_isometric_tiles(peering: int) -> PackedVector2Array
 
 
 static func _peering_polygon_isometric_vertices(peering: int) -> PackedVector2Array:
-	const t = 1.0 / 4.0
-	const ttt = 3.0 * t
+	const t := 1.0 / 4.0
+	const ttt := 3.0 * t
 	match peering:
 		-1: return PackedVector2Array([Vector2(t, t), Vector2(ttt, t), Vector2(ttt, ttt), Vector2(t, ttt)])
 		TileSet.CELL_NEIGHBOR_RIGHT_CORNER:
@@ -184,10 +184,10 @@ static func _peering_polygon_isometric_vertices(peering: int) -> PackedVector2Ar
 
 
 static func _peering_polygon_horizontal_tiles(peering: int) -> PackedVector2Array:
-	const e = 1.0 / (2.0 * sqrt(3.0))
-	const w = sqrt(3.0) / 8.0
-	const t = 1.0 / 2.0
-	const s = 1.0 / 8.0
+	const e := 1.0 / (2.0 * sqrt(3.0))
+	const w := sqrt(3.0) / 8.0
+	const t := 1.0 / 2.0
+	const s := 1.0 / 8.0
 	match peering:
 		-1:
 			return PackedVector2Array([
@@ -244,10 +244,10 @@ static func _peering_polygon_horizontal_tiles(peering: int) -> PackedVector2Arra
 
 
 static func _peering_polygon_horizontal_vertices(peering: int) -> PackedVector2Array:
-	const e = 1.0 / (2.0 * sqrt(3.0))
-	const w = sqrt(3.0) / 8.0
-	const t = 1.0 / 2.0
-	const s = 1.0 / 8.0
+	const e := 1.0 / (2.0 * sqrt(3.0))
+	const w := sqrt(3.0) / 8.0
+	const t := 1.0 / 2.0
+	const s := 1.0 / 8.0
 	match peering:
 		-1:
 			return PackedVector2Array([
@@ -310,10 +310,10 @@ static func _peering_polygon_horizontal_vertices(peering: int) -> PackedVector2A
 
 
 static func _peering_polygon_vertical_tiles(peering: int) -> PackedVector2Array:
-	const e = 1.0 / (2.0 * sqrt(3.0))
-	const w = sqrt(3.0) / 8.0
-	const t = 1.0 / 2.0
-	const s = 1.0 / 8.0
+	const e := 1.0 / (2.0 * sqrt(3.0))
+	const w := sqrt(3.0) / 8.0
+	const t := 1.0 / 2.0
+	const s := 1.0 / 8.0
 	match peering:
 		-1:
 			return PackedVector2Array([
@@ -370,10 +370,10 @@ static func _peering_polygon_vertical_tiles(peering: int) -> PackedVector2Array:
 
 
 static func _peering_polygon_vertical_vertices(peering: int) -> PackedVector2Array:
-	const e = 1.0 / (2.0 * sqrt(3.0))
-	const w = sqrt(3.0) / 8.0
-	const t = 1.0 / 2.0
-	const s = 1.0 / 8.0
+	const e := 1.0 / (2.0 * sqrt(3.0))
+	const w := sqrt(3.0) / 8.0
+	const t := 1.0 / 2.0
+	const s := 1.0 / 8.0
 	match peering:
 		-1:
 			return PackedVector2Array([
@@ -435,8 +435,8 @@ static func _peering_polygon_vertical_vertices(peering: int) -> PackedVector2Arr
 	return PackedVector2Array()
 
 
-static func _peering_non_modifying():
-	const t = 1.0 / 3.0
+static func _peering_non_modifying() -> PackedVector2Array:
+	const t := 1.0 / 3.0
 	return PackedVector2Array([
 		Vector2(t, 0),
 		Vector2(2 * t, 0),
@@ -457,22 +457,25 @@ static func peering_polygon(ts: TileSet, type: int, peering: int) -> PackedVecto
 	if type == BetterTerrain.TerrainType.DECORATION:
 		type = BetterTerrain.TerrainType.MATCH_TILES
 	
-	if ts.tile_shape == TileSet.TILE_SHAPE_SQUARE:
-		match type:
-			BetterTerrain.TerrainType.MATCH_TILES: return _peering_polygon_square_tiles(peering)
-			BetterTerrain.TerrainType.MATCH_VERTICES: return _peering_polygon_square_vertices(peering)
-	elif ts.tile_shape == TileSet.TILE_SHAPE_ISOMETRIC:
-		match type:
-			BetterTerrain.TerrainType.MATCH_TILES: return _peering_polygon_isometric_tiles(peering)
-			BetterTerrain.TerrainType.MATCH_VERTICES:  return _peering_polygon_isometric_vertices(peering)
-	elif ts.tile_offset_axis == TileSet.TILE_OFFSET_AXIS_HORIZONTAL:
-		match type:
-			BetterTerrain.TerrainType.MATCH_TILES: return _peering_polygon_horizontal_tiles(peering)
-			BetterTerrain.TerrainType.MATCH_VERTICES: return _peering_polygon_horizontal_vertices(peering)
-	else:
-		match type:
-			BetterTerrain.TerrainType.MATCH_TILES: return _peering_polygon_vertical_tiles(peering)
-			BetterTerrain.TerrainType.MATCH_VERTICES: return _peering_polygon_vertical_vertices(peering)
+	match [ts.tile_shape, type]:
+		[TileSet.TILE_SHAPE_SQUARE, BetterTerrain.TerrainType.MATCH_TILES]:
+			return _peering_polygon_square_tiles(peering)
+		[TileSet.TILE_SHAPE_SQUARE, BetterTerrain.TerrainType.MATCH_VERTICES]:
+			return _peering_polygon_square_vertices(peering)
+		[TileSet.TILE_SHAPE_ISOMETRIC, BetterTerrain.TerrainType.MATCH_TILES]:
+			return _peering_polygon_isometric_tiles(peering)
+		[TileSet.TILE_SHAPE_ISOMETRIC, BetterTerrain.TerrainType.MATCH_VERTICES]:
+			return _peering_polygon_isometric_vertices(peering)
+	
+	match [ts.tile_offset_axis, type]:
+		[TileSet.TILE_OFFSET_AXIS_VERTICAL, BetterTerrain.TerrainType.MATCH_TILES]:
+			return _peering_polygon_vertical_tiles(peering)
+		[TileSet.TILE_OFFSET_AXIS_VERTICAL, BetterTerrain.TerrainType.MATCH_VERTICES]:
+			return _peering_polygon_vertical_vertices(peering)
+		[TileSet.TILE_OFFSET_AXIS_HORIZONTAL, BetterTerrain.TerrainType.MATCH_TILES]:
+			return _peering_polygon_horizontal_tiles(peering)
+		[TileSet.TILE_OFFSET_AXIS_HORIZONTAL, BetterTerrain.TerrainType.MATCH_VERTICES]:
+			return _peering_polygon_horizontal_vertices(peering)
 	
 	return PackedVector2Array()
 
@@ -480,13 +483,13 @@ static func peering_polygon(ts: TileSet, type: int, peering: int) -> PackedVecto
 ## Returns as polygon centered on 0, 0 which represents the shape of the cell of
 ## a tile from [TileSet].
 static func cell_polygon(ts: TileSet) -> PackedVector2Array:
-	const t = 1.0 / 2.0
+	const t := 1.0 / 2.0
 	if ts.tile_shape in [TileSet.TILE_SHAPE_SQUARE, TileSet.TILE_SHAPE_HALF_OFFSET_SQUARE]:
 		return PackedVector2Array([Vector2(-t, -t), Vector2(t, -t), Vector2(t, t), Vector2(-t, t)])
 	if ts.tile_shape == TileSet.TILE_SHAPE_ISOMETRIC:
 		return PackedVector2Array([Vector2(0, -t), Vector2(t, 0), Vector2(0, t), Vector2(-t, 0)])
 	
-	const e = t - 1.0 / (2.0 * sqrt(3.0))
+	const e := t - 1.0 / (2.0 * sqrt(3.0))
 	if ts.tile_offset_axis == TileSet.TILE_OFFSET_AXIS_HORIZONTAL:
 		return PackedVector2Array([
 			Vector2(0, -t),
@@ -515,7 +518,7 @@ static func neighboring_coords(tm: TileMap, coord: Vector2i, peerings: Array) ->
 
 ## Returns an [Array] of coordinates which neighbor the vertex describe by [code]corner[/code]
 ## (which is of type [enum TileSet.CellNeighbor]) from [code]coord[/code] in [TileSet].
-static func associated_vertex_cells(tm: TileMap, coord: Vector2i, corner: int) -> Array:
+static func associated_vertex_cells(tm: TileMap, coord: Vector2i, corner: int) -> Array[Vector2i]:
 	# get array of associated peering bits
 	if tm.tile_set.tile_shape in [TileSet.TILE_SHAPE_SQUARE, TileSet.TILE_SHAPE_ISOMETRIC]:
 		match corner:
@@ -573,7 +576,7 @@ static func associated_vertex_cells(tm: TileMap, coord: Vector2i, corner: int) -
 
 ## Returns an [Array] of [enum TileSet.CellNeighbor] suitable for flood filling
 ## an area in [TileSet].
-static func cells_adjacent_for_fill(ts: TileSet) -> Array:
+static func cells_adjacent_for_fill(ts: TileSet) -> Array[int]:
 	if ts.tile_shape == TileSet.TILE_SHAPE_SQUARE:
 		return [0, 4, 8, 12]
 	if ts.tile_shape == TileSet.TILE_SHAPE_ISOMETRIC:
@@ -593,7 +596,7 @@ static func peering_bit_after_symmetry(bit: int, altflags: int) -> int:
 	return bit
 
 
-static func peering_bits_after_symmetry(dict: Dictionary, altflags: int):
+static func peering_bits_after_symmetry(dict: Dictionary, altflags: int) -> Dictionary:
 	# rearrange dictionary keys based on altflags
 	var result := {}
 	for k in dict:
