@@ -842,7 +842,7 @@ func tile_peering_for_type(td: TileData, type: int) -> Array:
 ## [br][br]
 ## Use terrain type -1 to erase cells.
 func set_cell(tm: TileMap, layer: int, coord: Vector2i, type: int) -> bool:
-	if !tm or !tm.tile_set or layer < 0 or layer >= tm.get_layers_count() or type < TileCategory.EMPTY:
+	if !tm or !tm.tile_set or layer < -tm.get_layers_count() or layer >= tm.get_layers_count() or type < TileCategory.EMPTY:
 		return false
 	
 	if type == TileCategory.EMPTY:
@@ -874,7 +874,7 @@ func set_cell(tm: TileMap, layer: int, coord: Vector2i, type: int) -> bool:
 ## [br][br]
 ## Use terrain type -1 to erase cells.
 func set_cells(tm: TileMap, layer: int, coords: Array, type: int) -> bool:
-	if !tm or !tm.tile_set or layer < 0 or layer >= tm.get_layers_count() or type < TileCategory.EMPTY:
+	if !tm or !tm.tile_set or layer < -tm.get_layers_count() or layer >= tm.get_layers_count() or type < TileCategory.EMPTY:
 		return false
 	
 	if type == TileCategory.EMPTY:
@@ -901,7 +901,7 @@ func set_cells(tm: TileMap, layer: int, coords: Array, type: int) -> bool:
 ## Returns [code]true[/code] if any tiles were changed. Use [method replace_cells]
 ## to replace multiple tiles at once.
 func replace_cell(tm: TileMap, layer: int, coord: Vector2i, type: int) -> bool:
-	if !tm or !tm.tile_set or layer < 0 or layer >= tm.get_layers_count() or type < 0:
+	if !tm or !tm.tile_set or layer < -tm.get_layers_count() or layer >= tm.get_layers_count() or type < 0:
 		return false
 	
 	var cache := _get_cache(tm.tile_set)
@@ -937,7 +937,7 @@ func replace_cell(tm: TileMap, layer: int, coord: Vector2i, type: int) -> bool:
 ## for each tile.
 ## Returns [code]true[/code] if any tiles were changed.
 func replace_cells(tm: TileMap, layer: int, coords: Array, type: int) -> bool:
-	if !tm or !tm.tile_set or layer < 0 or layer >= tm.get_layers_count() or type < 0:
+	if !tm or !tm.tile_set or layer < -tm.get_layers_count() or layer >= tm.get_layers_count() or type < 0:
 		return false
 	
 	var cache := _get_cache(tm.tile_set)
@@ -979,7 +979,7 @@ func replace_cells(tm: TileMap, layer: int, coords: Array, type: int) -> bool:
 ## and [code]coord[/code]. Returns -1 if tile is not valid or does not contain a
 ## tile associated with a terrain.
 func get_cell(tm: TileMap, layer: int, coord: Vector2i) -> int:
-	if !tm or !tm.tile_set or layer < 0 or layer >= tm.get_layers_count():
+	if !tm or !tm.tile_set or layer < -tm.get_layers_count() or layer >= tm.get_layers_count():
 		return TileCategory.ERROR
 	
 	if tm.get_cell_source_id(layer, coord) == -1:
@@ -999,7 +999,7 @@ func get_cell(tm: TileMap, layer: int, coord: Vector2i) -> int:
 ## [br][br]
 ## See also [method update_terrain_area] and [method update_terrain_cell].
 func update_terrain_cells(tm: TileMap, layer: int, cells: Array, and_surrounding_cells := true) -> void:
-	if !tm or !tm.tile_set or layer < 0 or layer >= tm.get_layers_count():
+	if !tm or !tm.tile_set or layer < -tm.get_layers_count() or layer >= tm.get_layers_count():
 		return
 	
 	if and_surrounding_cells:
@@ -1031,7 +1031,7 @@ func update_terrain_cell(tm: TileMap, layer: int, cell: Vector2i, and_surroundin
 ## [br][br]
 ## See also [method update_terrain_cells].
 func update_terrain_area(tm: TileMap, layer: int, area: Rect2i, and_surrounding_cells := true) -> void:
-	if !tm or !tm.tile_set or layer < 0 or layer >= tm.get_layers_count():
+	if !tm or !tm.tile_set or layer < -tm.get_layers_count() or layer >= tm.get_layers_count():
 		return
 	
 	# Normalize area and extend so tiles cover inclusive space
