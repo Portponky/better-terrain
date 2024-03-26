@@ -13,39 +13,41 @@ const MAX_ZOOM_SETTING := "editor/better_terrain/max_zoom_amount"
 
 
 # Buttons
-@onready var draw_button := $VBoxContainer/Toolbar/Draw
-@onready var line_button := $VBoxContainer/Toolbar/Line
-@onready var rectangle_button := $VBoxContainer/Toolbar/Rectangle
-@onready var fill_button := $VBoxContainer/Toolbar/Fill
-@onready var replace_button := $VBoxContainer/Toolbar/Replace
+@onready var draw_button := $VBox/Toolbar/Draw
+@onready var line_button := $VBox/Toolbar/Line
+@onready var rectangle_button := $VBox/Toolbar/Rectangle
+@onready var fill_button := $VBox/Toolbar/Fill
+@onready var replace_button := $VBox/Toolbar/Replace
 
-@onready var paint_type := $VBoxContainer/Toolbar/PaintType
-@onready var paint_terrain := $VBoxContainer/Toolbar/PaintTerrain
-@onready var select_tiles := $VBoxContainer/Toolbar/SelectTiles
+@onready var paint_type := $VBox/Toolbar/PaintType
+@onready var paint_terrain := $VBox/Toolbar/PaintTerrain
+@onready var select_tiles := $VBox/Toolbar/SelectTiles
 
-@onready var paint_symmetry := $VBoxContainer/Toolbar/PaintSymmetry
-@onready var symmetry_options = $VBoxContainer/Toolbar/SymmetryOptions
+@onready var paint_symmetry := $VBox/Toolbar/PaintSymmetry
+@onready var symmetry_options = $VBox/Toolbar/SymmetryOptions
 
-@onready var shuffle_random := $VBoxContainer/Toolbar/ShuffleRandom
-@onready var zoom_slider_container := $VBoxContainer/Toolbar/ZoomContainer
+@onready var shuffle_random := $VBox/Toolbar/ShuffleRandom
+@onready var zoom_slider_container := $VBox/Toolbar/ZoomContainer
 
-@onready var source_selector := $VBoxContainer/Toolbar/Sources
-@onready var source_selector_popup := $VBoxContainer/Toolbar/Sources/Sources
+@onready var source_selector := $VBox/Toolbar/Sources
+@onready var source_selector_popup := $VBox/Toolbar/Sources/Sources
 
-@onready var clean_button := $VBoxContainer/Toolbar/Clean
-@onready var layer_options := $VBoxContainer/Toolbar/LayerOptions
+@onready var clean_button := $VBox/Toolbar/Clean
+@onready var layer_options := $VBox/Toolbar/LayerOptions
 
-@onready var add_terrain_button := $VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar/AddTerrain
-@onready var edit_terrain_button := $VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar/EditTerrain
-@onready var pick_icon_button := $VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar/PickIcon
-@onready var move_up_button := $VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar/MoveUp
-@onready var move_down_button := $VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar/MoveDown
-@onready var remove_terrain_button := $VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar/RemoveTerrain
+@onready var edit_tool_buttons := $VBox/HSplit/Terrains/LowerToolbar/EditTools
+@onready var add_terrain_button := $VBox/HSplit/Terrains/LowerToolbar/EditTools/AddTerrain
+@onready var edit_terrain_button := $VBox/HSplit/Terrains/LowerToolbar/EditTools/EditTerrain
+@onready var pick_icon_button := $VBox/HSplit/Terrains/LowerToolbar/EditTools/PickIcon
+@onready var move_up_button := $VBox/HSplit/Terrains/LowerToolbar/EditTools/MoveUp
+@onready var move_down_button := $VBox/HSplit/Terrains/LowerToolbar/EditTools/MoveDown
+@onready var remove_terrain_button := $VBox/HSplit/Terrains/LowerToolbar/EditTools/RemoveTerrain
 
-@onready var scroll_container := $VBoxContainer/HSplitContainer/VBoxContainer/Panel/ScrollContainer
-@onready var terrain_list := $VBoxContainer/HSplitContainer/VBoxContainer/Panel/ScrollContainer/TerrainList
-@onready var tile_view := $VBoxContainer/HSplitContainer/Panel/ScrollArea/TileView
-@onready var grid_mode_button := $VBoxContainer/HSplitContainer/VBoxContainer/LowerToolbar/GridMode
+@onready var scroll_container := $VBox/HSplit/Terrains/Panel/ScrollContainer
+@onready var terrain_list := $VBox/HSplit/Terrains/Panel/ScrollContainer/TerrainList
+@onready var tile_view := $VBox/HSplit/Panel/ScrollArea/TileView
+@onready var grid_mode_button := $VBox/HSplit/Terrains/LowerToolbar/GridMode
+@onready var quick_mode_button := $VBox/HSplit/Terrains/LowerToolbar/QuickMode
 
 var selected_entry := -2
 
@@ -98,6 +100,7 @@ func _ready() -> void:
 	move_down_button.icon = get_theme_icon("ArrowDown", "EditorIcons")
 	remove_terrain_button.icon = get_theme_icon("Remove", "EditorIcons")
 	grid_mode_button.icon = get_theme_icon("Grid", "EditorIcons")
+	quick_mode_button.icon = get_theme_icon("GuiVisibilityVisible", "EditorIcons")
 	
 	select_tiles.button_group.pressed.connect(_on_bit_button_pressed)
 	
@@ -269,6 +272,7 @@ func tiles_changed() -> void:
 	
 	tileset_dirty = false
 	_on_grid_mode_pressed()
+	_on_quick_mode_pressed()
 
 
 func queue_tiles_changed() -> void:
@@ -313,10 +317,16 @@ func _on_clean_pressed() -> void:
 		undo_manager.commit_action()
 
 
-func _on_grid_mode_pressed():
+func _on_grid_mode_pressed() -> void:
 	for c in terrain_list.get_children():
 		c.grid_mode = grid_mode_button.button_pressed
 		c.update_style()
+
+
+func _on_quick_mode_pressed() -> void:
+	edit_tool_buttons.visible = !quick_mode_button.button_pressed
+	for c in terrain_list.get_children():
+		c.visible = !quick_mode_button.button_pressed or c.terrain.type in [BetterTerrain.TerrainType.MATCH_TILES, BetterTerrain.TerrainType.MATCH_VERTICES]
 
 
 func update_tile_view_paint() -> void:
@@ -861,4 +871,3 @@ func _on_terrain_enable_id_pressed(id):
 		if source_selector_popup.is_item_checkable(i) and !source_selector_popup.is_item_checked(i):
 			disabled_sources.append(source_selector_popup.get_item_id(i))
 	tile_view.disabled_sources = disabled_sources
-
