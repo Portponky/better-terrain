@@ -877,7 +877,7 @@ func _gui_input(event) -> void:
 
 
 func _on_zoom_value_changed(value) -> void:
-	zoom_level = max(1, value)
+	zoom_level = value
 	custom_minimum_size.x = zoom_level * tiles_size.x
 	if alternate_size.x > 0:
 		custom_minimum_size.x += ALTERNATE_TILE_MARGIN + zoom_level * alternate_size.x

@@ -8,6 +8,9 @@ signal update_overlay
 const MAX_CANVAS_RENDER_TILES = 1500
 const TERRAIN_PROPERTIES_SCENE := preload("res://addons/better-terrain/editor/TerrainProperties.tscn")
 const TERRAIN_ENTRY_SCENE := preload("res://addons/better-terrain/editor/TerrainEntry.tscn")
+const MIN_ZOOM_SETTING := "editor/better_terrain/min_zoom_amount"
+const MAX_ZOOM_SETTING := "editor/better_terrain/max_zoom_amount"
+
 
 # Buttons
 @onready var draw_button := $VBoxContainer/Toolbar/Draw
@@ -24,7 +27,7 @@ const TERRAIN_ENTRY_SCENE := preload("res://addons/better-terrain/editor/Terrain
 @onready var symmetry_options = $VBoxContainer/Toolbar/SymmetryOptions
 
 @onready var shuffle_random := $VBoxContainer/Toolbar/ShuffleRandom
-@onready var zoom_slider := $VBoxContainer/Toolbar/Zoom
+@onready var zoom_slider_container := $VBoxContainer/Toolbar/ZoomContainer
 
 @onready var source_selector := $VBoxContainer/Toolbar/Sources
 @onready var source_selector_popup := $VBoxContainer/Toolbar/Sources/Sources
@@ -58,6 +61,7 @@ var initial_click : Vector2i
 var prev_position : Vector2i
 var current_position : Vector2i
 var tileset_dirty := false
+var zoom_slider : HSlider
 
 enum PaintMode {
 	NO_PAINT,
@@ -108,10 +112,50 @@ func _ready() -> void:
 	
 	if Engine.get_version_info().hex < 0x040200:
 		paint_symmetry.visible = false
+	
+	# Zoom slider is manipulated by settings, make it at runtime
+	zoom_slider = HSlider.new()
+	zoom_slider.custom_minimum_size = Vector2(100, 0)
+	zoom_slider.value_changed.connect(tile_view._on_zoom_value_changed)
+	zoom_slider_container.add_child(zoom_slider)
+	
+	# Init settings if needed
+	if !ProjectSettings.has_setting(MIN_ZOOM_SETTING):
+		ProjectSettings.set(MIN_ZOOM_SETTING, 1.0)
+	ProjectSettings.add_property_info({
+		"name": MIN_ZOOM_SETTING,
+		"type": TYPE_FLOAT,
+		"hint": PROPERTY_HINT_RANGE,
+		"hint_string": "0.1,1.0,0.1"
+	})
+	ProjectSettings.set_initial_value(MIN_ZOOM_SETTING, 1.0)
+	ProjectSettings.set_as_basic(MIN_ZOOM_SETTING, true)
+	
+	if !ProjectSettings.has_setting(MAX_ZOOM_SETTING):
+		ProjectSettings.set(MAX_ZOOM_SETTING, 8.0)
+	ProjectSettings.add_property_info({
+		"name": MAX_ZOOM_SETTING,
+		"type": TYPE_FLOAT,
+		"hint": PROPERTY_HINT_RANGE,
+		"hint_string": "2.0,32.0,1.0"
+	})
+	ProjectSettings.set_initial_value(MAX_ZOOM_SETTING, 8.0)
+	ProjectSettings.set_as_basic(MAX_ZOOM_SETTING, true)
+	ProjectSettings.set_order(MAX_ZOOM_SETTING, ProjectSettings.get_order(MIN_ZOOM_SETTING) + 1)
+	
+	ProjectSettings.settings_changed.connect(_on_adjust_settings)
+	_on_adjust_settings()
+	zoom_slider.value = 1.0
 
 
 func _process(delta):
 	scroll_container.scroll_horizontal = 0
+
+
+func _on_adjust_settings():
+	zoom_slider.min_value = ProjectSettings.get_setting(MIN_ZOOM_SETTING, 1.0)
+	zoom_slider.max_value = ProjectSettings.get_setting(MAX_ZOOM_SETTING, 8.0)
+	zoom_slider.step = (zoom_slider.max_value - zoom_slider.min_value) / 100.0
 
 
 func _get_fill_cells(target: Vector2i) -> Array:
