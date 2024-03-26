@@ -6,7 +6,16 @@ var dock : Control
 var button : Button
 
 func _enter_tree() -> void:
-	add_autoload_singleton(AUTOLOAD_NAME, "res://addons/better-terrain/BetterTerrain.gd")
+	# Wait for autoloads to register
+	await get_tree().process_frame
+	
+	if !get_tree().root.get_node_or_null(^"BetterTerrain"):
+		# Autoload wasn't present on plugin init, which means plugin won't have loaded correctly
+		add_autoload_singleton(AUTOLOAD_NAME, "res://addons/better-terrain/BetterTerrain.gd")
+		ProjectSettings.save()
+		OS.set_restart_on_exit(true, ["-e"])
+		get_tree().quit()
+		return
 	
 	dock = load("res://addons/better-terrain/editor/Dock.tscn").instantiate()
 	dock.update_overlay.connect(self.update_overlays)
@@ -19,8 +28,6 @@ func _enter_tree() -> void:
 func _exit_tree() -> void:
 	remove_control_from_bottom_panel(dock)
 	dock.queue_free()
-	
-	remove_autoload_singleton(AUTOLOAD_NAME)
 
 
 func _handles(object) -> bool:
