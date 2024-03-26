@@ -380,8 +380,11 @@ func _draw_tile_data(texture: Texture2D, rect: Rect2, src_rect: Rect2, td: TileD
 		return
 	
 	var transform := Transform2D(0.0, rect.size, 0.0, rect.position)
-	var center_polygon = BetterTerrain.data.peering_polygon(tileset, terrain.type, -1)
-	draw_colored_polygon(transform * center_polygon, Color(terrain.color, 0.6))
+	var center_polygon = transform * BetterTerrain.data.peering_polygon(tileset, terrain.type, -1)
+	draw_colored_polygon(center_polygon, Color(terrain.color, 0.6))
+	if terrain.type == BetterTerrain.TerrainType.DECORATION:
+		center_polygon.append(center_polygon[0])
+		draw_polyline(center_polygon, Color.BLACK)
 	
 	if paint < BetterTerrain.TileCategory.EMPTY or paint >= BetterTerrain.terrain_count(tileset):
 		return
@@ -392,8 +395,11 @@ func _draw_tile_data(texture: Texture2D, rect: Rect2, src_rect: Rect2, td: TileD
 	var paint_terrain := BetterTerrain.get_terrain(tileset, paint)
 	for p in BetterTerrain.data.get_terrain_peering_cells(tileset, terrain.type):
 		if paint in BetterTerrain.tile_peering_types(td, p):
-			var side_polygon = BetterTerrain.data.peering_polygon(tileset, terrain.type, p)
-			draw_colored_polygon(transform * side_polygon, Color(paint_terrain.color, 0.6))
+			var side_polygon = transform * BetterTerrain.data.peering_polygon(tileset, terrain.type, p)
+			draw_colored_polygon(side_polygon, Color(paint_terrain.color, 0.6))
+			if paint_terrain.type == BetterTerrain.TerrainType.DECORATION:
+				side_polygon.append(side_polygon[0])
+				draw_polyline(side_polygon, Color.BLACK)
 
 
 func _draw_tile_symmetry(texture: Texture2D, rect: Rect2, src_rect: Rect2, td: TileData, draw_icon: bool = true) -> void:
