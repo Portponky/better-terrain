@@ -536,7 +536,7 @@ func perform_edit_terrain(index: int, name: String, color: Color, type: int, cat
 
 
 func _on_shuffle_random_pressed():
-	BetterTerrain.use_seed = !shuffle_random.button_pressed 
+	BetterTerrain.set_use_seed(!shuffle_random.button_pressed)
 
 
 func _on_bit_button_pressed(button: BaseButton) -> void:
