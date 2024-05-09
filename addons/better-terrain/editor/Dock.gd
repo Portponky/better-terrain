@@ -33,7 +33,6 @@ const MAX_ZOOM_SETTING := "editor/better_terrain/max_zoom_amount"
 @onready var source_selector_popup := $VBox/Toolbar/Sources/Sources
 
 @onready var clean_button := $VBox/Toolbar/Clean
-@onready var layer_options := $VBox/Toolbar/LayerOptions
 
 @onready var edit_tool_buttons := $VBox/HSplit/Terrains/LowerToolbar/EditTools
 @onready var add_terrain_button := $VBox/HSplit/Terrains/LowerToolbar/EditTools/AddTerrain
@@ -51,13 +50,12 @@ const MAX_ZOOM_SETTING := "editor/better_terrain/max_zoom_amount"
 
 var selected_entry := -2
 
-var tilemap : TileMap
+var tilemap : TileMapLayer
 var tileset : TileSet
 
 var undo_manager : EditorUndoRedoManager
 var terrain_undo
 
-var layer := 0
 var draw_overlay := false
 var initial_click : Vector2i
 var prev_position : Vector2i
@@ -113,9 +111,6 @@ func _ready() -> void:
 	tile_view.change_zoom_level.connect(_on_change_zoom_level)
 	tile_view.terrain_updated.connect(_on_terrain_updated)
 	
-	if Engine.get_version_info().hex < 0x040200:
-		paint_symmetry.visible = false
-	
 	# Zoom slider is manipulated by settings, make it at runtime
 	zoom_slider = HSlider.new()
 	zoom_slider.custom_minimum_size = Vector2(100, 0)
@@ -162,7 +157,7 @@ func _on_adjust_settings():
 
 
 func _get_fill_cells(target: Vector2i) -> Array:
-	var pick := BetterTerrain.get_cell(tilemap, layer, target)
+	var pick := BetterTerrain.get_cell(tilemap, target)
 	var bounds := tilemap.get_used_rect()
 	var neighbors = BetterTerrain.data.cells_adjacent_for_fill(tileset)
 	
@@ -176,7 +171,7 @@ func _get_fill_cells(target: Vector2i) -> Array:
 		if checked.has(p):
 			continue
 		checked[p] = true
-		if !bounds.has_point(p) or BetterTerrain.get_cell(tilemap, layer, p) != pick:
+		if !bounds.has_point(p) or BetterTerrain.get_cell(tilemap, p) != pick:
 			continue
 		
 		goal.append(p)
@@ -245,22 +240,6 @@ func tiles_changed() -> void:
 		source_selector_popup.add_check_item(name, source_id)
 		source_selector_popup.set_item_checked(source_selector_popup.get_item_index(source_id), true)
 	source_selector.visible = source_selector_popup.item_count > 3 # All, None and more than one source
-	
-	layer_options.clear()
-	if tilemap and tilemap.get_layers_count() == 0:
-		layer_options.text = tr("No layers")
-		layer_options.disabled = true
-		layer = 0
-	elif tilemap:
-		for n in tilemap.get_layers_count():
-			var name := tilemap.get_layer_name(n)
-			if name.is_empty():
-				name = tr("Layer {0}").format([n])
-			layer_options.add_item(name, n)
-			layer_options.set_item_disabled(n, !tilemap.is_layer_enabled(n))
-		layer_options.disabled = false
-		layer = min(layer, tilemap.get_layers_count() - 1)
-		layer_options.selected = layer
 	
 	update_tile_view_paint()
 	tile_view.refresh_tileset(tileset)
@@ -547,10 +526,6 @@ func _on_symmetry_selected(index):
 	tile_view.paint_symmetry = index
 
 
-func _on_layer_options_item_selected(index) -> void:
-	layer = index
-
-
 func _on_paste_occurred():
 	select_tiles.button_pressed = true
 
@@ -646,14 +621,14 @@ func canvas_input(event: InputEvent) -> bool:
 					var coord := Vector2i(x, y)
 					if paint_mode == PaintMode.PAINT:
 						if replace_mode:
-							undo_manager.add_do_method(BetterTerrain, &"replace_cell", tilemap, layer, coord, type)
+							undo_manager.add_do_method(BetterTerrain, &"replace_cell", tilemap, coord, type)
 						else:
-							undo_manager.add_do_method(BetterTerrain, &"set_cell", tilemap, layer, coord, type)
+							undo_manager.add_do_method(BetterTerrain, &"set_cell", tilemap, coord, type)
 					else:
-						undo_manager.add_do_method(tilemap, &"erase_cell", layer, coord)
+						undo_manager.add_do_method(tilemap, &"erase_cell", coord)
 			
-			undo_manager.add_do_method(BetterTerrain, &"update_terrain_area", tilemap, layer, area)
-			terrain_undo.create_tile_restore_point_area(undo_manager, tilemap, layer, area)
+			undo_manager.add_do_method(BetterTerrain, &"update_terrain_area", tilemap, area)
+			terrain_undo.create_tile_restore_point_area(undo_manager, tilemap, area)
 			undo_manager.commit_action()
 			update_overlay.emit()
 		elif paint_action == PaintAction.LINE and paint_mode != PaintMode.NO_PAINT:
@@ -661,14 +636,14 @@ func canvas_input(event: InputEvent) -> bool:
 			var cells := _get_tileset_line(initial_click, current_position, tileset)
 			if paint_mode == PaintMode.PAINT:
 				if replace_mode:
-					undo_manager.add_do_method(BetterTerrain, &"replace_cells", tilemap, layer, cells, type)
+					undo_manager.add_do_method(BetterTerrain, &"replace_cells", tilemap, cells, type)
 				else:
-					undo_manager.add_do_method(BetterTerrain, &"set_cells", tilemap, layer, cells, type)
+					undo_manager.add_do_method(BetterTerrain, &"set_cells", tilemap, cells, type)
 			elif paint_mode == PaintMode.ERASE:
 				for c in cells:
-					undo_manager.add_do_method(tilemap, &"erase_cell", layer, c)
-			undo_manager.add_do_method(BetterTerrain, &"update_terrain_cells", tilemap, layer, cells)
-			terrain_undo.create_tile_restore_point(undo_manager, tilemap, layer, cells)
+					undo_manager.add_do_method(tilemap, &"erase_cell", c)
+			undo_manager.add_do_method(BetterTerrain, &"update_terrain_cells", tilemap, cells)
+			terrain_undo.create_tile_restore_point(undo_manager, tilemap, cells)
 			undo_manager.commit_action()
 			update_overlay.emit()
 		
@@ -680,7 +655,7 @@ func canvas_input(event: InputEvent) -> bool:
 		paint_mode = PaintMode.NO_PAINT
 		
 		if event.ctrl_pressed:
-			var pick = BetterTerrain.get_cell(tilemap, layer, current_position)
+			var pick = BetterTerrain.get_cell(tilemap, current_position)
 			if pick >= 0:
 				terrain_list.get_children()[pick]._on_focus_entered()
 				#_on_entry_select(pick)
@@ -714,14 +689,14 @@ func canvas_input(event: InputEvent) -> bool:
 			var cells := _get_tileset_line(prev_position, current_position, tileset)
 			if paint_mode == PaintMode.PAINT:
 				if replace_mode:
-					terrain_undo.add_do_method(undo_manager, BetterTerrain, &"replace_cells", [tilemap, layer, cells, type])
+					terrain_undo.add_do_method(undo_manager, BetterTerrain, &"replace_cells", [tilemap, cells, type])
 				else:
-					terrain_undo.add_do_method(undo_manager, BetterTerrain, &"set_cells", [tilemap, layer, cells, type])
+					terrain_undo.add_do_method(undo_manager, BetterTerrain, &"set_cells", [tilemap, cells, type])
 			elif paint_mode == PaintMode.ERASE:
 				for c in cells:
-					terrain_undo.add_do_method(undo_manager, tilemap, &"erase_cell", [layer, c])
-			terrain_undo.add_do_method(undo_manager, BetterTerrain, &"update_terrain_cells", [tilemap, layer, cells])
-			terrain_undo.create_tile_restore_point(undo_manager, tilemap, layer, cells)
+					terrain_undo.add_do_method(undo_manager, tilemap, &"erase_cell", [c])
+			terrain_undo.add_do_method(undo_manager, BetterTerrain, &"update_terrain_cells", [tilemap, cells])
+			terrain_undo.create_tile_restore_point(undo_manager, tilemap, cells)
 			undo_manager.commit_action()
 			terrain_undo.action_count += 1
 		elif fill_button.button_pressed:
@@ -729,14 +704,14 @@ func canvas_input(event: InputEvent) -> bool:
 			undo_manager.create_action(tr("Fill terrain"), UndoRedo.MERGE_DISABLE, tilemap)
 			if paint_mode == PaintMode.PAINT:
 				if replace_mode:
-					undo_manager.add_do_method(BetterTerrain, &"replace_cells", tilemap, layer, cells, type)
+					undo_manager.add_do_method(BetterTerrain, &"replace_cells", tilemap, cells, type)
 				else:
-					undo_manager.add_do_method(BetterTerrain, &"set_cells", tilemap, layer, cells, type)
+					undo_manager.add_do_method(BetterTerrain, &"set_cells", tilemap, cells, type)
 			elif paint_mode == PaintMode.ERASE:
 				for c in cells:
-					undo_manager.add_do_method(tilemap, &"erase_cell", layer, c)
-			undo_manager.add_do_method(BetterTerrain, &"update_terrain_cells", tilemap, layer, cells)
-			terrain_undo.create_tile_restore_point(undo_manager, tilemap, layer, cells)
+					undo_manager.add_do_method(tilemap, &"erase_cell", c)
+			undo_manager.add_do_method(BetterTerrain, &"update_terrain_cells", tilemap, cells)
+			terrain_undo.create_tile_restore_point(undo_manager, tilemap, cells)
 			undo_manager.commit_action()
 		
 		update_overlay.emit()

@@ -19,40 +19,34 @@ const _terrain_peering_hflip : Array[int] = [8, 9, 6, 7, 4, 5, 2, 3, 0, 1, 14, 1
 const _terrain_peering_vflip : Array[int] = [0, 1, 14, 15, 12, 13, 10, 11, 8, 9, 6, 7, 4, 5, 2, 3]
 const _terrain_peering_transpose : Array[int] = [4, 5, 2, 3, 0, 1, 14, 15, 12, 13, 10, 11, 8, 9, 6, 7]
 
-# Replacement values for TileSetAtlasSource.TRANSFORM_*
-# Copied here for backwards compatibilityW
-const _transform_flip_h := 0x1000
-const _transform_flip_v := 0x2000
-const _transform_transpose := 0x4000
-
 const symmetry_mapping := {
 	BetterTerrain.SymmetryType.NONE: [0],
-	BetterTerrain.SymmetryType.MIRROR: [0, _transform_flip_h],
-	BetterTerrain.SymmetryType.FLIP: [0, _transform_flip_v],
+	BetterTerrain.SymmetryType.MIRROR: [0, TileSetAtlasSource.TRANSFORM_FLIP_H],
+	BetterTerrain.SymmetryType.FLIP: [0, TileSetAtlasSource.TRANSFORM_FLIP_V],
 	BetterTerrain.SymmetryType.REFLECT: [
 		0,
-		_transform_flip_h,
-		_transform_flip_v,
-		_transform_flip_h | _transform_flip_v
+		TileSetAtlasSource.TRANSFORM_FLIP_H,
+		TileSetAtlasSource.TRANSFORM_FLIP_V,
+		TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_FLIP_V
 	],
-	BetterTerrain.SymmetryType.ROTATE_CLOCKWISE: [0, _transform_flip_h | _transform_transpose],
-	BetterTerrain.SymmetryType.ROTATE_COUNTER_CLOCKWISE: [0, _transform_flip_v | _transform_transpose],
-	BetterTerrain.SymmetryType.ROTATE_180: [0, _transform_flip_h | _transform_flip_v],
+	BetterTerrain.SymmetryType.ROTATE_CLOCKWISE: [0, TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_TRANSPOSE],
+	BetterTerrain.SymmetryType.ROTATE_COUNTER_CLOCKWISE: [0, TileSetAtlasSource.TRANSFORM_FLIP_V | TileSetAtlasSource.TRANSFORM_TRANSPOSE],
+	BetterTerrain.SymmetryType.ROTATE_180: [0, TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_FLIP_V],
 	BetterTerrain.SymmetryType.ROTATE_ALL: [
 		0,
-		_transform_flip_h | _transform_transpose,
-		_transform_flip_h | _transform_flip_v,
-		_transform_flip_v | _transform_transpose
+		TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_TRANSPOSE,
+		TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_FLIP_V,
+		TileSetAtlasSource.TRANSFORM_FLIP_V | TileSetAtlasSource.TRANSFORM_TRANSPOSE
 	],
 	BetterTerrain.SymmetryType.ALL: [
 		0,
-		_transform_flip_h,
-		_transform_flip_v,
-		_transform_flip_h | _transform_flip_v,
-		_transform_transpose,
-		_transform_flip_h | _transform_transpose,
-		_transform_flip_v | _transform_transpose,
-		_transform_flip_h | _transform_flip_v | _transform_transpose
+		TileSetAtlasSource.TRANSFORM_FLIP_H,
+		TileSetAtlasSource.TRANSFORM_FLIP_V,
+		TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_FLIP_V,
+		TileSetAtlasSource.TRANSFORM_TRANSPOSE,
+		TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_TRANSPOSE,
+		TileSetAtlasSource.TRANSFORM_FLIP_V | TileSetAtlasSource.TRANSFORM_TRANSPOSE,
+		TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_FLIP_V | TileSetAtlasSource.TRANSFORM_TRANSPOSE
 	]
 }
 
@@ -512,13 +506,13 @@ static func cell_polygon(ts: TileSet) -> PackedVector2Array:
 
 ## Returns an [Array] of coordinated that neighbor [code]coord[/code] based on [code]peering[/code]
 ## [Array] of [enum TileSet.CellNeighbor] for a [TileSet].
-static func neighboring_coords(tm: TileMap, coord: Vector2i, peerings: Array) -> Array:
+static func neighboring_coords(tm: TileMapLayer, coord: Vector2i, peerings: Array) -> Array:
 	return peerings.map(func(p): return tm.get_neighbor_cell(coord, p))
 
 
 ## Returns an [Array] of coordinates which neighbor the vertex describe by [code]corner[/code]
 ## (which is of type [enum TileSet.CellNeighbor]) from [code]coord[/code] in [TileSet].
-static func associated_vertex_cells(tm: TileMap, coord: Vector2i, corner: int) -> Array:
+static func associated_vertex_cells(tm: TileMapLayer, coord: Vector2i, corner: int) -> Array:
 	# get array of associated peering bits
 	if tm.tile_set.tile_shape in [TileSet.TILE_SHAPE_SQUARE, TileSet.TILE_SHAPE_ISOMETRIC]:
 		match corner:
@@ -587,11 +581,11 @@ static func cells_adjacent_for_fill(ts: TileSet) -> Array[int]:
 
 
 static func peering_bit_after_symmetry(bit: int, altflags: int) -> int:
-	if altflags & _transform_transpose:
+	if altflags & TileSetAtlasSource.TRANSFORM_TRANSPOSE:
 		bit = _terrain_peering_transpose[bit]
-	if altflags & _transform_flip_h:
+	if altflags & TileSetAtlasSource.TRANSFORM_FLIP_H:
 		bit = _terrain_peering_hflip[bit]
-	if altflags & _transform_flip_v:
+	if altflags & TileSetAtlasSource.TRANSFORM_FLIP_V:
 		bit = _terrain_peering_vflip[bit]
 	return bit
 

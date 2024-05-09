@@ -6,7 +6,7 @@ var action_count := 0
 var _current_action_index := 0
 var _current_action_count := 0
 
-func create_tile_restore_point(undo_manager: EditorUndoRedoManager, tm: TileMap, layer: int, cells: Array, and_surrounding_cells: bool = true) -> void:
+func create_tile_restore_point(undo_manager: EditorUndoRedoManager, tm: TileMapLayer, cells: Array, and_surrounding_cells: bool = true) -> void:
 	if and_surrounding_cells:
 		cells = BetterTerrain._widen(tm, cells)
 	
@@ -14,15 +14,15 @@ func create_tile_restore_point(undo_manager: EditorUndoRedoManager, tm: TileMap,
 	for c in cells:
 		restore.append([
 			c,
-			tm.get_cell_source_id(layer, c),
-			tm.get_cell_atlas_coords(layer, c),
-			tm.get_cell_alternative_tile(layer, c)
+			tm.get_cell_source_id(c),
+			tm.get_cell_atlas_coords(c),
+			tm.get_cell_alternative_tile(c)
 		])
 	
-	undo_manager.add_undo_method(self, &"restore_tiles", tm, layer, restore)
+	undo_manager.add_undo_method(self, &"restore_tiles", tm, restore)
 
 
-func create_tile_restore_point_area(undo_manager: EditorUndoRedoManager, tm: TileMap, layer: int, area: Rect2i, and_surrounding_cells: bool = true) -> void:
+func create_tile_restore_point_area(undo_manager: EditorUndoRedoManager, tm: TileMapLayer, area: Rect2i, and_surrounding_cells: bool = true) -> void:
 	area.end += Vector2i.ONE
 	
 	var restore := []
@@ -31,12 +31,12 @@ func create_tile_restore_point_area(undo_manager: EditorUndoRedoManager, tm: Til
 			var c := Vector2i(x, y)
 			restore.append([
 				c,
-				tm.get_cell_source_id(layer, c),
-				tm.get_cell_atlas_coords(layer, c),
-				tm.get_cell_alternative_tile(layer, c)
+				tm.get_cell_source_id(c),
+				tm.get_cell_atlas_coords(c),
+				tm.get_cell_alternative_tile(c)
 			])
 	
-	undo_manager.add_undo_method(self, &"restore_tiles", tm, layer, restore)
+	undo_manager.add_undo_method(self, &"restore_tiles", tm, restore)
 	
 	if !and_surrounding_cells:
 		return
@@ -50,12 +50,12 @@ func create_tile_restore_point_area(undo_manager: EditorUndoRedoManager, tm: Til
 		edges.append(Vector2i(area.end.x, y))
 	
 	edges = BetterTerrain._widen_with_exclusion(tm, edges, area)
-	create_tile_restore_point(undo_manager, tm, layer, edges, false)
+	create_tile_restore_point(undo_manager, tm, edges, false)
 
 
-func restore_tiles(tm: TileMap, layer: int, restore: Array) -> void:
+func restore_tiles(tm: TileMapLayer, restore: Array) -> void:
 	for r in restore:
-		tm.set_cell(layer, r[0], r[1], r[2], r[3])
+		tm.set_cell(r[0], r[1], r[2], r[3])
 
 
 func create_peering_restore_point(undo_manager: EditorUndoRedoManager, ts: TileSet) -> void:
