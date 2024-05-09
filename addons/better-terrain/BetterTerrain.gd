@@ -1,20 +1,20 @@
 @tool
 extends Node
 
-## A [TileMap] terrain / auto-tiling system.
+## A [TileMapLayer] terrain / auto-tiling system.
 ##
 ## This is a drop-in replacement for Godot 4's tilemap terrain system, offering
 ## more versatile and straightforward autotiling. It can be used with any
-## existing [TileMap] or [TileSet], either through the editor plugin, or
+## existing [TileMapLayer] or [TileSet], either through the editor plugin, or
 ## directly via code.
 ## [br][br]
 ## The [b]BetterTerrain[/b] class contains only static functions, each of which
-## either takes a [TileMap], a [TileSet], and sometimes a [TileData]. Meta-data
-## is embedded inside the [TileSet] and the [TileData] types to store the
-## terrain information. See [method Object.get_meta] for information.
+## either takes a [TileMapLayer], a [TileSet], and sometimes a [TileData].
+## Meta-data is embedded inside the [TileSet] and the [TileData] types to store
+## the terrain information. See [method Object.get_meta] for information.
 ## [br][br]
 ## Once terrain is set up, it can be written to the tilemap using [method set_cells].
-## Similar to Godot 3.x, setting the cells does not run the terrain solved, so once
+## Similar to Godot 3.x, setting the cells does not run the terrain solver, so once
 ## the cells have been set, you need to call an update function such as [method update_terrain_cells].
 
 
@@ -289,7 +289,7 @@ func _weighted_selection_seeded(choices: Array, coord: Vector2i, apply_empty_pro
 	return _weighted_selection(choices, apply_empty_probability)
 
 
-func _update_tile_tiles(tm: TileMap, coord: Vector2i, types: Dictionary, cache: Array, apply_empty_probability: bool):
+func _update_tile_tiles(tm: TileMapLayer, coord: Vector2i, types: Dictionary, cache: Array, apply_empty_probability: bool):
 	var type = types[coord]
 	
 	var best_score := -1000 # Impossibly bad score
@@ -308,7 +308,7 @@ func _update_tile_tiles(tm: TileMap, coord: Vector2i, types: Dictionary, cache: 
 	return _weighted_selection_seeded(best, coord, apply_empty_probability)
 
 
-func _probe(tm: TileMap, coord: Vector2i, peering: int, type: int, types: Dictionary) -> int:
+func _probe(tm: TileMapLayer, coord: Vector2i, peering: int, type: int, types: Dictionary) -> int:
 	var targets = data.associated_vertex_cells(tm, coord, peering)
 	targets = targets.map(func(c): return types[c])
 	
@@ -321,7 +321,7 @@ func _probe(tm: TileMap, coord: Vector2i, peering: int, type: int, types: Dictio
 	return targets.reduce(func(a, t): return min(a, t))
 
 
-func _update_tile_vertices(tm: TileMap, coord: Vector2i, types: Dictionary, cache: Array):
+func _update_tile_vertices(tm: TileMapLayer, coord: Vector2i, types: Dictionary, cache: Array):
 	var type = types[coord]
 	
 	var best_score := -1000 # Impossibly bad score
@@ -340,7 +340,7 @@ func _update_tile_vertices(tm: TileMap, coord: Vector2i, types: Dictionary, cach
 	return _weighted_selection_seeded(best, coord, false)
 
 
-func _update_tile_immediate(tm: TileMap, layer: int, coord: Vector2i, ts_meta: Dictionary, types: Dictionary, cache: Array) -> void:
+func _update_tile_immediate(tm: TileMapLayer, coord: Vector2i, ts_meta: Dictionary, types: Dictionary, cache: Array) -> void:
 	var type = types[coord]
 	if type < TileCategory.EMPTY or type >= ts_meta.terrains.size():
 		return
@@ -355,10 +355,10 @@ func _update_tile_immediate(tm: TileMap, layer: int, coord: Vector2i, ts_meta: D
 		return
 	
 	if placement:
-		tm.set_cell(layer, coord, placement[0], placement[1], placement[2])
+		tm.set_cell(coord, placement[0], placement[1], placement[2])
 
 
-func _update_tile_deferred(tm: TileMap, coord: Vector2i, ts_meta: Dictionary, types: Dictionary, cache: Array):
+func _update_tile_deferred(tm: TileMapLayer, coord: Vector2i, ts_meta: Dictionary, types: Dictionary, cache: Array):
 	var type = types[coord]
 	if type >= TileCategory.EMPTY and type < ts_meta.terrains.size():
 		var terrain = _get_cache_terrain(ts_meta, type)
@@ -369,7 +369,7 @@ func _update_tile_deferred(tm: TileMap, coord: Vector2i, ts_meta: Dictionary, ty
 	return null
 
 
-func _widen(tm: TileMap, coords: Array) -> Array:
+func _widen(tm: TileMapLayer, coords: Array) -> Array:
 	var result := {}
 	var peering_neighbors = data.get_terrain_peering_cells(tm.tile_set, TerrainType.MATCH_TILES)
 	for c in coords:
@@ -380,7 +380,7 @@ func _widen(tm: TileMap, coords: Array) -> Array:
 	return result.keys()
 
 
-func _widen_with_exclusion(tm: TileMap, coords: Array, exclusion: Rect2i) -> Array:
+func _widen_with_exclusion(tm: TileMapLayer, coords: Array, exclusion: Rect2i) -> Array:
 	var result := {}
 	var peering_neighbors = data.get_terrain_peering_cells(tm.tile_set, TerrainType.MATCH_TILES)
 	for c in coords:
@@ -836,17 +836,17 @@ func tile_peering_for_type(td: TileData, type: int) -> Array:
 
 # Painting
 
-## Applies the terrain [code]type[/code] to the [TileMap] for the [code]layer[/code]
-## and [code]coord[/code]. Returns [code]true[/code] if it succeeds. Use [method set_cells]
+## Applies the terrain [code]type[/code] to the [TileMapLayer] for the [Vector2i]
+## [code]coord[/code]. Returns [code]true[/code] if it succeeds. Use [method set_cells]
 ## to change multiple tiles at once.
 ## [br][br]
 ## Use terrain type -1 to erase cells.
-func set_cell(tm: TileMap, layer: int, coord: Vector2i, type: int) -> bool:
-	if !tm or !tm.tile_set or layer < -tm.get_layers_count() or layer >= tm.get_layers_count() or type < TileCategory.EMPTY:
+func set_cell(tm: TileMapLayer, coord: Vector2i, type: int) -> bool:
+	if !tm or !tm.tile_set or type < TileCategory.EMPTY:
 		return false
 	
 	if type == TileCategory.EMPTY:
-		tm.erase_cell(layer, coord)
+		tm.erase_cell(coord)
 		return true
 	
 	var cache := _get_cache(tm.tile_set)
@@ -857,12 +857,12 @@ func set_cell(tm: TileMap, layer: int, coord: Vector2i, type: int) -> bool:
 		return false
 	
 	var tile = cache[type].front()
-	tm.set_cell(layer, coord, tile[0], tile[1], tile[2])
+	tm.set_cell(coord, tile[0], tile[1], tile[2])
 	return true
 
 
-## Applies the terrain [code]type[/code] to the [TileMap] for the [code]layer[/code]
-## and [Vector2i] [code]coords[/code]. Returns [code]true[/code] if it succeeds.
+## Applies the terrain [code]type[/code] to the [TileMapLayer] for the
+## [Vector2i] [code]coords[/code]. Returns [code]true[/code] if it succeeds.
 ## [br][br]
 ## Note that this does not cause the terrain solver to run, so this will just place
 ## an arbitrary terrain-associated tile in the given position. To run the solver,
@@ -873,13 +873,13 @@ func set_cell(tm: TileMap, layer: int, coord: Vector2i, type: int) -> bool:
 ## and the associated functions.
 ## [br][br]
 ## Use terrain type -1 to erase cells.
-func set_cells(tm: TileMap, layer: int, coords: Array, type: int) -> bool:
-	if !tm or !tm.tile_set or layer < -tm.get_layers_count() or layer >= tm.get_layers_count() or type < TileCategory.EMPTY:
+func set_cells(tm: TileMapLayer, coords: Array, type: int) -> bool:
+	if !tm or !tm.tile_set or type < TileCategory.EMPTY:
 		return false
 	
 	if type == TileCategory.EMPTY:
 		for c in coords:
-			tm.erase_cell(layer, c)
+			tm.erase_cell(c)
 		return true
 	
 	var cache := _get_cache(tm.tile_set)
@@ -891,17 +891,17 @@ func set_cells(tm: TileMap, layer: int, coords: Array, type: int) -> bool:
 	
 	var tile = cache[type].front()
 	for c in coords:
-		tm.set_cell(layer, c, tile[0], tile[1], tile[2])
+		tm.set_cell(c, tile[0], tile[1], tile[2])
 	return true
 
 
-## Replaces an existing tile on the [TileMap] for the [code]layer[/code]
-## and [code]coord[/code] with a new tile in the provided terrain [code]type[/code] 
+## Replaces an existing tile on the [TileMapLayer] for the [Vector2i]
+## [code]coord[/code] with a new tile in the provided terrain [code]type[/code] 
 ## *only if* there is a tile with a matching set of peering sides in this terrain.
 ## Returns [code]true[/code] if any tiles were changed. Use [method replace_cells]
 ## to replace multiple tiles at once.
-func replace_cell(tm: TileMap, layer: int, coord: Vector2i, type: int) -> bool:
-	if !tm or !tm.tile_set or layer < -tm.get_layers_count() or layer >= tm.get_layers_count() or type < 0:
+func replace_cell(tm: TileMapLayer, coord: Vector2i, type: int) -> bool:
+	if !tm or !tm.tile_set or type < 0:
 		return false
 	
 	var cache := _get_cache(tm.tile_set)
@@ -911,7 +911,7 @@ func replace_cell(tm: TileMap, layer: int, coord: Vector2i, type: int) -> bool:
 	if cache[type].is_empty():
 		return false
 	
-	var td = tm.get_cell_tile_data(layer, coord)
+	var td = tm.get_cell_tile_data(coord)
 	if !td:
 		return false
 	
@@ -925,19 +925,19 @@ func replace_cell(tm: TileMap, layer: int, coord: Vector2i, type: int) -> bool:
 			var check_peering := tile_peering_for_type(pt, check_type)
 			if placed_peering == check_peering:
 				var tile = cache[type].front()
-				tm.set_cell(layer, coord, tile[0], tile[1], tile[2])
+				tm.set_cell(coord, tile[0], tile[1], tile[2])
 				return true
 	
 	return false
 
 
-## Replaces existing tiles on the [TileMap] for the [code]layer[/code]
-## and [code]coords[/code] with new tiles in the provided terrain [code]type[/code] 
+## Replaces existing tiles on the [TileMapLayer] for the [Vector2i]
+## [code]coords[/code] with new tiles in the provided terrain [code]type[/code] 
 ## *only if* there is a tile with a matching set of peering sides in this terrain
 ## for each tile.
 ## Returns [code]true[/code] if any tiles were changed.
-func replace_cells(tm: TileMap, layer: int, coords: Array, type: int) -> bool:
-	if !tm or !tm.tile_set or layer < -tm.get_layers_count() or layer >= tm.get_layers_count() or type < 0:
+func replace_cells(tm: TileMapLayer, coords: Array, type: int) -> bool:
+	if !tm or !tm.tile_set or type < 0:
 		return false
 	
 	var cache := _get_cache(tm.tile_set)
@@ -955,7 +955,7 @@ func replace_cells(tm: TileMap, layer: int, coords: Array, type: int) -> bool:
 	var potential_tiles = get_tiles_in_terrain(tm.tile_set, type)
 	for c in coords:
 		var found = false
-		var td = tm.get_cell_tile_data(layer, c)
+		var td = tm.get_cell_tile_data(c)
 		if !td:
 			continue
 		for check_type in check_types:
@@ -964,7 +964,7 @@ func replace_cells(tm: TileMap, layer: int, coords: Array, type: int) -> bool:
 				var check_peering = tile_peering_for_type(pt, check_type)
 				if placed_peering == check_peering:
 					var tile = cache[type].front()
-					tm.set_cell(layer, c, tile[0], tile[1], tile[2])
+					tm.set_cell(c, tile[0], tile[1], tile[2])
 					changed = true
 					found = true
 					break
@@ -975,31 +975,31 @@ func replace_cells(tm: TileMap, layer: int, coords: Array, type: int) -> bool:
 	return changed
 
 
-## Returns the terrain type detected in the [TileMap] at specified [code]layer[/code]
-## and [code]coord[/code]. Returns -1 if tile is not valid or does not contain a
+## Returns the terrain type detected in the [TileMapLayer] at specified [Vector2i]
+## [code]coord[/code]. Returns -1 if tile is not valid or does not contain a
 ## tile associated with a terrain.
-func get_cell(tm: TileMap, layer: int, coord: Vector2i) -> int:
-	if !tm or !tm.tile_set or layer < -tm.get_layers_count() or layer >= tm.get_layers_count():
+func get_cell(tm: TileMapLayer, coord: Vector2i) -> int:
+	if !tm or !tm.tile_set:
 		return TileCategory.ERROR
 	
-	if tm.get_cell_source_id(layer, coord) == -1:
+	if tm.get_cell_source_id(coord) == -1:
 		return TileCategory.EMPTY
 	
-	var t := tm.get_cell_tile_data(layer, coord)
+	var t := tm.get_cell_tile_data(coord)
 	if !t:
 		return TileCategory.NON_TERRAIN
 	
 	return _get_tile_meta(t).type
 
 
-## Runs the tile solving algorithm on the [TileMap] for the given [code]layer[/code]
-## for the [Vector2i] coordinates in the [code]cells[/code] parameter. By default,
+## Runs the tile solving algorithm on the [TileMapLayer] for the given
+## [Vector2i] coordinates in the [code]cells[/code] parameter. By default,
 ## the surrounding cells are also solved, but this can be adjusted by passing [code]false[/code]
 ## to the [code]and_surrounding_cells[/code] parameter.
 ## [br][br]
 ## See also [method update_terrain_area] and [method update_terrain_cell].
-func update_terrain_cells(tm: TileMap, layer: int, cells: Array, and_surrounding_cells := true) -> void:
-	if !tm or !tm.tile_set or layer < -tm.get_layers_count() or layer >= tm.get_layers_count():
+func update_terrain_cells(tm: TileMapLayer, cells: Array, and_surrounding_cells := true) -> void:
+	if !tm or !tm.tile_set:
 		return
 	
 	if and_surrounding_cells:
@@ -1008,30 +1008,30 @@ func update_terrain_cells(tm: TileMap, layer: int, cells: Array, and_surrounding
 	
 	var types := {}
 	for c in needed_cells:
-		types[c] = get_cell(tm, layer, c)
+		types[c] = get_cell(tm, c)
 	
 	var ts_meta := _get_terrain_meta(tm.tile_set)
 	var cache := _get_cache(tm.tile_set)
 	for c in cells:
-		_update_tile_immediate(tm, layer, c, ts_meta, types, cache)
+		_update_tile_immediate(tm, c, ts_meta, types, cache)
 
 
-## Runs the tile solving algorithm on the [TileMap] for the given [code]layer[/code]
-## and [code]cell[/code]. By default, the surrounding cells are also solved, but
+## Runs the tile solving algorithm on the [TileMapLayer] for the given [Vector2i]
+## [code]cell[/code]. By default, the surrounding cells are also solved, but
 ## this can be adjusted by passing [code]false[/code] to the [code]and_surrounding_cells[/code]
 ## parameter. This calls through to [method update_terrain_cells].
-func update_terrain_cell(tm: TileMap, layer: int, cell: Vector2i, and_surrounding_cells := true) -> void:
-	update_terrain_cells(tm, layer, [cell], and_surrounding_cells)
+func update_terrain_cell(tm: TileMapLayer, cell: Vector2i, and_surrounding_cells := true) -> void:
+	update_terrain_cells(tm, [cell], and_surrounding_cells)
 
 
-## Runs the tile solving algorithm on the [TileMap] for the given [code]layer[/code]
-## and [code]area[/code]. By default, the surrounding cells are also solved, but
+## Runs the tile solving algorithm on the [TileMapLayer] for the given [Rect2i]
+## [code]area[/code]. By default, the surrounding cells are also solved, but
 ## this can be adjusted by passing [code]false[/code] to the [code]and_surrounding_cells[/code]
 ## parameter.
 ## [br][br]
 ## See also [method update_terrain_cells].
-func update_terrain_area(tm: TileMap, layer: int, area: Rect2i, and_surrounding_cells := true) -> void:
-	if !tm or !tm.tile_set or layer < -tm.get_layers_count() or layer >= tm.get_layers_count():
+func update_terrain_area(tm: TileMapLayer, area: Rect2i, and_surrounding_cells := true) -> void:
+	if !tm or !tm.tile_set:
 		return
 	
 	# Normalize area and extend so tiles cover inclusive space
@@ -1057,21 +1057,21 @@ func update_terrain_area(tm: TileMap, layer: int, area: Rect2i, and_surrounding_
 	for y in range(area.position.y, area.end.y):
 		for x in range(area.position.x, area.end.x):
 			var coord = Vector2i(x, y)
-			types[coord] = get_cell(tm, layer, coord)
+			types[coord] = get_cell(tm, coord)
 	for c in needed_cells:
-		types[c] = get_cell(tm, layer, c)
+		types[c] = get_cell(tm, c)
 	
 	var ts_meta := _get_terrain_meta(tm.tile_set)
 	var cache := _get_cache(tm.tile_set)
 	for y in range(area.position.y, area.end.y):
 		for x in range(area.position.x, area.end.x):
 			var coord := Vector2i(x, y)
-			_update_tile_immediate(tm, layer, coord, ts_meta, types, cache)
+			_update_tile_immediate(tm, coord, ts_meta, types, cache)
 	for c in additional_cells:
-		_update_tile_immediate(tm, layer, c, ts_meta, types, cache)
+		_update_tile_immediate(tm, c, ts_meta, types, cache)
 
 
-## For a [TileMap], on a specific [code]layer[/code], create a changeset that will
+## For a [TileMapLayer], create a changeset that will
 ## be calculated via a [WorkerThreadPool], so it will not delay processing the current
 ## frame or affect the framerate.
 ## [br][br]
@@ -1080,7 +1080,7 @@ func update_terrain_area(tm: TileMap, layer: int, area: Rect2i, and_surrounding_
 ## [br][br]
 ## Returns a [Dictionary] with internal details. See also [method is_terrain_changeset_ready],
 ## [method apply_terrain_changeset], and [method wait_for_terrain_changeset].
-func create_terrain_changeset(tm: TileMap, layer: int, paint: Dictionary) -> Dictionary:
+func create_terrain_changeset(tm: TileMapLayer, paint: Dictionary) -> Dictionary:
 	# Force cache rebuild if required
 	var _cache := _get_cache(tm.tile_set)
 	
@@ -1089,7 +1089,7 @@ func create_terrain_changeset(tm: TileMap, layer: int, paint: Dictionary) -> Dic
 	
 	var types := {}
 	for c in needed_cells:
-		types[c] = paint[c] if paint.has(c) else get_cell(tm, layer, c)
+		types[c] = paint[c] if paint.has(c) else get_cell(tm, c)
 	
 	var placements := []
 	placements.resize(cells.size())
@@ -1101,7 +1101,6 @@ func create_terrain_changeset(tm: TileMap, layer: int, paint: Dictionary) -> Dic
 	return {
 		"valid": true,
 		"tilemap": tm,
-		"layer": layer,
 		"cells": cells,
 		"placements": placements,
 		"group_id": WorkerThreadPool.add_group_task(work, cells.size(), -1, false, "BetterTerrain")
@@ -1135,7 +1134,7 @@ func wait_for_terrain_changeset(change: Dictionary) -> void:
 
 ## Apply the changes in a changeset created by [method create_terrain_changeset]
 ## once it is confirmed by [method is_terrain_changeset_ready]. The changes will
-## be applied to the [TileMap] that the changeset was initialized with.
+## be applied to the [TileMapLayer] that the changeset was initialized with.
 ## [br][br]
 ## Completed changesets can be applied multiple times, and stored for as long as
 ## needed once calculated.
@@ -1143,4 +1142,4 @@ func apply_terrain_changeset(change: Dictionary) -> void:
 	for n in change.cells.size():
 		var placement = change.placements[n]
 		if placement:
-			change.tilemap.set_cell(change.layer, change.cells[n], placement[0], placement[1], placement[2])
+			change.tilemap.set_cell(change.cells[n], placement[0], placement[1], placement[2])

@@ -31,7 +31,7 @@ func _exit_tree() -> void:
 
 
 func _handles(object) -> bool:
-	return object is TileMap or object is TileSet
+	return object is TileMapLayer or object is TileSet
 
 
 func _make_visible(visible) -> void:
@@ -40,7 +40,7 @@ func _make_visible(visible) -> void:
 
 func _edit(object) -> void:
 	dock.tiles_about_to_change()
-	if object is TileMap:
+	if object is TileMapLayer:
 		dock.tilemap = object
 		dock.tileset = object.tile_set
 	if object is TileSet:
