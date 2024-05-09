@@ -13,40 +13,46 @@ const MAX_ZOOM_SETTING := "editor/better_terrain/max_zoom_amount"
 
 
 # Buttons
-@onready var draw_button := $VBox/Toolbar/Draw
-@onready var line_button := $VBox/Toolbar/Line
-@onready var rectangle_button := $VBox/Toolbar/Rectangle
-@onready var fill_button := $VBox/Toolbar/Fill
-@onready var replace_button := $VBox/Toolbar/Replace
+@onready var draw_button: Button = $VBox/Toolbar/Draw
+@onready var line_button: Button = $VBox/Toolbar/Line
+@onready var rectangle_button: Button = $VBox/Toolbar/Rectangle
+@onready var fill_button: Button = $VBox/Toolbar/Fill
+@onready var replace_button: Button = $VBox/Toolbar/Replace
 
-@onready var paint_type := $VBox/Toolbar/PaintType
-@onready var paint_terrain := $VBox/Toolbar/PaintTerrain
-@onready var select_tiles := $VBox/Toolbar/SelectTiles
+@onready var paint_type: Button = $VBox/Toolbar/PaintType
+@onready var paint_terrain: Button = $VBox/Toolbar/PaintTerrain
+@onready var select_tiles: Button = $VBox/Toolbar/SelectTiles
 
-@onready var paint_symmetry := $VBox/Toolbar/PaintSymmetry
-@onready var symmetry_options = $VBox/Toolbar/SymmetryOptions
+@onready var paint_symmetry: Button = $VBox/Toolbar/PaintSymmetry
+@onready var symmetry_options: OptionButton = $VBox/Toolbar/SymmetryOptions
 
-@onready var shuffle_random := $VBox/Toolbar/ShuffleRandom
-@onready var zoom_slider_container := $VBox/Toolbar/ZoomContainer
+@onready var shuffle_random: Button = $VBox/Toolbar/ShuffleRandom
+@onready var zoom_slider_container: VBoxContainer = $VBox/Toolbar/ZoomContainer
 
-@onready var source_selector := $VBox/Toolbar/Sources
-@onready var source_selector_popup := $VBox/Toolbar/Sources/Sources
+@onready var source_selector: MenuBar = $VBox/Toolbar/Sources
+@onready var source_selector_popup: PopupMenu = $VBox/Toolbar/Sources/Sources
 
-@onready var clean_button := $VBox/Toolbar/Clean
+@onready var clean_button: Button = $VBox/Toolbar/Clean
+@onready var layer_up: Button = $VBox/Toolbar/LayerUp
+@onready var layer_down: Button = $VBox/Toolbar/LayerDown
+@onready var layer_highlight: Button = $VBox/Toolbar/LayerHighlight
+@onready var layer_grid: Button = $VBox/Toolbar/LayerGrid
 
-@onready var edit_tool_buttons := $VBox/HSplit/Terrains/LowerToolbar/EditTools
-@onready var add_terrain_button := $VBox/HSplit/Terrains/LowerToolbar/EditTools/AddTerrain
-@onready var edit_terrain_button := $VBox/HSplit/Terrains/LowerToolbar/EditTools/EditTerrain
-@onready var pick_icon_button := $VBox/HSplit/Terrains/LowerToolbar/EditTools/PickIcon
-@onready var move_up_button := $VBox/HSplit/Terrains/LowerToolbar/EditTools/MoveUp
-@onready var move_down_button := $VBox/HSplit/Terrains/LowerToolbar/EditTools/MoveDown
-@onready var remove_terrain_button := $VBox/HSplit/Terrains/LowerToolbar/EditTools/RemoveTerrain
+@onready var grid_mode_button: Button = $VBox/HSplit/Terrains/LowerToolbar/GridMode
+@onready var quick_mode_button: Button = $VBox/HSplit/Terrains/LowerToolbar/QuickMode
 
-@onready var scroll_container := $VBox/HSplit/Terrains/Panel/ScrollContainer
-@onready var terrain_list := $VBox/HSplit/Terrains/Panel/ScrollContainer/TerrainList
-@onready var tile_view := $VBox/HSplit/Panel/ScrollArea/TileView
-@onready var grid_mode_button := $VBox/HSplit/Terrains/LowerToolbar/GridMode
-@onready var quick_mode_button := $VBox/HSplit/Terrains/LowerToolbar/QuickMode
+@onready var edit_tool_buttons: HBoxContainer = $VBox/HSplit/Terrains/LowerToolbar/EditTools
+@onready var add_terrain_button: Button = $VBox/HSplit/Terrains/LowerToolbar/EditTools/AddTerrain
+@onready var edit_terrain_button: Button = $VBox/HSplit/Terrains/LowerToolbar/EditTools/EditTerrain
+@onready var pick_icon_button: Button = $VBox/HSplit/Terrains/LowerToolbar/EditTools/PickIcon
+@onready var move_up_button: Button = $VBox/HSplit/Terrains/LowerToolbar/EditTools/MoveUp
+@onready var move_down_button: Button = $VBox/HSplit/Terrains/LowerToolbar/EditTools/MoveDown
+@onready var remove_terrain_button: Button = $VBox/HSplit/Terrains/LowerToolbar/EditTools/RemoveTerrain
+
+@onready var scroll_container: ScrollContainer = $VBox/HSplit/Terrains/Panel/ScrollContainer
+@onready var terrain_list: HFlowContainer = $VBox/HSplit/Terrains/Panel/ScrollContainer/TerrainList
+@onready var tile_view: Control = $VBox/HSplit/Panel/ScrollArea/TileView
+
 
 var selected_entry := -2
 
@@ -97,8 +103,12 @@ func _ready() -> void:
 	move_up_button.icon = get_theme_icon("ArrowUp", "EditorIcons")
 	move_down_button.icon = get_theme_icon("ArrowDown", "EditorIcons")
 	remove_terrain_button.icon = get_theme_icon("Remove", "EditorIcons")
-	grid_mode_button.icon = get_theme_icon("Grid", "EditorIcons")
+	grid_mode_button.icon = get_theme_icon("FileThumbnail", "EditorIcons")
 	quick_mode_button.icon = get_theme_icon("GuiVisibilityVisible", "EditorIcons")
+	layer_up.icon = get_theme_icon("MoveUp", "EditorIcons")
+	layer_down.icon = get_theme_icon("MoveDown", "EditorIcons")
+	layer_highlight.icon = get_theme_icon("TileMapHighlightSelected", "EditorIcons")
+	layer_grid.icon = get_theme_icon("Grid", "EditorIcons")
 	
 	select_tiles.button_group.pressed.connect(_on_bit_button_pressed)
 	
