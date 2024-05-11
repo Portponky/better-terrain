@@ -22,6 +22,8 @@ func _enter_tree() -> void:
 	get_editor_interface().get_editor_main_screen().mouse_exited.connect(dock.canvas_mouse_exit)
 	dock.undo_manager = get_undo_redo()
 	button = add_control_to_bottom_panel(dock, "Terrain")
+	button.toggled.connect(dock.about_to_be_visible)
+	dock.force_show_terrains.connect(button.toggled.emit.bind(true))
 	button.visible = false
 
 
