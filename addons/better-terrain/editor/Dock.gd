@@ -2,6 +2,7 @@
 extends Control
 
 signal update_overlay
+signal force_show_terrains
 
 # The maximum individual tiles the overlay will draw before shortcutting the display
 # To prevent editor lag when drawing large rectangles or filling large areas
@@ -262,6 +263,19 @@ func tiles_changed() -> void:
 	tileset_dirty = false
 	_on_grid_mode_pressed()
 	_on_quick_mode_pressed()
+
+
+func about_to_be_visible(visible: bool) -> void:
+	if !visible:
+		return
+	
+	var tilemap_layer_highlight = corresponding_tilemap_editor_button(layer_highlight)
+	if tilemap_layer_highlight:
+		layer_highlight.set_pressed_no_signal(tilemap_layer_highlight.button_pressed)
+	
+	var tilemap_layer_grid = corresponding_tilemap_editor_button(layer_grid)
+	if tilemap_layer_grid:
+		layer_grid.set_pressed_no_signal(tilemap_layer_grid.button_pressed)
 
 
 func queue_tiles_changed() -> void:
@@ -848,3 +862,49 @@ func _on_terrain_enable_id_pressed(id):
 		if source_selector_popup.is_item_checkable(i) and !source_selector_popup.is_item_checked(i):
 			disabled_sources.append(source_selector_popup.get_item_id(i))
 	tile_view.disabled_sources = disabled_sources
+
+
+func corresponding_tilemap_editor_button(similar: Button) -> Button:
+	var editors = EditorInterface.get_base_control().find_children("*", "TileMapLayerEditor", true, false)
+	var tile_map_layer_editor = editors[0]
+	var buttons = tile_map_layer_editor.find_children("*", "Button", true, false)
+	for button: Button in buttons:
+		if button.icon == similar.icon:
+			return button
+	return null
+
+
+func _on_layer_up_or_down_pressed(button: Button) -> void:
+	var matching_button = corresponding_tilemap_editor_button(button)
+	if !matching_button:
+		return
+	matching_button.pressed.emit()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	force_show_terrains.emit()
+
+
+func _on_layer_up_pressed() -> void:
+	_on_layer_up_or_down_pressed(layer_up)
+
+
+func _on_layer_down_pressed() -> void:
+	_on_layer_up_or_down_pressed(layer_down)
+
+
+func _on_layer_highlight_toggled(toggled: bool) -> void:
+	var settings = EditorInterface.get_editor_settings()
+	settings.set_setting("editors/tiles_editor/highlight_selected_layer", toggled)
+	
+	var highlight = corresponding_tilemap_editor_button(layer_highlight)
+	if highlight:
+		highlight.toggled.emit(toggled)
+
+
+func _on_layer_grid_toggled(toggled: bool) -> void:
+	var settings = EditorInterface.get_editor_settings()
+	settings.set_setting("editors/tiles_editor/display_grid", toggled)
+	
+	var grid = corresponding_tilemap_editor_button(layer_grid)
+	if grid:
+		grid.toggled.emit(toggled)
