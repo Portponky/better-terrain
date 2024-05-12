@@ -269,13 +269,9 @@ func about_to_be_visible(visible: bool) -> void:
 	if !visible:
 		return
 	
-	var tilemap_layer_highlight = corresponding_tilemap_editor_button(layer_highlight)
-	if tilemap_layer_highlight:
-		layer_highlight.set_pressed_no_signal(tilemap_layer_highlight.button_pressed)
-	
-	var tilemap_layer_grid = corresponding_tilemap_editor_button(layer_grid)
-	if tilemap_layer_grid:
-		layer_grid.set_pressed_no_signal(tilemap_layer_grid.button_pressed)
+	var settings := EditorInterface.get_editor_settings()
+	layer_highlight.set_pressed_no_signal(settings.get_setting("editors/tiles_editor/highlight_selected_layer"))
+	layer_grid.set_pressed_no_signal(settings.get_setting("editors/tiles_editor/display_grid"))
 
 
 func queue_tiles_changed() -> void:

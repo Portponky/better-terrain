@@ -46,13 +46,18 @@ func _make_visible(visible) -> void:
 
 
 func _edit(object) -> void:
-	dock.tiles_about_to_change()
+	var new_tileset : TileSet = null
+	
 	if object is TileMapLayer:
 		dock.tilemap = object
-		dock.tileset = object.tile_set
+		new_tileset = object.tile_set
 	if object is TileSet:
-		dock.tileset = object
-	dock.tiles_changed()
+		new_tileset = object
+	
+	if dock.tileset != new_tileset:
+		dock.tiles_about_to_change()
+		dock.tileset = new_tileset
+		dock.tiles_changed()
 
 
 func _forward_canvas_draw_over_viewport(overlay: Control) -> void:
