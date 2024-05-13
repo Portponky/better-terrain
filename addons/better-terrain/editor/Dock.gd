@@ -882,10 +882,18 @@ func _on_layer_up_or_down_pressed(button: Button) -> void:
 	var matching_button = corresponding_tilemap_editor_button(button)
 	if !matching_button:
 		return
+	
+	# Major hack, to reduce flicker hide the tileset editor briefly
+	var editors = EditorInterface.get_base_control().find_children("*", "TileSetEditor", true, false)
+	var tile_set_editor = editors[0]
+	
 	matching_button.pressed.emit()
+	tile_set_editor.modulate = Color.TRANSPARENT
 	await get_tree().process_frame
 	await get_tree().process_frame
 	force_show_terrains.emit()
+	tile_set_editor.modulate = Color.WHITE
+
 
 
 func _on_layer_up_pressed() -> void:
