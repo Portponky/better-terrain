@@ -518,7 +518,7 @@ static func neighboring_coords(tm: TileMap, coord: Vector2i, peerings: Array) ->
 
 ## Returns an [Array] of coordinates which neighbor the vertex describe by [code]corner[/code]
 ## (which is of type [enum TileSet.CellNeighbor]) from [code]coord[/code] in [TileSet].
-static func associated_vertex_cells(tm: TileMap, coord: Vector2i, corner: int) -> Array[Vector2i]:
+static func associated_vertex_cells(tm: TileMap, coord: Vector2i, corner: int) -> Array:
 	# get array of associated peering bits
 	if tm.tile_set.tile_shape in [TileSet.TILE_SHAPE_SQUARE, TileSet.TILE_SHAPE_ISOMETRIC]:
 		match corner:
