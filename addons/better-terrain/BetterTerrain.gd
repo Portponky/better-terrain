@@ -1144,3 +1144,9 @@ func apply_terrain_changeset(change: Dictionary) -> void:
 		var placement = change.placements[n]
 		if placement:
 			change.tilemap.set_cell(change.layer, change.cells[n], placement[0], placement[1], placement[2])
+
+## If true, a seed for the [RandomNumberGenerator] is used and [b]BetterTerrain[/b] will determistically calculate a weighted selection for each tile.
+## If false, each placement of a tile will be random.
+func set_use_seed(state: bool):
+	use_seed = state
+
