@@ -13,9 +13,14 @@ func _enter_tree() -> void:
 		# Autoload wasn't present on plugin init, which means plugin won't have loaded correctly
 		add_autoload_singleton(AUTOLOAD_NAME, "res://addons/better-terrain/BetterTerrain.gd")
 		ProjectSettings.save()
-		OS.set_restart_on_exit(true, ["-e"])
-		get_tree().quit()
-		return
+		
+		var confirm = ConfirmationDialog.new()
+		confirm.dialog_text = "The editor needs to be restarted for Better Terrain to load correctly. Restart now? Note: Unsaved changes will be lost."
+		confirm.confirmed.connect(func():
+			OS.set_restart_on_exit(true, ["-e"])
+			get_tree().quit()
+		)
+		get_editor_interface().popup_dialog_centered(confirm)
 	
 	dock = load("res://addons/better-terrain/editor/Dock.tscn").instantiate()
 	dock.update_overlay.connect(self.update_overlays)
