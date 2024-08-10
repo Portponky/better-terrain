@@ -82,6 +82,7 @@ func _get_terrain_meta(ts: TileSet) -> Dictionary:
 
 func _set_terrain_meta(ts: TileSet, meta : Dictionary) -> void:
 	ts.set_meta(TERRAIN_META, meta)
+	ts.emit_changed()
 
 
 func _get_tile_meta(td: TileData) -> Dictionary:
@@ -90,8 +91,9 @@ func _get_tile_meta(td: TileData) -> Dictionary:
 	}
 
 
-func _set_tile_meta(td: TileData, meta) -> void:
+func _set_tile_meta(ts: TileSet, td: TileData, meta) -> void:
 	td.set_meta(TERRAIN_META, meta)
+	ts.emit_changed()
 
 
 func _get_cache(ts: TileSet) -> Array:
@@ -207,7 +209,7 @@ func _clear_invalid_peering_types(ts: TileSet) -> void:
 					continue
 				td_meta.erase(peering)
 			
-			_set_tile_meta(td, td_meta)
+			_set_tile_meta(ts, td, td_meta)
 	
 	# Not strictly necessary
 	_purge_cache(ts)
@@ -470,7 +472,7 @@ func remove_terrain(ts: TileSet, index: int) -> bool:
 					continue
 				
 				if td_meta.type == index:
-					_set_tile_meta(td, null)
+					_set_tile_meta(ts, td, null)
 					continue
 				
 				if td_meta.type > index:
@@ -492,7 +494,7 @@ func remove_terrain(ts: TileSet, index: int) -> bool:
 					else:
 						td_meta[peering] = fixed_peering
 				
-				_set_tile_meta(td, td_meta)
+				_set_tile_meta(ts, td, td_meta)
 	
 	ts_meta.terrains.remove_at(index)
 	_set_terrain_meta(ts, ts_meta)
@@ -630,7 +632,7 @@ func swap_terrains(ts: TileSet, index1: int, index2: int) -> bool:
 							fixed_peering.append(p)
 					td_meta[peering] = fixed_peering
 				
-				_set_tile_meta(td, td_meta)
+				_set_tile_meta(ts, td, td_meta)
 	
 	var temp = ts_meta.terrains[index1]
 	ts_meta.terrains[index1] = ts_meta.terrains[index2]
@@ -654,7 +656,7 @@ func set_tile_terrain_type(ts: TileSet, td: TileData, type: int) -> bool:
 	td_meta.type = type
 	if type == TileCategory.NON_TERRAIN:
 		td_meta = null
-	_set_tile_meta(td, td_meta)
+	_set_tile_meta(ts, td, td_meta)
 	
 	_clear_invalid_peering_types(ts)
 	_purge_cache(ts)
@@ -682,7 +684,7 @@ func set_tile_symmetry_type(ts: TileSet, td: TileData, type: int) -> bool:
 		return false
 	
 	td_meta.symmetry = type
-	_set_tile_meta(td, td_meta)
+	_set_tile_meta(ts, td, td_meta)
 	_purge_cache(ts)
 	return true
 
@@ -768,7 +770,7 @@ func add_tile_peering_type(ts: TileSet, td: TileData, peering: int, type: int) -
 		td_meta[peering].append(type)
 	else:
 		return false
-	_set_tile_meta(td, td_meta)
+	_set_tile_meta(ts, td, td_meta)
 	_purge_cache(ts)
 	return true
 
@@ -788,7 +790,7 @@ func remove_tile_peering_type(ts: TileSet, td: TileData, peering: int, type: int
 	td_meta[peering].erase(type)
 	if td_meta[peering].is_empty():
 		td_meta.erase(peering)
-	_set_tile_meta(td, td_meta)
+	_set_tile_meta(ts, td, td_meta)
 	_purge_cache(ts)
 	return true
 
