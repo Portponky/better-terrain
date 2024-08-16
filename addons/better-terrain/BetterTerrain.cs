@@ -20,17 +20,16 @@ Very simple example:
 
     public override void _Ready()
     {
-        TileMap tileMap = GetNode<TileMap>("TileMap");
+        TileMapLayer tileMapLayer = GetNode<TileMapLayer>("TileMapLayer");
         betterTerrain = new BetterTerrain(tm);
 
-        var layer = 0;
         var coordinates = new Vector2I(0, 0);
-        betterTerrain.SetCell(layer, coordinates, 1);
-        betterTerrain.UpdateTerrainCell(layer, coordinates);
+        betterTerrain.SetCell(coordinates, 1);
+        betterTerrain.UpdateTerrainCell(coordinates);
     }
 ```
 
-The functions available are the same as BetterTerrain's, though the TileMap or
+The functions available are the same as BetterTerrain's, though the TileMapLayer or
 TileSet parameters are automatically filled in. The help is not duplicated here,
 refer to the GDScript version for specifics.
 
@@ -61,56 +60,56 @@ public class BetterTerrain
 
     private static readonly NodePath nodePath = new("/root/BetterTerrain");
     private readonly Node betterTerrain;
-    private readonly TileMap tileMap;
+    private readonly TileMapLayer tileMapLayer;
 
-    public BetterTerrain(TileMap tileMap)
+    public BetterTerrain(TileMapLayer tileMapLayer)
     {
-        this.tileMap = tileMap;
-        betterTerrain = tileMap.GetNode(nodePath);
+        this.tileMapLayer = tileMapLayer;
+        betterTerrain = tileMapLayer.GetNode(nodePath);
     }
 
     public Array<Godot.Collections.Dictionary<string, Variant>> GetTerrainCategories()
     {
-        return (Array<Godot.Collections.Dictionary<string, Variant>>)betterTerrain.Call(MethodName.GetTerrainCategories, tileMap.TileSet);
+        return (Array<Godot.Collections.Dictionary<string, Variant>>)betterTerrain.Call(MethodName.GetTerrainCategories, tileMapLayer.TileSet);
     }
 
     public bool AddTerrain(string name, Color color, TerrainType type, Array<int> categories = null, Godot.Collections.Dictionary<Variant, Variant> icon = null)
     {
         categories ??= new Array<int>();
         icon ??= new Godot.Collections.Dictionary<Variant, Variant>();
-        return (bool)betterTerrain.Call(MethodName.AddTerrain, tileMap.TileSet, name, color, (int)type, categories, icon);
+        return (bool)betterTerrain.Call(MethodName.AddTerrain, tileMapLayer.TileSet, name, color, (int)type, categories, icon);
     }
 
     public bool RemoveTerrain(int index)
     {
-        return (bool)betterTerrain.Call(MethodName.RemoveTerrain, tileMap.TileSet, index);
+        return (bool)betterTerrain.Call(MethodName.RemoveTerrain, tileMapLayer.TileSet, index);
     }
 
     public int TerrainCount()
     {
-        return (int)betterTerrain.Call(MethodName.TerrainCount, tileMap.TileSet);
+        return (int)betterTerrain.Call(MethodName.TerrainCount, tileMapLayer.TileSet);
     }
 
     public Godot.Collections.Dictionary<string, Variant> GetTerrain(int index)
     {
-        return (Godot.Collections.Dictionary<string, Variant>)betterTerrain.Call(MethodName.GetTerrain, tileMap.TileSet, index);
+        return (Godot.Collections.Dictionary<string, Variant>)betterTerrain.Call(MethodName.GetTerrain, tileMapLayer.TileSet, index);
     }
 
     public bool SetTerrain(int index, string name, Color color, TerrainType type, Array<int> categories = null, Godot.Collections.Dictionary<Variant, Variant> icon = null)
     {
         categories ??= new Array<int>();
         icon ??= new Godot.Collections.Dictionary<Variant, Variant>();
-        return (bool)betterTerrain.Call(MethodName.SetTerrain, tileMap.TileSet, index, name, color, (int)type, categories, icon);
+        return (bool)betterTerrain.Call(MethodName.SetTerrain, tileMapLayer.TileSet, index, name, color, (int)type, categories, icon);
     }
 
     public bool SwapTerrains(int index1, int index2)
     {
-        return (bool)betterTerrain.Call(MethodName.SwapTerrains, tileMap.TileSet, index1, index2);
+        return (bool)betterTerrain.Call(MethodName.SwapTerrains, tileMapLayer.TileSet, index1, index2);
     }
 
     public bool SetTileTerrainType(TileData tileData, int type)
     {
-        return (bool)betterTerrain.Call(MethodName.SetTileTerrainType, tileMap.TileSet, tileData, type);
+        return (bool)betterTerrain.Call(MethodName.SetTileTerrainType, tileMapLayer.TileSet, tileData, type);
     }
 
     public int GetTileTerrainType(TileData tileData)
@@ -120,7 +119,7 @@ public class BetterTerrain
 
     public bool SetTileSymmetryType(TileData tileData, SymmetryType type)
     {
-        return (bool)betterTerrain.Call(MethodName.SetTileSymmetryType, tileMap.TileSet, tileData, (int)type);
+        return (bool)betterTerrain.Call(MethodName.SetTileSymmetryType, tileMapLayer.TileSet, tileData, (int)type);
     }
 
     public SymmetryType GetTileSymmetryType(TileData tileData)
@@ -130,22 +129,22 @@ public class BetterTerrain
 
     public Array<TileData> GetTilesInTerrain(int type)
     {
-        return (Array<TileData>)betterTerrain.Call(MethodName.GetTilesInTerrain, tileMap.TileSet, type);
+        return (Array<TileData>)betterTerrain.Call(MethodName.GetTilesInTerrain, tileMapLayer.TileSet, type);
     }
 
     public Array<Godot.Collections.Dictionary<string, Variant>> GetTileSourcesInTerrain(int type)
     {
-        return (Array<Godot.Collections.Dictionary<string, Variant>>)betterTerrain.Call(MethodName.GetTileSourcesInTerrain, tileMap.TileSet, type);
+        return (Array<Godot.Collections.Dictionary<string, Variant>>)betterTerrain.Call(MethodName.GetTileSourcesInTerrain, tileMapLayer.TileSet, type);
     }
 
     public bool AddTilePeeringType(TileData tileData, TileSet.CellNeighbor peering, int type)
     {
-        return (bool)betterTerrain.Call(MethodName.AddTilePeeringType, tileMap.TileSet, tileData, (int)peering, type);
+        return (bool)betterTerrain.Call(MethodName.AddTilePeeringType, tileMapLayer.TileSet, tileData, (int)peering, type);
     }
 
     public bool RemoveTilePeeringType(TileData tileData, TileSet.CellNeighbor peering, int type)
     {
-        return (bool)betterTerrain.Call(MethodName.RemoveTilePeeringType, tileMap.TileSet, tileData, (int)peering, type);
+        return (bool)betterTerrain.Call(MethodName.RemoveTilePeeringType, tileMapLayer.TileSet, tileData, (int)peering, type);
     }
 
     public Array<TileSet.CellNeighbor> TilePeeringKeys(TileData tileData)
@@ -163,49 +162,49 @@ public class BetterTerrain
         return (Array<TileSet.CellNeighbor>)betterTerrain.Call(MethodName.TilePeeringForType, tileData, type);
     }
 
-    public bool SetCell(int layer, Vector2I coordinate, int type)
+    public bool SetCell(Vector2I coordinate, int type)
     {
-        return (bool)betterTerrain.Call(MethodName.SetCell, tileMap, layer, coordinate, type);
+        return (bool)betterTerrain.Call(MethodName.SetCell, tileMapLayer, coordinate, type);
     }
 
-    public bool SetCells(int layer, Array<Vector2I> coordinates, int type)
+    public bool SetCells(Array<Vector2I> coordinates, int type)
     {
-        return (bool)betterTerrain.Call(MethodName.SetCells, tileMap, layer, coordinates, type);
+        return (bool)betterTerrain.Call(MethodName.SetCells, tileMapLayer, coordinates, type);
     }
 
-    public bool ReplaceCell(int layer, Vector2I coordinate, int type)
+    public bool ReplaceCell(Vector2I coordinate, int type)
     {
-        return (bool)betterTerrain.Call(MethodName.ReplaceCell, tileMap, layer, coordinate, type);
+        return (bool)betterTerrain.Call(MethodName.ReplaceCell, tileMapLayer, coordinate, type);
     }
 
-    public bool ReplaceCells(int layer, Array<Vector2I> coordinates, int type)
+    public bool ReplaceCells(Array<Vector2I> coordinates, int type)
     {
-        return (bool)betterTerrain.Call(MethodName.ReplaceCells, tileMap, layer, coordinates, type);
+        return (bool)betterTerrain.Call(MethodName.ReplaceCells, tileMapLayer, coordinates, type);
     }
 
-    public int GetCell(int layer, Vector2I coordinate)
+    public int GetCell(Vector2I coordinate)
     {
-        return (int)betterTerrain.Call(MethodName.GetCell, tileMap, layer, coordinate);
+        return (int)betterTerrain.Call(MethodName.GetCell, tileMapLayer, coordinate);
     }
 
-    public void UpdateTerrainCells(int layer, Array<Vector2I> cells, bool updateSurroundingCells = true)
+    public void UpdateTerrainCells(Array<Vector2I> cells, bool updateSurroundingCells = true)
     {
-        betterTerrain.Call(MethodName.UpdateTerrainCells, tileMap, layer, cells, updateSurroundingCells);
+        betterTerrain.Call(MethodName.UpdateTerrainCells, tileMapLayer, cells, updateSurroundingCells);
     }
 
-    public void UpdateTerrainCell(int layer, Vector2I cell, bool updateSurroundingCells = true)
+    public void UpdateTerrainCell(Vector2I cell, bool updateSurroundingCells = true)
     {
-        betterTerrain.Call(MethodName.UpdateTerrainCell, tileMap, layer, cell, updateSurroundingCells);
+        betterTerrain.Call(MethodName.UpdateTerrainCell, tileMapLayer, cell, updateSurroundingCells);
     }
 
-    public void UpdateTerrainArea(int layer, Rect2I area, bool updateSurroundingCells = true)
+    public void UpdateTerrainArea(Rect2I area, bool updateSurroundingCells = true)
     {
-        betterTerrain.Call(MethodName.UpdateTerrainArea, tileMap, layer, area, updateSurroundingCells);
+        betterTerrain.Call(MethodName.UpdateTerrainArea, tileMapLayer, area, updateSurroundingCells);
     }
 
-    public Godot.Collections.Dictionary<Variant, Variant> CreateTerrainChangeset(int layer, Godot.Collections.Dictionary<Vector2I, int> paint)
+    public Godot.Collections.Dictionary<Variant, Variant> CreateTerrainChangeset(Godot.Collections.Dictionary<Vector2I, int> paint)
     {
-        return (Godot.Collections.Dictionary<Variant, Variant>)betterTerrain.Call(MethodName.CreateTerrainChangeset, tileMap, layer, paint);
+        return (Godot.Collections.Dictionary<Variant, Variant>)betterTerrain.Call(MethodName.CreateTerrainChangeset, tileMapLayer, paint);
     }
 
     public bool IsTerrainChangesetReady(Godot.Collections.Dictionary<Variant, Variant> changeset)

@@ -2,6 +2,7 @@
 extends Control
 
 signal update_overlay
+signal force_show_terrains
 
 # The maximum individual tiles the overlay will draw before shortcutting the display
 # To prevent editor lag when drawing large rectangles or filling large areas
@@ -13,51 +14,55 @@ const MAX_ZOOM_SETTING := "editor/better_terrain/max_zoom_amount"
 
 
 # Buttons
-@onready var draw_button := $VBox/Toolbar/Draw
-@onready var line_button := $VBox/Toolbar/Line
-@onready var rectangle_button := $VBox/Toolbar/Rectangle
-@onready var fill_button := $VBox/Toolbar/Fill
-@onready var replace_button := $VBox/Toolbar/Replace
+@onready var draw_button: Button = $VBox/Toolbar/Draw
+@onready var line_button: Button = $VBox/Toolbar/Line
+@onready var rectangle_button: Button = $VBox/Toolbar/Rectangle
+@onready var fill_button: Button = $VBox/Toolbar/Fill
+@onready var replace_button: Button = $VBox/Toolbar/Replace
 
-@onready var paint_type := $VBox/Toolbar/PaintType
-@onready var paint_terrain := $VBox/Toolbar/PaintTerrain
-@onready var select_tiles := $VBox/Toolbar/SelectTiles
+@onready var paint_type: Button = $VBox/Toolbar/PaintType
+@onready var paint_terrain: Button = $VBox/Toolbar/PaintTerrain
+@onready var select_tiles: Button = $VBox/Toolbar/SelectTiles
 
-@onready var paint_symmetry := $VBox/Toolbar/PaintSymmetry
-@onready var symmetry_options = $VBox/Toolbar/SymmetryOptions
+@onready var paint_symmetry: Button = $VBox/Toolbar/PaintSymmetry
+@onready var symmetry_options: OptionButton = $VBox/Toolbar/SymmetryOptions
 
-@onready var shuffle_random := $VBox/Toolbar/ShuffleRandom
-@onready var zoom_slider_container := $VBox/Toolbar/ZoomContainer
+@onready var shuffle_random: Button = $VBox/Toolbar/ShuffleRandom
+@onready var zoom_slider_container: VBoxContainer = $VBox/Toolbar/ZoomContainer
 
-@onready var source_selector := $VBox/Toolbar/Sources
-@onready var source_selector_popup := $VBox/Toolbar/Sources/Sources
+@onready var source_selector: MenuBar = $VBox/Toolbar/Sources
+@onready var source_selector_popup: PopupMenu = $VBox/Toolbar/Sources/Sources
 
-@onready var clean_button := $VBox/Toolbar/Clean
-@onready var layer_options := $VBox/Toolbar/LayerOptions
+@onready var clean_button: Button = $VBox/Toolbar/Clean
+@onready var layer_up: Button = $VBox/Toolbar/LayerUp
+@onready var layer_down: Button = $VBox/Toolbar/LayerDown
+@onready var layer_highlight: Button = $VBox/Toolbar/LayerHighlight
+@onready var layer_grid: Button = $VBox/Toolbar/LayerGrid
 
-@onready var edit_tool_buttons := $VBox/HSplit/Terrains/LowerToolbar/EditTools
-@onready var add_terrain_button := $VBox/HSplit/Terrains/LowerToolbar/EditTools/AddTerrain
-@onready var edit_terrain_button := $VBox/HSplit/Terrains/LowerToolbar/EditTools/EditTerrain
-@onready var pick_icon_button := $VBox/HSplit/Terrains/LowerToolbar/EditTools/PickIcon
-@onready var move_up_button := $VBox/HSplit/Terrains/LowerToolbar/EditTools/MoveUp
-@onready var move_down_button := $VBox/HSplit/Terrains/LowerToolbar/EditTools/MoveDown
-@onready var remove_terrain_button := $VBox/HSplit/Terrains/LowerToolbar/EditTools/RemoveTerrain
+@onready var grid_mode_button: Button = $VBox/HSplit/Terrains/LowerToolbar/GridMode
+@onready var quick_mode_button: Button = $VBox/HSplit/Terrains/LowerToolbar/QuickMode
 
-@onready var scroll_container := $VBox/HSplit/Terrains/Panel/ScrollContainer
-@onready var terrain_list := $VBox/HSplit/Terrains/Panel/ScrollContainer/TerrainList
-@onready var tile_view := $VBox/HSplit/Panel/ScrollArea/TileView
-@onready var grid_mode_button := $VBox/HSplit/Terrains/LowerToolbar/GridMode
-@onready var quick_mode_button := $VBox/HSplit/Terrains/LowerToolbar/QuickMode
+@onready var edit_tool_buttons: HBoxContainer = $VBox/HSplit/Terrains/LowerToolbar/EditTools
+@onready var add_terrain_button: Button = $VBox/HSplit/Terrains/LowerToolbar/EditTools/AddTerrain
+@onready var edit_terrain_button: Button = $VBox/HSplit/Terrains/LowerToolbar/EditTools/EditTerrain
+@onready var pick_icon_button: Button = $VBox/HSplit/Terrains/LowerToolbar/EditTools/PickIcon
+@onready var move_up_button: Button = $VBox/HSplit/Terrains/LowerToolbar/EditTools/MoveUp
+@onready var move_down_button: Button = $VBox/HSplit/Terrains/LowerToolbar/EditTools/MoveDown
+@onready var remove_terrain_button: Button = $VBox/HSplit/Terrains/LowerToolbar/EditTools/RemoveTerrain
+
+@onready var scroll_container: ScrollContainer = $VBox/HSplit/Terrains/Panel/ScrollContainer
+@onready var terrain_list: HFlowContainer = $VBox/HSplit/Terrains/Panel/ScrollContainer/TerrainList
+@onready var tile_view: Control = $VBox/HSplit/Panel/ScrollArea/TileView
+
 
 var selected_entry := -2
 
-var tilemap : TileMap
+var tilemap : TileMapLayer
 var tileset : TileSet
 
 var undo_manager : EditorUndoRedoManager
 var terrain_undo
 
-var layer := 0
 var draw_overlay := false
 var initial_click : Vector2i
 var prev_position : Vector2i
@@ -99,8 +104,12 @@ func _ready() -> void:
 	move_up_button.icon = get_theme_icon("ArrowUp", "EditorIcons")
 	move_down_button.icon = get_theme_icon("ArrowDown", "EditorIcons")
 	remove_terrain_button.icon = get_theme_icon("Remove", "EditorIcons")
-	grid_mode_button.icon = get_theme_icon("Grid", "EditorIcons")
+	grid_mode_button.icon = get_theme_icon("FileThumbnail", "EditorIcons")
 	quick_mode_button.icon = get_theme_icon("GuiVisibilityVisible", "EditorIcons")
+	layer_up.icon = get_theme_icon("MoveUp", "EditorIcons")
+	layer_down.icon = get_theme_icon("MoveDown", "EditorIcons")
+	layer_highlight.icon = get_theme_icon("TileMapHighlightSelected", "EditorIcons")
+	layer_grid.icon = get_theme_icon("Grid", "EditorIcons")
 	
 	select_tiles.button_group.pressed.connect(_on_bit_button_pressed)
 	
@@ -112,9 +121,6 @@ func _ready() -> void:
 	tile_view.paste_occurred.connect(_on_paste_occurred)
 	tile_view.change_zoom_level.connect(_on_change_zoom_level)
 	tile_view.terrain_updated.connect(_on_terrain_updated)
-	
-	if Engine.get_version_info().hex < 0x040200:
-		paint_symmetry.visible = false
 	
 	# Zoom slider is manipulated by settings, make it at runtime
 	zoom_slider = HSlider.new()
@@ -162,7 +168,7 @@ func _on_adjust_settings():
 
 
 func _get_fill_cells(target: Vector2i) -> Array:
-	var pick := BetterTerrain.get_cell(tilemap, layer, target)
+	var pick := BetterTerrain.get_cell(tilemap, target)
 	var bounds := tilemap.get_used_rect()
 	var neighbors = BetterTerrain.data.cells_adjacent_for_fill(tileset)
 	
@@ -176,7 +182,7 @@ func _get_fill_cells(target: Vector2i) -> Array:
 		if checked.has(p):
 			continue
 		checked[p] = true
-		if !bounds.has_point(p) or BetterTerrain.get_cell(tilemap, layer, p) != pick:
+		if !bounds.has_point(p) or BetterTerrain.get_cell(tilemap, p) != pick:
 			continue
 		
 		goal.append(p)
@@ -246,22 +252,6 @@ func tiles_changed() -> void:
 		source_selector_popup.set_item_checked(source_selector_popup.get_item_index(source_id), true)
 	source_selector.visible = source_selector_popup.item_count > 3 # All, None and more than one source
 	
-	layer_options.clear()
-	if tilemap and tilemap.get_layers_count() == 0:
-		layer_options.text = tr("No layers")
-		layer_options.disabled = true
-		layer = 0
-	elif tilemap:
-		for n in tilemap.get_layers_count():
-			var name := tilemap.get_layer_name(n)
-			if name.is_empty():
-				name = tr("Layer {0}").format([n])
-			layer_options.add_item(name, n)
-			layer_options.set_item_disabled(n, !tilemap.is_layer_enabled(n))
-		layer_options.disabled = false
-		layer = min(layer, tilemap.get_layers_count() - 1)
-		layer_options.selected = layer
-	
 	update_tile_view_paint()
 	tile_view.refresh_tileset(tileset)
 	
@@ -273,6 +263,15 @@ func tiles_changed() -> void:
 	tileset_dirty = false
 	_on_grid_mode_pressed()
 	_on_quick_mode_pressed()
+
+
+func about_to_be_visible(visible: bool) -> void:
+	if !visible:
+		return
+	
+	var settings := EditorInterface.get_editor_settings()
+	layer_highlight.set_pressed_no_signal(settings.get_setting("editors/tiles_editor/highlight_selected_layer"))
+	layer_grid.set_pressed_no_signal(settings.get_setting("editors/tiles_editor/display_grid"))
 
 
 func queue_tiles_changed() -> void:
@@ -547,10 +546,6 @@ func _on_symmetry_selected(index):
 	tile_view.paint_symmetry = index
 
 
-func _on_layer_options_item_selected(index) -> void:
-	layer = index
-
-
 func _on_paste_occurred():
 	select_tiles.button_pressed = true
 
@@ -646,14 +641,14 @@ func canvas_input(event: InputEvent) -> bool:
 					var coord := Vector2i(x, y)
 					if paint_mode == PaintMode.PAINT:
 						if replace_mode:
-							undo_manager.add_do_method(BetterTerrain, &"replace_cell", tilemap, layer, coord, type)
+							undo_manager.add_do_method(BetterTerrain, &"replace_cell", tilemap, coord, type)
 						else:
-							undo_manager.add_do_method(BetterTerrain, &"set_cell", tilemap, layer, coord, type)
+							undo_manager.add_do_method(BetterTerrain, &"set_cell", tilemap, coord, type)
 					else:
-						undo_manager.add_do_method(tilemap, &"erase_cell", layer, coord)
+						undo_manager.add_do_method(tilemap, &"erase_cell", coord)
 			
-			undo_manager.add_do_method(BetterTerrain, &"update_terrain_area", tilemap, layer, area)
-			terrain_undo.create_tile_restore_point_area(undo_manager, tilemap, layer, area)
+			undo_manager.add_do_method(BetterTerrain, &"update_terrain_area", tilemap, area)
+			terrain_undo.create_tile_restore_point_area(undo_manager, tilemap, area)
 			undo_manager.commit_action()
 			update_overlay.emit()
 		elif paint_action == PaintAction.LINE and paint_mode != PaintMode.NO_PAINT:
@@ -661,14 +656,14 @@ func canvas_input(event: InputEvent) -> bool:
 			var cells := _get_tileset_line(initial_click, current_position, tileset)
 			if paint_mode == PaintMode.PAINT:
 				if replace_mode:
-					undo_manager.add_do_method(BetterTerrain, &"replace_cells", tilemap, layer, cells, type)
+					undo_manager.add_do_method(BetterTerrain, &"replace_cells", tilemap, cells, type)
 				else:
-					undo_manager.add_do_method(BetterTerrain, &"set_cells", tilemap, layer, cells, type)
+					undo_manager.add_do_method(BetterTerrain, &"set_cells", tilemap, cells, type)
 			elif paint_mode == PaintMode.ERASE:
 				for c in cells:
-					undo_manager.add_do_method(tilemap, &"erase_cell", layer, c)
-			undo_manager.add_do_method(BetterTerrain, &"update_terrain_cells", tilemap, layer, cells)
-			terrain_undo.create_tile_restore_point(undo_manager, tilemap, layer, cells)
+					undo_manager.add_do_method(tilemap, &"erase_cell", c)
+			undo_manager.add_do_method(BetterTerrain, &"update_terrain_cells", tilemap, cells)
+			terrain_undo.create_tile_restore_point(undo_manager, tilemap, cells)
 			undo_manager.commit_action()
 			update_overlay.emit()
 		
@@ -680,7 +675,7 @@ func canvas_input(event: InputEvent) -> bool:
 		paint_mode = PaintMode.NO_PAINT
 		
 		if event.ctrl_pressed:
-			var pick = BetterTerrain.get_cell(tilemap, layer, current_position)
+			var pick = BetterTerrain.get_cell(tilemap, current_position)
 			if pick >= 0:
 				terrain_list.get_children()[pick]._on_focus_entered()
 				#_on_entry_select(pick)
@@ -714,14 +709,14 @@ func canvas_input(event: InputEvent) -> bool:
 			var cells := _get_tileset_line(prev_position, current_position, tileset)
 			if paint_mode == PaintMode.PAINT:
 				if replace_mode:
-					terrain_undo.add_do_method(undo_manager, BetterTerrain, &"replace_cells", [tilemap, layer, cells, type])
+					terrain_undo.add_do_method(undo_manager, BetterTerrain, &"replace_cells", [tilemap, cells, type])
 				else:
-					terrain_undo.add_do_method(undo_manager, BetterTerrain, &"set_cells", [tilemap, layer, cells, type])
+					terrain_undo.add_do_method(undo_manager, BetterTerrain, &"set_cells", [tilemap, cells, type])
 			elif paint_mode == PaintMode.ERASE:
 				for c in cells:
-					terrain_undo.add_do_method(undo_manager, tilemap, &"erase_cell", [layer, c])
-			terrain_undo.add_do_method(undo_manager, BetterTerrain, &"update_terrain_cells", [tilemap, layer, cells])
-			terrain_undo.create_tile_restore_point(undo_manager, tilemap, layer, cells)
+					terrain_undo.add_do_method(undo_manager, tilemap, &"erase_cell", [c])
+			terrain_undo.add_do_method(undo_manager, BetterTerrain, &"update_terrain_cells", [tilemap, cells])
+			terrain_undo.create_tile_restore_point(undo_manager, tilemap, cells)
 			undo_manager.commit_action()
 			terrain_undo.action_count += 1
 		elif fill_button.button_pressed:
@@ -729,14 +724,14 @@ func canvas_input(event: InputEvent) -> bool:
 			undo_manager.create_action(tr("Fill terrain"), UndoRedo.MERGE_DISABLE, tilemap)
 			if paint_mode == PaintMode.PAINT:
 				if replace_mode:
-					undo_manager.add_do_method(BetterTerrain, &"replace_cells", tilemap, layer, cells, type)
+					undo_manager.add_do_method(BetterTerrain, &"replace_cells", tilemap, cells, type)
 				else:
-					undo_manager.add_do_method(BetterTerrain, &"set_cells", tilemap, layer, cells, type)
+					undo_manager.add_do_method(BetterTerrain, &"set_cells", tilemap, cells, type)
 			elif paint_mode == PaintMode.ERASE:
 				for c in cells:
-					undo_manager.add_do_method(tilemap, &"erase_cell", layer, c)
-			undo_manager.add_do_method(BetterTerrain, &"update_terrain_cells", tilemap, layer, cells)
-			terrain_undo.create_tile_restore_point(undo_manager, tilemap, layer, cells)
+					undo_manager.add_do_method(tilemap, &"erase_cell", c)
+			undo_manager.add_do_method(BetterTerrain, &"update_terrain_cells", tilemap, cells)
+			terrain_undo.create_tile_restore_point(undo_manager, tilemap, cells)
 			undo_manager.commit_action()
 		
 		update_overlay.emit()
@@ -863,3 +858,57 @@ func _on_terrain_enable_id_pressed(id):
 		if source_selector_popup.is_item_checkable(i) and !source_selector_popup.is_item_checked(i):
 			disabled_sources.append(source_selector_popup.get_item_id(i))
 	tile_view.disabled_sources = disabled_sources
+
+
+func corresponding_tilemap_editor_button(similar: Button) -> Button:
+	var editors = EditorInterface.get_base_control().find_children("*", "TileMapLayerEditor", true, false)
+	var tile_map_layer_editor = editors[0]
+	var buttons = tile_map_layer_editor.find_children("*", "Button", true, false)
+	for button: Button in buttons:
+		if button.icon == similar.icon:
+			return button
+	return null
+
+
+func _on_layer_up_or_down_pressed(button: Button) -> void:
+	var matching_button = corresponding_tilemap_editor_button(button)
+	if !matching_button:
+		return
+	
+	# Major hack, to reduce flicker hide the tileset editor briefly
+	var editors = EditorInterface.get_base_control().find_children("*", "TileSetEditor", true, false)
+	var tile_set_editor = editors[0]
+	
+	matching_button.pressed.emit()
+	tile_set_editor.modulate = Color.TRANSPARENT
+	await get_tree().process_frame
+	await get_tree().process_frame
+	force_show_terrains.emit()
+	tile_set_editor.modulate = Color.WHITE
+
+
+
+func _on_layer_up_pressed() -> void:
+	_on_layer_up_or_down_pressed(layer_up)
+
+
+func _on_layer_down_pressed() -> void:
+	_on_layer_up_or_down_pressed(layer_down)
+
+
+func _on_layer_highlight_toggled(toggled: bool) -> void:
+	var settings = EditorInterface.get_editor_settings()
+	settings.set_setting("editors/tiles_editor/highlight_selected_layer", toggled)
+	
+	var highlight = corresponding_tilemap_editor_button(layer_highlight)
+	if highlight:
+		highlight.toggled.emit(toggled)
+
+
+func _on_layer_grid_toggled(toggled: bool) -> void:
+	var settings = EditorInterface.get_editor_settings()
+	settings.set_setting("editors/tiles_editor/display_grid", toggled)
+	
+	var grid = corresponding_tilemap_editor_button(layer_grid)
+	if grid:
+		grid.toggled.emit(toggled)

@@ -27,6 +27,8 @@ func _enter_tree() -> void:
 	get_editor_interface().get_editor_main_screen().mouse_exited.connect(dock.canvas_mouse_exit)
 	dock.undo_manager = get_undo_redo()
 	button = add_control_to_bottom_panel(dock, "Terrain")
+	button.toggled.connect(dock.about_to_be_visible)
+	dock.force_show_terrains.connect(button.toggled.emit.bind(true))
 	button.visible = false
 
 
@@ -36,7 +38,7 @@ func _exit_tree() -> void:
 
 
 func _handles(object) -> bool:
-	return object is TileMap or object is TileSet
+	return object is TileMapLayer or object is TileSet
 
 
 func _make_visible(visible) -> void:
@@ -44,13 +46,18 @@ func _make_visible(visible) -> void:
 
 
 func _edit(object) -> void:
-	dock.tiles_about_to_change()
-	if object is TileMap:
+	var new_tileset : TileSet = null
+	
+	if object is TileMapLayer:
 		dock.tilemap = object
-		dock.tileset = object.tile_set
+		new_tileset = object.tile_set
 	if object is TileSet:
-		dock.tileset = object
-	dock.tiles_changed()
+		new_tileset = object
+	
+	if dock.tileset != new_tileset:
+		dock.tiles_about_to_change()
+		dock.tileset = new_tileset
+		dock.tiles_changed()
 
 
 func _forward_canvas_draw_over_viewport(overlay: Control) -> void:
