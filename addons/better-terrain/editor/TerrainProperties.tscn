@@ -70,12 +70,14 @@ popup/item_2/icon = ExtResource("5_awp83")
 popup/item_2/id = 2
 
 [node name="CategoryLabel" type="Label" parent="GridContainer"]
+unique_name_in_owner = true
 visible = false
 layout_mode = 2
 size_flags_vertical = 1
 text = "Categories"
 
 [node name="CategoryContainer" type="ScrollContainer" parent="GridContainer"]
+unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(0, 100)
 layout_mode = 2
