@@ -303,8 +303,7 @@ func _on_clean_pressed() -> void:
 		confirmed[0] = true
 		popup.hide()
 	)
-	add_child(popup)
-	popup.popup_centered()
+	EditorInterface.popup_dialog_centered(popup)
 	await popup.visibility_changed
 	popup.queue_free()
 	
@@ -341,23 +340,17 @@ func update_tile_view_paint() -> void:
 	pick_icon_button.disabled = !editable
 
 
-func generate_popup() -> ConfirmationDialog:
-	var popup := TERRAIN_PROPERTIES_SCENE.instantiate()
-	add_child(popup)
-	return popup
-
-
 func _on_add_terrain_pressed() -> void:
 	if !tileset:
 		return
 	
-	var popup := generate_popup()
+	var popup := TERRAIN_PROPERTIES_SCENE.instantiate()
 	popup.set_category_data(BetterTerrain.get_terrain_categories(tileset))
 	popup.terrain_name = "New terrain"
 	popup.terrain_color = Color.from_hsv(randf(), 0.3 + 0.7 * randf(), 0.6 + 0.4 * randf())
 	popup.terrain_icon = ""
 	popup.terrain_type = 0
-	popup.popup_centered()
+	EditorInterface.popup_dialog_centered(popup)
 	await popup.visibility_changed
 	if popup.accepted:
 		undo_manager.create_action("Add terrain type", UndoRedo.MERGE_DISABLE, tileset)
@@ -378,7 +371,7 @@ func _on_edit_terrain_pressed() -> void:
 	var categories = BetterTerrain.get_terrain_categories(tileset)
 	categories = categories.filter(func(x): return x.id != selected_entry)
 	
-	var popup := generate_popup()
+	var popup := TERRAIN_PROPERTIES_SCENE.instantiate()
 	popup.set_category_data(categories)
 	
 	t.icon = t.icon.duplicate()
@@ -389,7 +382,7 @@ func _on_edit_terrain_pressed() -> void:
 	if t.has("icon") and t.icon.has("path"):
 		popup.terrain_icon = t.icon.path
 	popup.terrain_categories = t.categories
-	popup.popup_centered()
+	EditorInterface.popup_dialog_centered(popup)
 	await popup.visibility_changed
 	if popup.accepted:
 		undo_manager.create_action("Edit terrain details", UndoRedo.MERGE_DISABLE, tileset)
@@ -448,8 +441,7 @@ func _on_remove_terrain_pressed() -> void:
 		confirmed[0] = true
 		popup.hide()
 	)
-	add_child(popup)
-	popup.popup_centered()
+	EditorInterface.popup_dialog_centered(popup)
 	await popup.visibility_changed
 	popup.queue_free()
 	

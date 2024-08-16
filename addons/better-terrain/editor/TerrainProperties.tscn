@@ -25,6 +25,7 @@ layout_mode = 2
 text = "Name"
 
 [node name="NameEdit" type="LineEdit" parent="GridContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "Terrain name"
@@ -34,6 +35,7 @@ layout_mode = 2
 text = "Color"
 
 [node name="ColorPicker" type="ColorPickerButton" parent="GridContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 color = Color(1, 0.262745, 0.498039, 1)
@@ -44,6 +46,7 @@ layout_mode = 2
 text = "Icon"
 
 [node name="IconEdit" type="LineEdit" parent="GridContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "Icon path (optional)"
@@ -53,12 +56,12 @@ layout_mode = 2
 text = "Mode"
 
 [node name="TypeOption" type="OptionButton" parent="GridContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 item_count = 3
 popup/item_0/text = "Match tiles"
 popup/item_0/icon = ExtResource("2_ncc5p")
-popup/item_0/id = 0
 popup/item_1/text = "Match vertices"
 popup/item_1/icon = ExtResource("3_0nvmi")
 popup/item_1/id = 1
@@ -79,6 +82,7 @@ layout_mode = 2
 size_flags_vertical = 3
 
 [node name="CategoryLayout" type="VBoxContainer" parent="GridContainer/CategoryContainer"]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 100)
 layout_mode = 2
 size_flags_vertical = 3
