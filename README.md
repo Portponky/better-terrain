@@ -51,15 +51,15 @@ To edit terrain at runtime, first you must set terrain into cells, and then you 
 
 To set or get terrain in cells, these functions are available. Terrain types are integer indexes into the list you see in the editor (e.g. the first terrain is 0, the second is 1, etc...)
 
-* `func set_cell(tm: TileMap, layer: int, coord: Vector2i, type: int) -> bool`
-* `func set_cells(tm: TileMap, layer: int, coords: Array, type: int) -> bool`
-* `func get_cell(tm: TileMap, layer: int, coord: Vector2i) -> int`
+* `func set_cell(tm: TileMapLayer, coord: Vector2i, type: int) -> bool`
+* `func set_cells(tm: TileMapLayer, coords: Array, type: int) -> bool`
+* `func get_cell(tm: TileMapLayer, coord: Vector2i) -> int`
 
 Once cell(s) are set, they must be updated. Use one of these functions to run the updates. They also update the neighboring cells, though that can be switched off if desired.
 
-* `func update_terrain_cells(tm: TileMap, layer: int, cells: Array, and_surrounding_cells := true) -> void`
-* `func update_terrain_cell(tm: TileMap, layer: int, cell: Vector2i, and_surrounding_cells := true) -> void`
-* `func update_terrain_area(tm: TileMap, layer: int, area: Rect2i, and_surrounding_cells := true) -> void`
+* `func update_terrain_cells(tm: TileMapLayer, cells: Array, and_surrounding_cells := true) -> void`
+* `func update_terrain_cell(tm: TileMapLayer, cell: Vector2i, and_surrounding_cells := true) -> void`
+* `func update_terrain_area(tm: TileMapLayer, area: Rect2i, and_surrounding_cells := true) -> void`
 
 Documentation is available in Godot's editor help system, accessed by pressing F1.
 
