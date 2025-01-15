@@ -52,7 +52,9 @@ const MAX_ZOOM_SETTING := "editor/better_terrain/max_zoom_amount"
 
 @onready var scroll_container: ScrollContainer = $VBox/HSplit/Terrains/Panel/ScrollContainer
 @onready var terrain_list: HFlowContainer = $VBox/HSplit/Terrains/Panel/ScrollContainer/TerrainList
-@onready var tile_view: Control = $VBox/HSplit/Panel/ScrollArea/TileView
+
+@onready var tile_panel: Panel = $VBox/HSplit/TilePanel
+@onready var tile_view: Control = $VBox/HSplit/TilePanel/TileView
 
 
 var selected_entry := -2
@@ -912,3 +914,13 @@ func _on_layer_grid_toggled(toggled: bool) -> void:
 	var grid = corresponding_tilemap_editor_button(layer_grid)
 	if grid:
 		grid.toggled.emit(toggled)
+
+
+func _on_reset_view_pressed():
+	var _view_tiles_size = tile_view.tiles_size * tile_view.zoom_level
+
+	tile_view.position.x = tile_panel.size.x / 2 - _view_tiles_size.x / 2
+	tile_view.position.y = (tile_panel.size.y - _view_tiles_size.y) / 2
+
+	if _view_tiles_size.y > tile_panel.size.y:
+		tile_view.position.y = 0
