@@ -651,21 +651,21 @@ func _gui_input(event) -> void:
 				paint_mode = PaintMode.SELECT
 				paint_action = PaintAction.NO_ACTION
 				selection_start = Vector2i(-1,-1)
-		if event.keycode == KEY_C and event.ctrl_pressed and not event.echo:
+		if event.keycode == KEY_C and (event.ctrl_pressed or event.meta_pressed) and not event.echo:
 			accept_event()
 			copy_selection()
-		if event.keycode == KEY_X and event.ctrl_pressed and not event.echo:
+		if event.keycode == KEY_X and (event.ctrl_pressed or event.meta_pressed) and not event.echo:
 			accept_event()
 			copy_selection()
 			delete_selection()
-		if event.keycode == KEY_V and event.ctrl_pressed and not event.echo:
+		if event.keycode == KEY_V and (event.ctrl_pressed or event.meta_pressed) and not event.echo:
 			accept_event()
 			paste_selection()
 	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_WHEEL_UP and event.ctrl_pressed:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP and (event.ctrl_pressed or event.meta_pressed):
 			accept_event()
 			change_zoom_level.emit(zoom_level * 1.1)
-		if event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.ctrl_pressed:
+		if event.button_index == MOUSE_BUTTON_WHEEL_DOWN and (event.ctrl_pressed or event.meta_pressed):
 			accept_event()
 			change_zoom_level.emit(zoom_level / 1.1)
 	

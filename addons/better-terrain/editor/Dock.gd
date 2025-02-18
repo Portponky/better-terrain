@@ -674,7 +674,7 @@ func canvas_input(event: InputEvent) -> bool:
 	if clicked:
 		paint_mode = PaintMode.NO_PAINT
 		
-		if event.ctrl_pressed:
+		if (event.ctrl_pressed or event.meta_pressed):
 			var pick = BetterTerrain.get_cell(tilemap, current_position)
 			if pick >= 0:
 				terrain_list.get_children()[pick]._on_focus_entered()
@@ -747,10 +747,10 @@ func canvas_mouse_exit() -> void:
 
 func _shortcut_input(event) -> void:
 	if event is InputEventKey:
-		if event.keycode == KEY_C and event.ctrl_pressed and not event.echo:
+		if event.keycode == KEY_C and (event.ctrl_pressed or event.meta_pressed) and not event.echo:
 			get_viewport().set_input_as_handled()
 			tile_view.copy_selection()
-		if event.keycode == KEY_V and event.ctrl_pressed and not event.echo:
+		if event.keycode == KEY_V and (event.ctrl_pressed or event.meta_pressed) and not event.echo:
 			get_viewport().set_input_as_handled()
 			tile_view.paste_selection()
 
