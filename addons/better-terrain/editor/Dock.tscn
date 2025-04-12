@@ -107,7 +107,9 @@ layout_mode = 2
 
 [node name="Draw" type="Button" parent="VBox/Toolbar"]
 layout_mode = 2
-tooltip_text = "Draw terrain"
+tooltip_text = "Draw terrain
+Shift: Draw line.
+Ctrl/Cmd+Shift: Draw rectangle."
 toggle_mode = true
 button_pressed = true
 button_group = SubResource("ButtonGroup_aon7c")
