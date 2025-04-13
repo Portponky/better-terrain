@@ -596,4 +596,3 @@ static func peering_bits_after_symmetry(dict: Dictionary, altflags: int) -> Dict
 	for k in dict:
 		result[peering_bit_after_symmetry(k, altflags)] = dict[k]
 	return result
-
