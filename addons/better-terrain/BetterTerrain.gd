@@ -164,7 +164,14 @@ func _get_cache(ts: TileSet) -> Array:
 					cache[td_meta.type].push_back([source_id, coord, alternate, peering, td.probability])
 					continue
 				
-				var adjusted_probability = td.probability / data.symmetry_mapping[symmetry].size()
+				# calculate the symmetry order for this tile
+				var symmetry_order := 0
+				for flags in data.symmetry_mapping[symmetry]:
+					var symmetric_peering = data.peering_bits_after_symmetry(peering, flags)
+					if symmetric_peering == peering:
+						symmetry_order += 1
+				
+				var adjusted_probability = td.probability / symmetry_order
 				for flags in data.symmetry_mapping[symmetry]:
 					var symmetric_peering = data.peering_bits_after_symmetry(peering, flags)
 					cache[td_meta.type].push_back([source_id, coord, alternate | flags, symmetric_peering, adjusted_probability])
@@ -266,15 +273,14 @@ func _weighted_selection(choices: Array, apply_empty_probability: bool):
 	if choices.is_empty():
 		return null
 	
-	if apply_empty_probability:
-		var max_weight := choices.reduce(func(a, c): return maxf(a, c[4]), 0.0)
-		if max_weight < 1.0 and rng.randf() > max_weight:
-			return [-1, Vector2.ZERO, -1, null, 1.0]
+	var weight = choices.reduce(func(a, c): return a + c[4], 0.0)
+	
+	if apply_empty_probability and weight < 1.0 and rng.randf() > weight:
+		return [-1, Vector2.ZERO, -1, null, 1.0]
 	
 	if choices.size() == 1:
 		return choices[0]
 	
-	var weight = choices.reduce(func(a, c): return a + c[4], 0.0)
 	if weight == 0.0:
 		return choices[rng.randi() % choices.size()]
 	
@@ -295,12 +301,15 @@ func _weighted_selection_seeded(choices: Array, coord: Vector2i, apply_empty_pro
 func _update_tile_tiles(tm: TileMapLayer, coord: Vector2i, types: Dictionary, cache: Array, apply_empty_probability: bool):
 	var type = types[coord]
 	
+	const reward := 3
+	var penalty := -2000 if apply_empty_probability else -10
+	
 	var best_score := -1000 # Impossibly bad score
 	var best := []
 	for t in cache[type]:
 		var score := 0
 		for peering in t[3]:
-			score += 3 if t[3][peering].has(types[tm.get_neighbor_cell(coord, peering)]) else -10
+			score += reward if t[3][peering].has(types[tm.get_neighbor_cell(coord, peering)]) else penalty
 		
 		if score > best_score:
 			best_score = score
@@ -327,12 +336,15 @@ func _probe(tm: TileMapLayer, coord: Vector2i, peering: int, type: int, types: D
 func _update_tile_vertices(tm: TileMapLayer, coord: Vector2i, types: Dictionary, cache: Array):
 	var type = types[coord]
 	
+	const reward := 3
+	const penalty := -10
+	
 	var best_score := -1000 # Impossibly bad score
 	var best := []
 	for t in cache[type]:
 		var score := 0
 		for peering in t[3]:
-			score += 3 if _probe(tm, coord, peering, type, types) in t[3][peering] else -10
+			score += reward if _probe(tm, coord, peering, type, types) in t[3][peering] else penalty
 		
 		if score > best_score:
 			best_score = score
