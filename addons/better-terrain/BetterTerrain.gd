@@ -164,9 +164,10 @@ func _get_cache(ts: TileSet) -> Array:
 					cache[td_meta.type].push_back([source_id, coord, alternate, peering, td.probability])
 					continue
 				
+				var adjusted_probability = td.probability / data.symmetry_mapping[symmetry].size()
 				for flags in data.symmetry_mapping[symmetry]:
 					var symmetric_peering = data.peering_bits_after_symmetry(peering, flags)
-					cache[td_meta.type].push_back([source_id, coord, alternate | flags, symmetric_peering, td.probability])
+					cache[td_meta.type].push_back([source_id, coord, alternate | flags, symmetric_peering, adjusted_probability])
 	
 	return cache
 
