@@ -566,6 +566,19 @@ func _on_terrain_updated(index):
 	entry.update()
 
 
+func canvas_tilemap_transform() -> Transform2D:
+	var transform := tilemap.get_viewport_transform() * tilemap.global_transform
+	
+	# Handle subviewport
+	var editor_viewport := EditorInterface.get_editor_viewport_2d()
+	if tilemap.get_viewport() != editor_viewport:
+		var container = tilemap.get_viewport().get_parent() as SubViewportContainer
+		if container:
+			transform = editor_viewport.global_canvas_transform * container.get_transform() * transform
+	
+	return transform
+
+
 func canvas_draw(overlay: Control) -> void:
 	if !draw_overlay:
 		return
@@ -579,14 +592,7 @@ func canvas_draw(overlay: Control) -> void:
 		return
 	
 	var tiles := []
-	var transform := tilemap.get_viewport_transform() * tilemap.global_transform
-	
-	# Handle subviewport
-	var editor_viewport := EditorInterface.get_editor_viewport_2d()
-	if tilemap.get_viewport() != editor_viewport:
-		var container = tilemap.get_viewport().get_parent() as SubViewportContainer
-		if container:
-			transform = editor_viewport.global_canvas_transform * container.get_transform() * transform
+	var transform := canvas_tilemap_transform()
 	
 	if paint_action == PaintAction.RECT and paint_mode != PaintMode.NO_PAINT:
 		var area := Rect2i(initial_click, current_position - initial_click).abs()
@@ -630,7 +636,8 @@ func canvas_input(event: InputEvent) -> bool:
 	
 	draw_overlay = true
 	if event is InputEventMouseMotion:
-		var pos := tilemap.get_viewport().get_mouse_position()
+		var tr := canvas_tilemap_transform()
+		var pos := tr.affine_inverse() * Vector2(event.position)
 		var event_position := tilemap.local_to_map(pos)
 		prev_position = current_position
 		if event_position == current_position:
