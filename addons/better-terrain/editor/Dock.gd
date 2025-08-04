@@ -250,7 +250,12 @@ func tiles_changed() -> void:
 		name += " (ID: %d)" % source_id
 		
 		source_selector_popup.add_check_item(name, source_id)
-		source_selector_popup.set_item_checked(source_selector_popup.get_item_index(source_id), true)
+		
+		var set_enabled: bool = true
+		if tile_view.disabled_sources.has(source_id):
+			set_enabled = false
+		
+		source_selector_popup.set_item_checked(source_selector_popup.get_item_index(source_id), set_enabled)
 	source_selector.visible = source_selector_popup.item_count > 3 # All, None and more than one source
 	
 	update_tile_view_paint()
