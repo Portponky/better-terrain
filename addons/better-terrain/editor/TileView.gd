@@ -102,7 +102,10 @@ func refresh_tileset(ts: TileSet) -> void:
 	tiles_size = Vector2.ZERO
 	alternate_size = Vector2.ZERO
 	alternate_lookup = []
-	# disabled_sources = []
+	disabled_sources = disabled_sources.filter(
+		func(id):
+			return ts.has_source(id)
+	)
 	
 	if !tileset:
 		return
