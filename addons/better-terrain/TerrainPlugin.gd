@@ -52,6 +52,7 @@ func _edit(object) -> void:
 		dock.tilemap = object
 		new_tileset = object.tile_set
 	if object is TileSet:
+		dock.tilemap = null
 		new_tileset = object
 	
 	if dock.tileset != new_tileset:

@@ -274,7 +274,7 @@ func about_to_be_visible(visible: bool) -> void:
 	if !visible:
 		return
 	
-	if tileset != tilemap.tile_set:
+	if tilemap and tileset != tilemap.tile_set:
 		tiles_about_to_change()
 		tileset = tilemap.tile_set
 		tiles_changed()
@@ -571,6 +571,9 @@ func _on_terrain_updated(index):
 
 
 func canvas_tilemap_transform() -> Transform2D:
+	if not tilemap:
+		return Transform2D.IDENTITY
+	
 	var transform := tilemap.get_viewport_transform() * tilemap.global_transform
 	
 	# Handle subviewport
@@ -584,7 +587,7 @@ func canvas_tilemap_transform() -> Transform2D:
 
 
 func canvas_draw(overlay: Control) -> void:
-	if !draw_overlay:
+	if not draw_overlay or not tilemap:
 		return
 	
 	if selected_entry < 0:
@@ -635,6 +638,8 @@ func canvas_draw(overlay: Control) -> void:
 
 
 func canvas_input(event: InputEvent) -> bool:
+	if not tilemap:
+		return false
 	if selected_entry < 0:
 		return false
 	
