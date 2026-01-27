@@ -62,12 +62,12 @@ func _edit(object) -> void:
 
 
 func _forward_canvas_draw_over_viewport(overlay: Control) -> void:
-	if dock.visible:
+	if dock.is_visible_in_tree():
 		dock.canvas_draw(overlay)
 
 
 func _forward_canvas_gui_input(event: InputEvent) -> bool:
-	if !dock.visible:
+	if !dock.is_visible_in_tree():
 		return false
 	
 	return dock.canvas_input(event)
