@@ -298,7 +298,7 @@ func _weighted_selection_seeded(choices: Array, coord: Vector2i, apply_empty_pro
 	return _weighted_selection(choices, apply_empty_probability)
 
 
-func _update_tile_tiles(tm: TileMapLayer, coord: Vector2i, types: Dictionary, cache: Array, apply_empty_probability: bool):
+func _update_tile_tiles(tm: TileMapLayer, coord: Vector2i, types: Dictionary, cache: Array, apply_empty_probability: bool, identities: Dictionary = {}):
 	var type = types[coord]
 	
 	const reward := 3
@@ -309,7 +309,10 @@ func _update_tile_tiles(tm: TileMapLayer, coord: Vector2i, types: Dictionary, ca
 	for t in cache[type]:
 		var score := 0
 		for peering in t[3]:
-			score += reward if t[3][peering].has(types[tm.get_neighbor_cell(coord, peering)]) else penalty
+			var neighbor_coord: Vector2i = tm.get_neighbor_cell(coord, peering)
+			var same_type: bool = t[3][peering].has(types[neighbor_coord])
+			var same_identity: bool = (not identities.has(coord) or not identities.has(neighbor_coord) or identities[coord] == identities[neighbor_coord])
+			score += reward if same_type and same_identity else penalty
 		
 		if score > best_score:
 			best_score = score
@@ -355,7 +358,7 @@ func _update_tile_vertices(tm: TileMapLayer, coord: Vector2i, types: Dictionary,
 	return _weighted_selection_seeded(best, coord, false)
 
 
-func _update_tile_immediate(tm: TileMapLayer, coord: Vector2i, ts_meta: Dictionary, types: Dictionary, cache: Array) -> void:
+func _update_tile_immediate(tm: TileMapLayer, coord: Vector2i, ts_meta: Dictionary, types: Dictionary, cache: Array, identities: Dictionary = {}) -> void:
 	var type = types[coord]
 	if type < TileCategory.EMPTY or type >= ts_meta.terrains.size():
 		return
@@ -363,7 +366,7 @@ func _update_tile_immediate(tm: TileMapLayer, coord: Vector2i, ts_meta: Dictiona
 	var placement
 	var terrain = _get_cache_terrain(ts_meta, type)
 	if terrain[2] in [TerrainType.MATCH_TILES, TerrainType.DECORATION]:
-		placement = _update_tile_tiles(tm, coord, types, cache, terrain[2] == TerrainType.DECORATION)
+		placement = _update_tile_tiles(tm, coord, types, cache, terrain[2] == TerrainType.DECORATION, identities)
 	elif terrain[2] == TerrainType.MATCH_VERTICES:
 		placement = _update_tile_vertices(tm, coord, types, cache)
 	else:
@@ -1045,7 +1048,7 @@ func update_terrain_cell(tm: TileMapLayer, cell: Vector2i, and_surrounding_cells
 ## parameter.
 ## [br][br]
 ## See also [method update_terrain_cells].
-func update_terrain_area(tm: TileMapLayer, area: Rect2i, and_surrounding_cells := true) -> void:
+func update_terrain_area(tm: TileMapLayer, area: Rect2i, and_surrounding_cells := true, identities: Dictionary = {}) -> void:
 	if !tm or !tm.tile_set:
 		return
 	
@@ -1081,9 +1084,9 @@ func update_terrain_area(tm: TileMapLayer, area: Rect2i, and_surrounding_cells :
 	for y in range(area.position.y, area.end.y):
 		for x in range(area.position.x, area.end.x):
 			var coord := Vector2i(x, y)
-			_update_tile_immediate(tm, coord, ts_meta, types, cache)
+			_update_tile_immediate(tm, coord, ts_meta, types, cache, identities)
 	for c in additional_cells:
-		_update_tile_immediate(tm, c, ts_meta, types, cache)
+		_update_tile_immediate(tm, c, ts_meta, types, cache, identities)
 
 
 ## For a [TileMapLayer], create a changeset that will
