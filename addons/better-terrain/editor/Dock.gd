@@ -168,7 +168,7 @@ func _on_adjust_settings():
 	zoom_slider.step = (zoom_slider.max_value - zoom_slider.min_value) / 100.0
 
 
-func _get_fill_cells(target: Vector2i) -> Array:
+func _get_fill_cells(target: Vector2i) -> Array[Vector2i]:
 	var pick := BetterTerrain.get_cell(tilemap, target)
 	var bounds := tilemap.get_used_rect()
 	var neighbors = BetterTerrain.data.cells_adjacent_for_fill(tileset)
@@ -176,10 +176,10 @@ func _get_fill_cells(target: Vector2i) -> Array:
 	# No sets yet, so use a dictionary
 	var checked := {}
 	var pending := [target]
-	var goal := []
+	var goal: Array[Vector2i] = []
 	
 	while !pending.is_empty():
-		var p = pending.pop_front()
+		var p: Vector2i = pending.pop_front()
 		if checked.has(p):
 			continue
 		checked[p] = true
