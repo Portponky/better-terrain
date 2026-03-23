@@ -80,49 +80,61 @@ func create_peering_restore_point(undo_manager: EditorUndoRedoManager, ts: TileS
 				var peering_dict := {}
 				for c in BetterTerrain.tile_peering_keys(td):
 					peering_dict[c] = BetterTerrain.tile_peering_types(td, c)
+				var not_peering_dict := {}
+				for c in BetterTerrain.tile_peering_keys(td):
+					var npt = BetterTerrain.tile_not_peering_types(td, c)
+					if !npt.is_empty():
+						not_peering_dict[c] = npt
 				var symmetry = BetterTerrain.get_tile_symmetry_type(td)
-				restore.append([source_id, coord, alternate, tile_type, peering_dict, symmetry])
-	
+				restore.append([source_id, coord, alternate, tile_type, peering_dict, symmetry, not_peering_dict])
+
 	undo_manager.add_undo_method(self, &"restore_peering", ts, restore)
 
 
 func create_peering_restore_point_specific(undo_manager: EditorUndoRedoManager, ts: TileSet, protect: int) -> void:
 	var restore := []
-	
+
 	for s in ts.get_source_count():
 		var source_id := ts.get_source_id(s)
 		var source := ts.get_source(source_id) as TileSetAtlasSource
 		if !source:
 			continue
-		
+
 		for t in source.get_tiles_count():
 			var coord := source.get_tile_id(t)
 			for a in source.get_alternative_tiles_count(coord):
 				var alternate := source.get_alternative_tile_id(coord, a)
-				
+
 				var td := source.get_tile_data(coord, alternate)
 				var tile_type := BetterTerrain.get_tile_terrain_type(td)
 				if tile_type == BetterTerrain.TileCategory.NON_TERRAIN:
 					continue
-				
+
 				var to_restore : bool = tile_type == protect
-				
+
 				var terrain := BetterTerrain.get_terrain(ts, tile_type)
 				var cells = BetterTerrain.data.get_terrain_peering_cells(ts, terrain.type)
 				for c in cells:
 					if protect in BetterTerrain.tile_peering_types(td, c):
 						to_restore = true
 						break
-				
+					if protect in BetterTerrain.tile_not_peering_types(td, c):
+						to_restore = true
+						break
+
 				if !to_restore:
 					continue
-				
+
 				var peering_dict := {}
+				var not_peering_dict := {}
 				for c in cells:
 					peering_dict[c] = BetterTerrain.tile_peering_types(td, c)
+					var npt = BetterTerrain.tile_not_peering_types(td, c)
+					if !npt.is_empty():
+						not_peering_dict[c] = npt
 				var symmetry = BetterTerrain.get_tile_symmetry_type(td)
-				restore.append([source_id, coord, alternate, tile_type, peering_dict, symmetry])
-	
+				restore.append([source_id, coord, alternate, tile_type, peering_dict, symmetry, not_peering_dict])
+
 	undo_manager.add_undo_method(self, &"restore_peering", ts, restore)
 
 
@@ -130,14 +142,18 @@ func create_peering_restore_point_tile(undo_manager: EditorUndoRedoManager, ts: 
 	var source := ts.get_source(source_id) as TileSetAtlasSource
 	var td := source.get_tile_data(coord, alternate)
 	var tile_type := BetterTerrain.get_tile_terrain_type(td)
-	
+
 	var restore := []
 	var peering_dict := {}
+	var not_peering_dict := {}
 	for c in BetterTerrain.tile_peering_keys(td):
 		peering_dict[c] = BetterTerrain.tile_peering_types(td, c)
+		var npt = BetterTerrain.tile_not_peering_types(td, c)
+		if !npt.is_empty():
+			not_peering_dict[c] = npt
 	var symmetry = BetterTerrain.get_tile_symmetry_type(td)
-	restore.append([source_id, coord, alternate, tile_type, peering_dict, symmetry])
-	
+	restore.append([source_id, coord, alternate, tile_type, peering_dict, symmetry, not_peering_dict])
+
 	undo_manager.add_undo_method(self, &"restore_peering", ts, restore)
 
 
@@ -153,6 +169,14 @@ func restore_peering(ts: TileSet, restore: Array) -> void:
 				BetterTerrain.remove_tile_peering_type(ts, td, peering, t)
 			for t in peering_types[peering]:
 				BetterTerrain.add_tile_peering_type(ts, td, peering, t)
+		# Restore "not" peering
+		var not_peering_types = r[6] if r.size() > 6 else {}
+		for peering in not_peering_types:
+			var types := BetterTerrain.tile_not_peering_types(td, peering)
+			for t in types:
+				BetterTerrain.remove_tile_not_peering_type(ts, td, peering, t)
+			for t in not_peering_types[peering]:
+				BetterTerrain.add_tile_not_peering_type(ts, td, peering, t)
 		var symmetry = r[5]
 		BetterTerrain.set_tile_symmetry_type(ts, td, symmetry)
 

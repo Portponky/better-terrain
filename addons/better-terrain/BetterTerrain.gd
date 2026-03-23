@@ -124,7 +124,7 @@ func _get_cache(ts: TileSet) -> Array:
 	
 	# Decoration
 	types[-1] = [TileCategory.EMPTY]
-	cache.push_back([[-1, Vector2.ZERO, -1, {}, 1.0]])
+	cache.push_back([[-1, Vector2.ZERO, -1, {}, 1.0, {}]])
 	
 	for s in ts.get_source_count():
 		var source_id := ts.get_source_id(s)
@@ -146,35 +146,46 @@ func _get_cache(ts: TileSet) -> Array:
 				for key in td_meta.keys():
 					if !(key is int):
 						continue
-					
+
 					var targets := []
 					for k in types:
 						if _intersect(types[k], td_meta[key]):
 							targets.push_back(k)
-					
+
 					peering[key] = targets
-				
+
+				# Build inverted peering from "not" dict (same _intersect resolution)
+				var inverted_peering := {}
+				var not_meta = td_meta.get("not", {})
+				for key in not_meta:
+					var targets := []
+					for k in types:
+						if _intersect(types[k], not_meta[key]):
+							targets.push_back(k)
+					inverted_peering[key] = targets
+
 				# Decoration tiles without peering are skipped
 				if td_meta.type == TileCategory.EMPTY and !peering:
 					continue
-				
+
 				var symmetry = td_meta.get("symmetry", SymmetryType.NONE)
 				# Branch out no symmetry tiles early
 				if symmetry == SymmetryType.NONE:
-					cache[td_meta.type].push_back([source_id, coord, alternate, peering, td.probability])
+					cache[td_meta.type].push_back([source_id, coord, alternate, peering, td.probability, inverted_peering])
 					continue
-				
+
 				# calculate the symmetry order for this tile
 				var symmetry_order := 0
 				for flags in data.symmetry_mapping[symmetry]:
 					var symmetric_peering = data.peering_bits_after_symmetry(peering, flags)
 					if symmetric_peering == peering:
 						symmetry_order += 1
-				
+
 				var adjusted_probability = td.probability / symmetry_order
 				for flags in data.symmetry_mapping[symmetry]:
 					var symmetric_peering = data.peering_bits_after_symmetry(peering, flags)
-					cache[td_meta.type].push_back([source_id, coord, alternate | flags, symmetric_peering, adjusted_probability])
+					var symmetric_inverted = data.peering_bits_after_symmetry(inverted_peering, flags)
+					cache[td_meta.type].push_back([source_id, coord, alternate | flags, symmetric_peering, adjusted_probability, symmetric_inverted])
 	
 	return cache
 
@@ -216,7 +227,15 @@ func _clear_invalid_peering_types(ts: TileSet) -> void:
 				if valid_peering_types.has(peering):
 					continue
 				td_meta.erase(peering)
-			
+
+			# Also clean invalid "not" peering entries
+			var not_dict = td_meta.get("not", {})
+			for peering in not_dict.keys():
+				if !valid_peering_types.has(peering):
+					not_dict.erase(peering)
+			if not_dict.is_empty():
+				td_meta.erase("not")
+
 			_set_tile_meta(ts, td, td_meta)
 	
 	# Not strictly necessary
@@ -235,7 +254,10 @@ func _has_invalid_peering_types(ts: TileSet) -> bool:
 			for peering in c[3].keys():
 				if !valid_peering_types.has(peering):
 					return true
-	
+			for peering in c[5].keys():
+				if !valid_peering_types.has(peering):
+					return true
+
 	return false
 
 
@@ -276,7 +298,7 @@ func _weighted_selection(choices: Array, apply_empty_probability: bool):
 	var weight = choices.reduce(func(a, c): return a + c[4], 0.0)
 	
 	if apply_empty_probability and weight < 1.0 and rng.randf() > weight:
-		return [-1, Vector2.ZERO, -1, null, 1.0]
+		return [-1, Vector2.ZERO, -1, {}, 1.0, {}]
 	
 	if choices.size() == 1:
 		return choices[0]
@@ -310,13 +332,20 @@ func _update_tile_tiles(tm: TileMapLayer, coord: Vector2i, types: Dictionary, ca
 		var score := 0
 		for peering in t[3]:
 			score += reward if t[3][peering].has(types[tm.get_neighbor_cell(coord, peering)]) else penalty
-		
+		# Inverted peering (t[5]): reward when the excluded terrain is absent,
+		# penalty when it is present. Using +reward (not 0) is intentional —
+		# "not" bits only appear on tiles that specifically need them, so
+		# rewarding satisfaction lets them outscore generic alternatives.
+		if t[5]:
+			for peering in t[5]:
+				score += penalty if t[5][peering].has(types[tm.get_neighbor_cell(coord, peering)]) else reward
+
 		if score > best_score:
 			best_score = score
 			best = [t]
 		elif score == best_score:
 			best.append(t)
-	
+
 	return _weighted_selection_seeded(best, coord, apply_empty_probability)
 
 
@@ -345,13 +374,16 @@ func _update_tile_vertices(tm: TileMapLayer, coord: Vector2i, types: Dictionary,
 		var score := 0
 		for peering in t[3]:
 			score += reward if _probe(tm, coord, peering, type, types) in t[3][peering] else penalty
-		
+		if t[5]:
+			for peering in t[5]:
+				score += penalty if _probe(tm, coord, peering, type, types) in t[5][peering] else reward
+
 		if score > best_score:
 			best_score = score
 			best = [t]
 		elif score == best_score:
 			best.append(t)
-	
+
 	return _weighted_selection_seeded(best, coord, false)
 
 
@@ -494,21 +526,37 @@ func remove_terrain(ts: TileSet, index: int) -> bool:
 				for peering in td_meta.keys():
 					if !(peering is int):
 						continue
-					
+
 					var fixed_peering = []
 					for p in td_meta[peering]:
 						if p < index:
 							fixed_peering.append(p)
 						elif p > index:
 							fixed_peering.append(p - 1)
-					
+
 					if fixed_peering.is_empty():
 						td_meta.erase(peering)
 					else:
 						td_meta[peering] = fixed_peering
-				
+
+				# Re-index "not" dict entries
+				var not_dict = td_meta.get("not", {})
+				for peering in not_dict.keys():
+					var fixed_not = []
+					for p in not_dict[peering]:
+						if p < index:
+							fixed_not.append(p)
+						elif p > index:
+							fixed_not.append(p - 1)
+					if fixed_not.is_empty():
+						not_dict.erase(peering)
+					else:
+						not_dict[peering] = fixed_not
+				if not_dict.is_empty():
+					td_meta.erase("not")
+
 				_set_tile_meta(ts, td, td_meta)
-	
+
 	ts_meta.terrains.remove_at(index)
 	_set_terrain_meta(ts, ts_meta)
 	
@@ -634,7 +682,7 @@ func swap_terrains(ts: TileSet, index1: int, index2: int) -> bool:
 				for peering in td_meta.keys():
 					if !(peering is int):
 						continue
-					
+
 					var fixed_peering = []
 					for p in td_meta[peering]:
 						if p == index1:
@@ -644,9 +692,22 @@ func swap_terrains(ts: TileSet, index1: int, index2: int) -> bool:
 						else:
 							fixed_peering.append(p)
 					td_meta[peering] = fixed_peering
-				
+
+				# Swap indices in "not" dict entries
+				var not_dict = td_meta.get("not", {})
+				for peering in not_dict:
+					var fixed_not = []
+					for p in not_dict[peering]:
+						if p == index1:
+							fixed_not.append(index2)
+						elif p == index2:
+							fixed_not.append(index1)
+						else:
+							fixed_not.append(p)
+					not_dict[peering] = fixed_not
+
 				_set_tile_meta(ts, td, td_meta)
-	
+
 	var temp = ts_meta.terrains[index1]
 	ts_meta.terrains[index1] = ts_meta.terrains[index2]
 	ts_meta.terrains[index2] = temp
@@ -777,6 +838,11 @@ func add_tile_peering_type(ts: TileSet, td: TileData, peering: int, type: int) -
 	if td_meta.type < TileCategory.EMPTY or td_meta.type >= ts_meta.terrains.size():
 		return false
 	
+	# Mutual exclusivity: type must not be in the "not" list
+	var not_dict = td_meta.get("not", {})
+	if not_dict.has(peering) and not_dict[peering].has(type):
+		return false
+
 	if !td_meta.has(peering):
 		td_meta[peering] = [type]
 	elif !td_meta[peering].has(type):
@@ -808,6 +874,61 @@ func remove_tile_peering_type(ts: TileSet, td: TileData, peering: int, type: int
 	return true
 
 
+## For a [TileSet]'s tile, specified by [TileData], add terrain [code]type[/code]
+## to the must-NOT-match list in direction [code]peering[/code], which is of type
+## [enum TileSet.CellNeighbor]. Mutually exclusive with the normal match list.
+## Returns [code]true[/code] on success.
+func add_tile_not_peering_type(ts: TileSet, td: TileData, peering: int, type: int) -> bool:
+	if !ts or !td or peering < 0 or peering > 15 or type < TileCategory.EMPTY:
+		return false
+
+	var ts_meta := _get_terrain_meta(ts)
+	var td_meta := _get_tile_meta(td)
+	if td_meta.type < TileCategory.EMPTY or td_meta.type >= ts_meta.terrains.size():
+		return false
+
+	# Mutual exclusivity: type must not be in the normal match list
+	if td_meta.has(peering) and td_meta[peering].has(type):
+		return false
+
+	if !td_meta.has("not"):
+		td_meta["not"] = {}
+	var not_dict = td_meta["not"]
+
+	if !not_dict.has(peering):
+		not_dict[peering] = [type]
+	elif !not_dict[peering].has(type):
+		not_dict[peering].append(type)
+	else:
+		return false
+	_set_tile_meta(ts, td, td_meta)
+	_purge_cache(ts)
+	return true
+
+
+## For a [TileSet]'s tile, specified by [TileData], remove terrain [code]type[/code]
+## from the must-NOT-match list in direction [code]peering[/code], which is of type
+## [enum TileSet.CellNeighbor]. Returns [code]true[/code] on success.
+func remove_tile_not_peering_type(ts: TileSet, td: TileData, peering: int, type: int) -> bool:
+	if !ts or !td or peering < 0 or peering > 15 or type < TileCategory.EMPTY:
+		return false
+
+	var td_meta := _get_tile_meta(td)
+	var not_dict = td_meta.get("not", {})
+	if !not_dict.has(peering):
+		return false
+	if !not_dict[peering].has(type):
+		return false
+	not_dict[peering].erase(type)
+	if not_dict[peering].is_empty():
+		not_dict.erase(peering)
+	if not_dict.is_empty():
+		td_meta.erase("not")
+	_set_tile_meta(ts, td, td_meta)
+	_purge_cache(ts)
+	return true
+
+
 ## For the tile specified by [TileData], return an [Array] of peering directions
 ## for which terrain matching is set up. These will be of type [enum TileSet.CellNeighbor].
 func tile_peering_keys(td: TileData) -> Array:
@@ -818,6 +939,10 @@ func tile_peering_keys(td: TileData) -> Array:
 	var result := []
 	for k in td_meta:
 		if k is int:
+			result.append(k)
+	var not_dict = td_meta.get("not", {})
+	for k in not_dict:
+		if k is int and k not in result:
 			result.append(k)
 	return result
 
@@ -832,6 +957,17 @@ func tile_peering_types(td: TileData, peering: int) -> Array:
 	return td_meta[peering].duplicate() if td_meta.has(peering) else []
 
 
+## For the tile specified by [TileData], return the [Array] of terrains that must NOT
+## match for the direction [code]peering[/code] which should be of type [enum TileSet.CellNeighbor].
+func tile_not_peering_types(td: TileData, peering: int) -> Array:
+	if !td or peering < 0 or peering > 15:
+		return []
+
+	var td_meta := _get_tile_meta(td)
+	var not_dict = td_meta.get("not", {})
+	return not_dict[peering].duplicate() if not_dict.has(peering) else []
+
+
 ## For the tile specified by [TileData], return the [Array] of peering directions
 ## for the specified terrain type [code]type[/code].
 func tile_peering_for_type(td: TileData, type: int) -> Array:
@@ -842,7 +978,7 @@ func tile_peering_for_type(td: TileData, type: int) -> Array:
 	var result := []
 	var sides := tile_peering_keys(td)
 	for side in sides:
-		if td_meta[side].has(type):
+		if td_meta.has(side) and td_meta[side].has(type):
 			result.push_back(side)
 	
 	result.sort()

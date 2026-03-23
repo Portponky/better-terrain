@@ -403,6 +403,15 @@ func _draw_tile_data(texture: Texture2D, rect: Rect2, src_rect: Rect2, td: TileD
 			if paint_terrain.type == BetterTerrain.TerrainType.DECORATION:
 				side_polygon.append(side_polygon[0])
 				draw_polyline(side_polygon, Color.BLACK)
+		elif paint in BetterTerrain.tile_not_peering_types(td, p):
+			# Draw filled circle to indicate "must not match"
+			var side_polygon = transform * BetterTerrain.data.peering_polygon(tileset, terrain.type, p)
+			var bounds := Rect2(side_polygon[0], Vector2.ZERO)
+			for pt in side_polygon:
+				bounds = bounds.expand(pt)
+			var center := bounds.get_center()
+			var radius : float = min(bounds.size.x, bounds.size.y) * 0.25
+			draw_circle(center, radius, Color(paint_terrain.color, 0.9))
 
 
 func _draw_tile_symmetry(texture: Texture2D, rect: Rect2, src_rect: Rect2, td: TileData, draw_icon: bool = true) -> void:
@@ -574,6 +583,14 @@ func _draw() -> void:
 							var side_polygon = BetterTerrain.data.peering_polygon(tileset, paint_terrain_type, p)
 							var color = Color(paint_terrain.color, 0.6)
 							draw_colored_polygon(transform * side_polygon, color)
+						elif state.paint in BetterTerrain.tile_not_peering_types(state.part.data, p):
+							var side_polygon = transform * BetterTerrain.data.peering_polygon(tileset, paint_terrain_type, p)
+							var bounds := Rect2(side_polygon[0], Vector2.ZERO)
+							for pt in side_polygon:
+								bounds = bounds.expand(pt)
+							var center := bounds.get_center()
+							var radius : float = min(bounds.size.x, bounds.size.y) * 0.25
+							draw_circle(center, radius, Color(paint_terrain.color, 0.6))
 				
 				draw_rect(staged_rect, Color.DEEP_PINK, false)
 	
@@ -587,6 +604,10 @@ func delete_selection():
 			if old_peering.has(paint):
 				undo_manager.add_do_method(BetterTerrain, &"remove_tile_peering_type", tileset, t.part.data, side, paint)
 				undo_manager.add_undo_method(BetterTerrain, &"add_tile_peering_type", tileset, t.part.data, side, paint)
+			var old_not_peering = BetterTerrain.tile_not_peering_types(t.part.data, side)
+			if old_not_peering.has(paint):
+				undo_manager.add_do_method(BetterTerrain, &"remove_tile_not_peering_type", tileset, t.part.data, side, paint)
+				undo_manager.add_undo_method(BetterTerrain, &"add_tile_not_peering_type", tileset, t.part.data, side, paint)
 	
 	undo_manager.add_do_method(self, &"queue_redraw")
 	undo_manager.add_undo_method(self, &"queue_redraw")
@@ -729,6 +750,16 @@ func _gui_input(event) -> void:
 						elif old_peering.has(paint) and not new_sides.has(side):
 							undo_manager.add_do_method(BetterTerrain, &"remove_tile_peering_type", tileset, old_tile_part.data, side, paint)
 							undo_manager.add_undo_method(BetterTerrain, &"add_tile_peering_type", tileset, old_tile_part.data, side, paint)
+
+						# Handle "not" peering paste
+						var old_not_peering = BetterTerrain.tile_not_peering_types(old_tile_part.data, side)
+						var new_not_sides = new_tile_state.get("not_sides", [])
+						if new_not_sides.has(side) and not old_not_peering.has(paint):
+							undo_manager.add_do_method(BetterTerrain, &"add_tile_not_peering_type", tileset, old_tile_part.data, side, paint)
+							undo_manager.add_undo_method(BetterTerrain, &"remove_tile_not_peering_type", tileset, old_tile_part.data, side, paint)
+						elif old_not_peering.has(paint) and not new_not_sides.has(side):
+							undo_manager.add_do_method(BetterTerrain, &"remove_tile_not_peering_type", tileset, old_tile_part.data, side, paint)
+							undo_manager.add_undo_method(BetterTerrain, &"add_tile_not_peering_type", tileset, old_tile_part.data, side, paint)
 					
 					var old_symmetry = BetterTerrain.get_tile_symmetry_type(old_tile_part.data)
 					var new_symmetry = new_tile_state.symmetry
@@ -798,11 +829,16 @@ func _gui_input(event) -> void:
 			var selected_tile_parts = tile_parts_from_rect(selection_rect)
 			selected_tile_states = []
 			for t in selected_tile_parts:
+				var not_sides := []
+				for side in range(16):
+					if paint in BetterTerrain.tile_not_peering_types(t.data, side):
+						not_sides.push_back(side)
 				var state := {
 					part = t,
 					base_rect = Rect2(t.rect.position / zoom_level, t.rect.size / zoom_level),
 					paint = paint,
 					sides = BetterTerrain.tile_peering_for_type(t.data, paint),
+					not_sides = not_sides,
 					symmetry = BetterTerrain.get_tile_symmetry_type(t.data)
 				}
 				selected_tile_states.push_back(state)
@@ -845,21 +881,60 @@ func _gui_input(event) -> void:
 						terrain_undo.action_count += 1
 				elif paint_action == PaintAction.DRAW_PEERING:
 					if highlighted_tile_part.has("peering"):
-						if !(paint in BetterTerrain.tile_peering_types(highlighted_tile_part.data, highlighted_tile_part.peering)):
-							undo_manager.create_action("Set tile terrain peering type " + str(terrain_undo.action_index), UndoRedo.MERGE_ALL, tileset, true)
-							terrain_undo.add_do_method(undo_manager, BetterTerrain, &"add_tile_peering_type", [tileset, highlighted_tile_part.data, highlighted_tile_part.peering, paint])
+						var _p = highlighted_tile_part.peering
+						var has_match = paint in BetterTerrain.tile_peering_types(highlighted_tile_part.data, _p)
+						var has_not = paint in BetterTerrain.tile_not_peering_types(highlighted_tile_part.data, _p)
+						if clicked and has_match:
+							# Click on match → toggle to not-match
+							undo_manager.create_action("Toggle peering to not-match " + str(terrain_undo.action_index), UndoRedo.MERGE_ALL, tileset, true)
+							terrain_undo.add_do_method(undo_manager, BetterTerrain, &"remove_tile_peering_type", [tileset, highlighted_tile_part.data, _p, paint])
+							terrain_undo.add_do_method(undo_manager, BetterTerrain, &"add_tile_not_peering_type", [tileset, highlighted_tile_part.data, _p, paint])
 							terrain_undo.add_do_method(undo_manager, self, &"queue_redraw", [])
-							undo_manager.add_undo_method(BetterTerrain, &"remove_tile_peering_type", tileset, highlighted_tile_part.data, highlighted_tile_part.peering, paint)
+							# Undo runs in reverse: remove not-match first, then add match back
+							undo_manager.add_undo_method(self, &"queue_redraw")
+							undo_manager.add_undo_method(BetterTerrain, &"add_tile_peering_type", tileset, highlighted_tile_part.data, _p, paint)
+							undo_manager.add_undo_method(BetterTerrain, &"remove_tile_not_peering_type", tileset, highlighted_tile_part.data, _p, paint)
+							undo_manager.commit_action()
+							terrain_undo.action_count += 1
+							break
+						elif clicked and has_not:
+							# Click on not-match → toggle to match
+							undo_manager.create_action("Toggle peering to match " + str(terrain_undo.action_index), UndoRedo.MERGE_ALL, tileset, true)
+							terrain_undo.add_do_method(undo_manager, BetterTerrain, &"remove_tile_not_peering_type", [tileset, highlighted_tile_part.data, _p, paint])
+							terrain_undo.add_do_method(undo_manager, BetterTerrain, &"add_tile_peering_type", [tileset, highlighted_tile_part.data, _p, paint])
+							terrain_undo.add_do_method(undo_manager, self, &"queue_redraw", [])
+							# Undo runs in reverse: remove match first, then add not-match back
+							undo_manager.add_undo_method(self, &"queue_redraw")
+							undo_manager.add_undo_method(BetterTerrain, &"add_tile_not_peering_type", tileset, highlighted_tile_part.data, _p, paint)
+							undo_manager.add_undo_method(BetterTerrain, &"remove_tile_peering_type", tileset, highlighted_tile_part.data, _p, paint)
+							undo_manager.commit_action()
+							terrain_undo.action_count += 1
+							break
+						elif !has_match and !has_not:
+							# Unset → match (works for both click and drag)
+							undo_manager.create_action("Set tile terrain peering type " + str(terrain_undo.action_index), UndoRedo.MERGE_ALL, tileset, true)
+							terrain_undo.add_do_method(undo_manager, BetterTerrain, &"add_tile_peering_type", [tileset, highlighted_tile_part.data, _p, paint])
+							terrain_undo.add_do_method(undo_manager, self, &"queue_redraw", [])
+							undo_manager.add_undo_method(BetterTerrain, &"remove_tile_peering_type", tileset, highlighted_tile_part.data, _p, paint)
 							undo_manager.add_undo_method(self, &"queue_redraw")
 							undo_manager.commit_action()
 							terrain_undo.action_count += 1
+							if clicked:
+								break
 				elif paint_action == PaintAction.ERASE_PEERING:
 					if highlighted_tile_part.has("peering"):
-						if paint in BetterTerrain.tile_peering_types(highlighted_tile_part.data, highlighted_tile_part.peering):
+						var _p = highlighted_tile_part.peering
+						var has_match = paint in BetterTerrain.tile_peering_types(highlighted_tile_part.data, _p)
+						var has_not = paint in BetterTerrain.tile_not_peering_types(highlighted_tile_part.data, _p)
+						if has_match or has_not:
 							undo_manager.create_action("Remove tile terrain peering type " + str(terrain_undo.action_index), UndoRedo.MERGE_ALL, tileset, true)
-							terrain_undo.add_do_method(undo_manager, BetterTerrain, &"remove_tile_peering_type", [tileset, highlighted_tile_part.data, highlighted_tile_part.peering, paint])
+							if has_match:
+								terrain_undo.add_do_method(undo_manager, BetterTerrain, &"remove_tile_peering_type", [tileset, highlighted_tile_part.data, _p, paint])
+								undo_manager.add_undo_method(BetterTerrain, &"add_tile_peering_type", tileset, highlighted_tile_part.data, _p, paint)
+							if has_not:
+								terrain_undo.add_do_method(undo_manager, BetterTerrain, &"remove_tile_not_peering_type", [tileset, highlighted_tile_part.data, _p, paint])
+								undo_manager.add_undo_method(BetterTerrain, &"add_tile_not_peering_type", tileset, highlighted_tile_part.data, _p, paint)
 							terrain_undo.add_do_method(undo_manager, self, &"queue_redraw", [])
-							undo_manager.add_undo_method(BetterTerrain, &"add_tile_peering_type", tileset, highlighted_tile_part.data, highlighted_tile_part.peering, paint)
 							undo_manager.add_undo_method(self, &"queue_redraw")
 							undo_manager.commit_action()
 							terrain_undo.action_count += 1

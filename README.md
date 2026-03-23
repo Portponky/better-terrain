@@ -36,7 +36,7 @@ The dock has terrain types on the left, and tiles on the right. At the bottom of
 Along the top, you will find the following buttons:
 
 * Pen, line, rectangle, and fill tools. These are for drawing in the scene. Right click will erase.
-* Select, change type and change peering connecting types. Note that these are unselected by default to prevent accidental alterations to the terrain settings. You can unselect them after using them.
+* Select, change type and change peering connecting types. Note that these are unselected by default to prevent accidental alterations to the terrain settings. You can unselect them after using them. Clicking an unset peering cell sets it to **match**. Further clicks toggle between **match** and **must-not-match** (filled circle). The "must-not-match" state prevents a tile from being placed when the excluded terrain is present in that direction. Right click erases both match and must-not-match in one step.
 * A zoom slider for the tiles.
 * An option to control the level of randomization used.
 * A layer selector for the scene. Unfortunately, the layer highlight option is not exposed to GDScript, so that is unavailable.

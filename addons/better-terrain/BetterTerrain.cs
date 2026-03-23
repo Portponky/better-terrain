@@ -147,6 +147,16 @@ public class BetterTerrain
         return (bool)betterTerrain.Call(MethodName.RemoveTilePeeringType, tileMapLayer.TileSet, tileData, (int)peering, type);
     }
 
+    public bool AddTileNotPeeringType(TileData tileData, TileSet.CellNeighbor peering, int type)
+    {
+        return (bool)betterTerrain.Call(MethodName.AddTileNotPeeringType, tileMapLayer.TileSet, tileData, (int)peering, type);
+    }
+
+    public bool RemoveTileNotPeeringType(TileData tileData, TileSet.CellNeighbor peering, int type)
+    {
+        return (bool)betterTerrain.Call(MethodName.RemoveTileNotPeeringType, tileMapLayer.TileSet, tileData, (int)peering, type);
+    }
+
     public Array<TileSet.CellNeighbor> TilePeeringKeys(TileData tileData)
     {
         return (Array<TileSet.CellNeighbor>)betterTerrain.Call(MethodName.TilePeeringKeys, tileData);
@@ -155,6 +165,11 @@ public class BetterTerrain
     public Array<int> TilePeeringTypes(TileData tileData, TileSet.CellNeighbor peering)
     {
         return (Array<int>)betterTerrain.Call(MethodName.TilePeeringTypes, tileData, (int)peering);
+    }
+
+    public Array<int> TileNotPeeringTypes(TileData tileData, TileSet.CellNeighbor peering)
+    {
+        return (Array<int>)betterTerrain.Call(MethodName.TileNotPeeringTypes, tileData, (int)peering);
     }
 
     public Array<TileSet.CellNeighbor> TilePeeringForType(TileData tileData, int type)
@@ -239,8 +254,11 @@ public class BetterTerrain
         public static readonly StringName GetTileSourcesInTerrain = "get_tile_sources_in_terrain";
         public static readonly StringName AddTilePeeringType = "add_tile_peering_type";
         public static readonly StringName RemoveTilePeeringType = "remove_tile_peering_type";
+        public static readonly StringName AddTileNotPeeringType = "add_tile_not_peering_type";
+        public static readonly StringName RemoveTileNotPeeringType = "remove_tile_not_peering_type";
         public static readonly StringName TilePeeringKeys = "tile_peering_keys";
         public static readonly StringName TilePeeringTypes = "tile_peering_types";
+        public static readonly StringName TileNotPeeringTypes = "tile_not_peering_types";
         public static readonly StringName TilePeeringForType = "tile_peering_for_type";
         public static readonly StringName SetCell = "set_cell";
         public static readonly StringName SetCells = "set_cells";
