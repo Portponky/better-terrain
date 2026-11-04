@@ -27,6 +27,8 @@ const MAX_ZOOM_SETTING := "editor/better_terrain/max_zoom_amount"
 @onready var paint_symmetry: Button = $VBox/Toolbar/PaintSymmetry
 @onready var symmetry_options: OptionButton = $VBox/Toolbar/SymmetryOptions
 
+@onready var paint_repetition: Button = $VBox/Toolbar/PaintRepetition
+
 @onready var shuffle_random: Button = $VBox/Toolbar/ShuffleRandom
 @onready var zoom_slider_container: VBoxContainer = $VBox/Toolbar/ZoomContainer
 
@@ -546,6 +548,7 @@ func _on_bit_button_pressed(button: BaseButton) -> void:
 		paint_type: tile_view.paint_mode = tile_view.PaintMode.PAINT_TYPE
 		paint_terrain: tile_view.paint_mode = tile_view.PaintMode.PAINT_PEERING
 		paint_symmetry: tile_view.paint_mode = tile_view.PaintMode.PAINT_SYMMETRY
+		paint_repetition: tile_view.paint_mode = tile_view.PaintMode.PAINT_REPETITION
 		_: tile_view.paint_mode = tile_view.PaintMode.NO_PAINT
 	tile_view.queue_redraw()
 	

@@ -298,6 +298,28 @@ func _weighted_selection_seeded(choices: Array, coord: Vector2i, apply_empty_pro
 	return _weighted_selection(choices, apply_empty_probability)
 
 
+func _is_same_tile(a:Array, b:Array) -> bool:
+	return a[0] == b[0] and a[1] == b[1]
+
+func _is_used_by_neighbors(tm: TileMapLayer, coord: Vector2i, tile: Array) -> bool:
+	var source := tm.tile_set.get_source(tile[0]) as TileSetAtlasSource
+	var td := source.get_tile_data(tile[1], tile[2])
+
+	if not get_tile_block_repetition(td):
+		return false
+
+	for offset in [Vector2i.LEFT, Vector2i.UP, Vector2i.RIGHT, Vector2i.DOWN]:
+		var neighbor: Vector2i = coord + offset
+
+		var source_id := tm.get_cell_source_id(neighbor)
+		var atlas_coord := tm.get_cell_atlas_coords(neighbor)
+
+		if _is_same_tile(tile, [source_id, atlas_coord]):
+			return true
+
+	return false
+
+
 func _update_tile_tiles(tm: TileMapLayer, coord: Vector2i, types: Dictionary, cache: Array, apply_empty_probability: bool):
 	var type = types[coord]
 	
@@ -307,6 +329,8 @@ func _update_tile_tiles(tm: TileMapLayer, coord: Vector2i, types: Dictionary, ca
 	var best_score := -1000 # Impossibly bad score
 	var best := []
 	for t in cache[type]:
+		if _is_used_by_neighbors(tm, coord, t):
+			continue
 		var score := 0
 		for peering in t[3]:
 			score += reward if t[3][peering].has(types[tm.get_neighbor_cell(coord, peering)]) else penalty
@@ -710,6 +734,33 @@ func get_tile_symmetry_type(td: TileData) -> int:
 	
 	var td_meta := _get_tile_meta(td)
 	return td_meta.get("symmetry", SymmetryType.NONE)
+
+
+## For a tile represented by [TileData] [code]td[/code] in [TileSet]
+## [code]ts[/code], sets [bool enabled] [code]type[/code]. This controls
+## how the tile is been handled in the check repetition system.
+func set_tile_block_repetition(ts: TileSet, td: TileData, enabled: bool) -> bool:
+	if !ts or !td:
+		return false
+
+	var td_meta := _get_tile_meta(td)
+	if td_meta.type == TileCategory.NON_TERRAIN:
+		return false
+
+	td_meta.block_repetition = enabled
+	_set_tile_meta(ts, td, td_meta)
+	_purge_cache(ts)
+	return true
+
+
+## For a tile [code]td[/code], returns whether it is subject to the repetition rule.
+func get_tile_block_repetition(td: TileData) -> bool:
+	if !td:
+		return false
+
+	var td_meta := _get_tile_meta(td)
+	return td_meta.get("block_repetition", false)
+
 
 
 ## Returns an Array of all [TileData] tiles included in the specified

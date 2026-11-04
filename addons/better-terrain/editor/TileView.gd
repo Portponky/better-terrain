@@ -60,6 +60,7 @@ enum PaintMode {
 	PAINT_TYPE,
 	PAINT_PEERING,
 	PAINT_SYMMETRY,
+	PAINT_REPETITION,
 	SELECT,
 	PASTE
 }
@@ -75,6 +76,8 @@ enum PaintAction {
 	ERASE_PEERING,
 	DRAW_SYMMETRY,
 	ERASE_SYMMETRY,
+	DRAW_REPETITION,
+	ERASE_REPETITION,
 	SELECT,
 	PASTE
 }
@@ -438,6 +441,32 @@ func _draw_tile_symmetry(texture: Texture2D, rect: Rect2, src_rect: Rect2, td: T
 	)
 
 
+func _draw_tile_repetition(texture: Texture2D, rect: Rect2, src_rect: Rect2, td: TileData) -> void:
+	var flipped_rect := rect
+	if td.flip_h:
+		flipped_rect.size.x = -rect.size.x
+	if td.flip_v:
+		flipped_rect.size.y = -rect.size.y
+	
+	RenderingServer.canvas_item_add_texture_rect_region(
+		_get_canvas_item(td),
+		flipped_rect,
+		texture.get_rid(),
+		src_rect,
+		td.modulate,
+		td.transpose
+	)
+
+	if not BetterTerrain.get_tile_block_repetition(td):
+		return
+
+	RenderingServer.canvas_item_add_rect(
+		_get_canvas_item(td),
+		rect,
+		Color(1.0, 0.0, 0.0, 0.5)
+	)
+
+
 func _draw() -> void:
 	if !tileset:
 		return
@@ -488,6 +517,8 @@ func _draw() -> void:
 				var drawing_current = BetterTerrain.get_tile_terrain_type(td) == paint
 				if paint_mode == PaintMode.PAINT_SYMMETRY:
 					_draw_tile_symmetry(source.texture, target_rect, rect, td, drawing_current)
+				elif paint_mode == PaintMode.PAINT_REPETITION:
+					_draw_tile_repetition(source.texture, target_rect, rect, td)
 				else:
 					_draw_tile_data(source.texture, target_rect, rect, td)
 				
@@ -544,6 +575,8 @@ func _draw() -> void:
 			if paint_symmetry > 0:
 				var symmetry_icon = paint_symmetry_icons[paint_symmetry]
 				draw_texture_rect(symmetry_icon, highlighted_tile_part.rect, false, Color(0.5,0.75,1,0.5))
+		if paint_mode == PaintMode.PAINT_REPETITION:
+			draw_rect(highlighted_tile_part.rect, Color(1.0,0,0, .2), true)
 	
 	if paint_mode == PaintMode.SELECT:
 		draw_rect(selection_rect, Color.WHITE, false)
@@ -779,6 +812,8 @@ func _gui_input(event) -> void:
 				[PaintMode.PAINT_PEERING, MOUSE_BUTTON_RIGHT]: paint_action = PaintAction.ERASE_PEERING
 				[PaintMode.PAINT_SYMMETRY, MOUSE_BUTTON_LEFT]: paint_action = PaintAction.DRAW_SYMMETRY
 				[PaintMode.PAINT_SYMMETRY, MOUSE_BUTTON_RIGHT]: paint_action = PaintAction.ERASE_SYMMETRY
+				[PaintMode.PAINT_REPETITION, MOUSE_BUTTON_LEFT]: paint_action = PaintAction.DRAW_REPETITION
+				[PaintMode.PAINT_REPETITION, MOUSE_BUTTON_RIGHT]: paint_action = PaintAction.ERASE_REPETITION
 				[PaintMode.SELECT, MOUSE_BUTTON_LEFT]: paint_action = PaintAction.SELECT
 		else:
 			match [paint_mode, event.button_index]:
@@ -884,6 +919,26 @@ func _gui_input(event) -> void:
 						undo_manager.commit_action()
 						terrain_undo.action_count += 1
 
+				elif paint_action == PaintAction.DRAW_REPETITION:
+					if paint == BetterTerrain.get_tile_terrain_type(highlighted_tile_part.data):
+						undo_manager.create_action("Set tile block repetition value " + str(terrain_undo.action_index), UndoRedo.MERGE_ALL, tileset, true)
+						var old_repetition := BetterTerrain.get_tile_block_repetition(highlighted_tile_part.data)
+						terrain_undo.add_do_method(undo_manager, BetterTerrain, &"set_tile_block_repetition", [tileset, highlighted_tile_part.data, true])
+						terrain_undo.add_do_method(undo_manager, self, &"queue_redraw", [])
+						undo_manager.add_undo_method(BetterTerrain, &"set_tile_block_repetition", tileset, highlighted_tile_part.data, old_repetition)
+						undo_manager.add_undo_method(self, &"queue_redraw")
+						undo_manager.commit_action()
+						terrain_undo.action_count += 1
+				elif paint_action == PaintAction.ERASE_REPETITION:
+					if paint == BetterTerrain.get_tile_terrain_type(highlighted_tile_part.data):
+						undo_manager.create_action("Remove tile block repetition value " + str(terrain_undo.action_index), UndoRedo.MERGE_ALL, tileset, true)
+						var old_repetition := BetterTerrain.get_tile_block_repetition(highlighted_tile_part.data)
+						terrain_undo.add_do_method(undo_manager, BetterTerrain, &"set_tile_block_repetition", [tileset, highlighted_tile_part.data, false])
+						terrain_undo.add_do_method(undo_manager, self, &"queue_redraw", [])
+						undo_manager.add_undo_method(BetterTerrain, &"set_tile_block_repetition", tileset, highlighted_tile_part.data, old_repetition)
+						undo_manager.add_undo_method(self, &"queue_redraw")
+						undo_manager.commit_action()
+						terrain_undo.action_count += 1
 
 func _on_zoom_value_changed(value) -> void:
 	zoom_level = value
